@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/.well-known/omenz-flyer.json",
+      "destination": "/api/hit?f=index"
+    },
+    {
+      "source": "/.well-known/omenz-keys.json",
+      "destination": "/api/hit?f=keys"
+    },
+    {
+      "source": "/feed.json",
+      "destination": "/api/hit?f=feed"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "/api/hit?f=llms"
+    },
+    {
+      "source": "/flyers/:id.json",
+      "destination": "/api/hit?f=flyer-:id"
+    }
+  ]
+}

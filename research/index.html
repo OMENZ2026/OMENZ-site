@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research (SCRIBE) | OMENZ</title>
+  <meta name="description" content="SCRIBE is OMENZ's public research record: what we tested, what we expected, what happened, and what we changed." />
+  <link rel="canonical" href="https://www.omenz.org/research/" />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <style>
+    :root { --bg:#000; --panel:#0c0f14; --line:#1f2733; --text:#f2f4f7; --muted:#b5bdc8; --dim:#7d8794; --accent:#3b82f6; --accent2:#40e0d0; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    a { color: var(--accent2); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    header.top { position: sticky; top: 0; background: rgba(0,0,0,.92); border-bottom:1px solid var(--line); z-index: 5; }
+    header.top .wrap { display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; font-size:1.2rem; }
+    .brand img { width:36px; filter: drop-shadow(0 0 8px var(--accent)); }
+    nav a { color: var(--muted); text-decoration:none; margin-left:18px; font-size:.95rem; }
+    nav a:hover { color: var(--text); }
+    .hero { padding: 72px 0 40px; }
+    .hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 0 0 12px; letter-spacing: 2px; }
+    .hero p.lead { font-size: 1.25rem; color: var(--muted); max-width: 720px; margin: 0 0 8px; }
+    .hero p.motto { color: var(--accent2); font-weight: 700; letter-spacing: 1px; margin: 0 0 28px; }
+    .btn { display:inline-block; padding:11px 18px; border-radius:6px; text-decoration:none; font-weight:700; margin: 0 10px 10px 0; }
+    .btn.primary { background: var(--accent); color:#fff; }
+    .btn.ghost { border:1px solid var(--line); color: var(--text); }
+    section { padding: 44px 0; border-top: 1px solid var(--line); }
+    section h2 { font-size: 1.6rem; margin: 0 0 6px; }
+    section p.sub { color: var(--dim); margin: 0 0 22px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card { background: var(--panel); border:1px solid var(--line); border-radius: 10px; padding: 18px; display:flex; flex-direction:column; }
+    .card h3 { margin: 0 0 6px; font-size: 1.1rem; }
+    .card p { color: var(--muted); margin: 0 0 12px; font-size: .95rem; flex: 1; }
+    .card .meta { color: var(--dim); font-size: .85rem; margin-bottom: 12px; }
+    .card a.go { font-weight: 700; text-decoration: none; }
+    ul.edu { color: var(--muted); padding-left: 20px; margin: 6px 0 14px; }
+    .two { display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .social a { display:inline-block; margin: 0 14px 10px 0; font-weight:700; text-decoration:none; }
+    footer { border-top:1px solid var(--line); padding: 28px 0 40px; color: var(--dim); font-size: .9rem; }
+    footer a { color: var(--muted); }
+    @media (max-width: 720px) { header.top .wrap { flex-wrap:wrap; height:auto; padding-top:10px; padding-bottom:10px; } nav { width:100%; display:flex; flex-wrap:wrap; gap:2px 14px; margin-top:6px; } nav a { margin-left:0; font-size:.9rem; } .two { grid-template-columns: 1fr; } .hero { padding-top: 44px; } }
+  </style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/omenz-logo.png" alt="OMENZ logo">OMENZ</a><nav><a href="/#tools">Agent Tools</a><a href="/#services">Services</a><a href="/research/">Research</a><a href="/#ai-stories">AI &amp; Stories</a><a href="/#contact">Contact</a></nav></div></header>
+<main class="wrap">
+  <div class="hero"><h1>Research</h1><p class="lead">SCRIBE is OMENZ's public record: what we tested, what we expected, what actually happened, and what we changed because of it. Failures included.</p></div>
+
+  <section id="scribe-002">
+    <h2>Changed? failed its first test, then shipped</h2>
+    <p class="sub">SCRIBE 002 · Nov 1, 2026 · finding + change</p>
+    <p>Changed? tells an agent whether a page really changed since its last visit, or just got a new timestamp. The first version failed our own frozen test: it called a JavaScript-only page "unchanged". That was 1 miss, 3.4%, over our 2% bar.</p>
+    <p>We didn't lower the bar. We fixed it: pages that need a browser now come back UNKNOWN, never UNCHANGED. Version 2 then took a fresh test on 157 pages it had never seen, rechecked 4 days later: 0 of 43 real changes missed, 93.4% accuracy. In the wild it caught two small businesses changing their opening hours. Known false alarms (live counters, rolling dates, captchas, social feeds) are listed on the tool page.</p>
+    <p><a data-dest="apify:changed-page-check" href="https://apify.com/omenz/changed-page-check?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=research">Changed? on Apify</a> · <a data-dest="social:x-scribe002" href="https://x.com/menz_oscar29819/status/2116957056259518619">Thread on X</a> · <a data-dest="social:threads-scribe002" href="https://www.threads.com/@omenz.inc/post/DfNWrLqGV4k">Thread on Threads</a></p>
+  </section>
+
+  <section id="scribe-001">
+    <h2>Agents decide to verify before they read</h2>
+    <p class="sub">SCRIBE 001 · Oct 27–30, 2026 · finding + change (Confío)</p>
+    <p>We tried to make fact-checking cheaper for AI agents by handing them verified evidence: exact quotes, sources, timestamps. They mostly ignored it and checked the original website anyway, often before even reading what we gave them.</p>
+    <p>So we measured when they decide to verify. Answer: at planning time, from how the tool describes itself. We moved the claim there. Compared with agents given no evidence, re-checks on simple lookups went from 100% to 0%, and high-stakes tasks used 54–67% fewer tokens, with every answer correct. A follow-up showed the flip side: when a trustworthy-sounding source was wrong, agents that didn't spot-check repeated the error, and every agent that spot-checked caught it. Claims have to be true and checkable.</p>
+    <p>Small, simulated tests (8 businesses, 2 AI models).</p>
+    <p><a data-dest="social:x-scribe001" href="https://x.com/menz_oscar29819/status/2116245843632410755">Thread on X</a> · <a data-dest="social:threads-scribe001" href="https://www.threads.com/@omenz.inc/post/DfIYxCYEltg">Thread on Threads</a> · <a data-dest="social:instagram-scribe001" href="https://www.instagram.com/p/DfIZA69knl_/">Instagram</a> · <a data-dest="social:tiktok-scribe001" href="https://www.tiktok.com/@oscarmenz2021/video/7702553630615833887">TikTok</a></p>
+  </section>
+
+  <section id="okenz-question">
+    <h2>Open question: do lenders check a token's state?</h2>
+    <p class="sub">OKENZ · open research question · Nov 1, 2026</p>
+    <p>In Ankr aBNBc → Helio (2022) and the eBTC mint → Curvance (2026), a token's state changed and a lending market kept accepting it. Before you accept a token as collateral or payment, do you check the token itself (supply jumps, contract upgrades, admin changes, pauses), or rely on oracles and caps? If a token-side change ever cost you money or a pause, we'd like to hear about it.</p>
+    <p><a data-dest="social:x-okenz" href="https://x.com/menz_oscar29819/status/2116961724528263257">Reply on X</a> · <a data-dest="social:threads-okenz" href="https://www.threads.com/@omenz.inc/post/DfNZYyggVn3">Reply on Threads</a> · <a data-dest="contact:email" href="mailto:hello@omenz.org">hello@omenz.org</a></p>
+  </section>
+</main>
+<footer><div class="wrap">© 2026 OMENZ. All rights reserved. · <a href="/">Home</a> · <a href="mailto:hello@omenz.org">hello@omenz.org</a></div></footer>
+<script>
+  /* OMENZ first-party analytics: page views + outbound clicks. No cookies, no IP stored, honors Do Not Track. */
+  (function () {
+    if (navigator.doNotTrack === "1" || window.doNotTrack === "1") return;
+    var q = new URLSearchParams(location.search);
+    function send(d) {
+      try {
+        d.p = location.pathname; d.r = document.referrer || ""; d.w = window.innerWidth;
+        ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { if (q.get(k)) d[k] = q.get(k); });
+        var b = JSON.stringify(d);
+        if (navigator.sendBeacon) navigator.sendBeacon("/api/t", new Blob([b], { type: "application/json" }));
+        else fetch("/api/t", { method: "POST", body: b, keepalive: true, headers: { "Content-Type": "application/json" } });
+      } catch (e) {}
+    }
+    send({ t: "pv" });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[data-dest]");
+      if (a) send({ t: "click", dest: a.getAttribute("data-dest"), href: a.href });
+    });
+  })();
+  </script>
+</body>
+</html>

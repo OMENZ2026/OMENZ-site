@@ -93,7 +93,15 @@ module.exports = {
  ],
  "llms": [
   "text/plain; charset=utf-8",
-  "# OMENZ\n\n> Structured digital education and small tools that help AI agents and businesses work with web data.\n\n## Flyers (compact, signed, machine-readable offers)\n- [Flyer index](https://www.omenz.org/.well-known/omenz-flyer.json)\n- [JSON Feed](https://www.omenz.org/feed.json)\n- [Agent-Ready Checker: can AI assistants find and read a business website? $0.10 per site](https://www.omenz.org/flyers/agent-ready-checker.json)\n- [Lead List Website Check: is a business website live, parked, hijacked or bot-walled? $0.002 per site](https://www.omenz.org/flyers/lead-list-website-check.json)\n\n## Tools\n- [Agent-Ready Checker](https://apify.com/omenz/agent-ready-checker)\n- [Lead List Website Check](https://apify.com/omenz/lead-list-website-check)\n"
+  "# OMENZ\n\n> Tools, research and stories for the agentic internet. OMENZ builds small, tested pay-per-use tools for AI agents, publishes what its experiments find (SCRIBE), offers digital education and consulting, and tells stories from the OMENZ universe.\n\nContact: hello@omenz.org\n\n## Agent tools (Apify, pay per use)\n- [Changed?: has a page really changed since your last check? $0.001 per page](https://apify.com/omenz/changed-page-check)\n- [Lead List Website Check: live, parked, hijacked or bot-walled? $0.002 per site](https://apify.com/omenz/lead-list-website-check)\n- [Agent-Ready Checker: can AI assistants find and read a business website? $0.10 per site](https://apify.com/omenz/agent-ready-checker)\n\n## Flyers (compact, signed, machine-readable offers)\n- [Flyer index](https://www.omenz.org/.well-known/omenz-flyer.json)\n- [JSON Feed](https://www.omenz.org/feed.json)\n- [Agent-Ready Checker: can AI assistants find and read a business website? $0.10 per site](https://www.omenz.org/flyers/agent-ready-checker.json)\n- [Lead List Website Check: is a business website live, parked, hijacked or bot-walled? $0.002 per site](https://www.omenz.org/flyers/lead-list-website-check.json)\n\n## Research\n- [SCRIBE: OMENZ public research record](https://www.omenz.org/research/)\n\n## Services, education and digital products (Gumroad)\n- [Agent-Ready Check: human-reviewed audit, $149](https://kadeelac.gumroad.com/l/gxdbx)\n- [Workflow Diagnostic (pilot), $149](https://kadeelac.gumroad.com/l/noqcwz)\n- [OMENZ Prompt Pack, Volume 1, $9](https://kadeelac.gumroad.com/l/fazlvp)\n- [Caught in Code, Chapter One, $10](https://kadeelac.gumroad.com/l/ybgil)\n\n## AI persona\n- [SheGPT](https://shegpt.online)\n"
+ ],
+ "robots": [
+  "text/plain; charset=utf-8",
+  "User-agent: *\nAllow: /\n\nSitemap: https://www.omenz.org/sitemap.xml\n"
+ ],
+ "sitemap": [
+  "application/xml; charset=utf-8",
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://www.omenz.org/</loc></url>\n  <url><loc>https://www.omenz.org/research/</loc></url>\n  <url><loc>https://www.omenz.org/llms.txt</loc></url>\n  <url><loc>https://www.omenz.org/feed.json</loc></url>\n</urlset>\n"
  ],
  "flyer-agent-ready-checker": [
   "application/json",

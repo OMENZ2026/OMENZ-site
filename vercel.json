@@ -19,6 +19,14 @@
     {
       "source": "/flyers/:id.json",
       "destination": "/api/hit?f=flyer-:id"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/hit?f=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/hit?f=sitemap"
     }
   ]
 }

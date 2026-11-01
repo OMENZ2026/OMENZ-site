@@ -3,118 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OMENZ | Structured Digital Education</title>
-  <link rel="icon" type="image/png"
-  href="omenz-logo.png">  
+  <title>OMENZ | Tools, research and stories for the agentic internet</title>
+  <meta name="description" content="OMENZ builds small, tested tools for AI agents, publishes what its experiments find, offers digital education and consulting, and tells stories from the OMENZ universe." />
+  <link rel="canonical" href="https://www.omenz.org/" />
+  <link rel="icon" type="image/png" href="omenz-logo.png" />
+  <meta property="og:title" content="OMENZ" />
+  <meta property="og:description" content="Tools, research and stories for the agentic internet. Evolve or Dissolve." />
+  <meta property="og:url" content="https://www.omenz.org/" />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <meta property="og:type" content="website" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
-      line-height: 1.6;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 60px 20px;
-    }
-    h1, h2 {
-      margin-bottom: 10px;
-    }
-    h1 {
-      font-size: 3rem;
-      letter-spacing: 2px;
-    }
-    h2 {
-      font-size: 1.5rem;
-      margin-top: 40px;
-      border-bottom: 1px solid #444;
-      padding-bottom: 10px;
-    }
-    p, li {
-      font-size: 1rem;
-      color: #ddd;
-    }
-    ul {
-      padding-left: 20px;
-    }
-    .tagline {
-      font-size: 1.2rem;
-      color: #bbb;
-      margin-bottom: 30px;
-    }
-    .footer {
-      margin-top: 50px;
-      font-size: 0.9rem;
-      color: #888;
-      border-top: 1px solid #333;
-      padding-top: 20px;
-    }
-    .header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 10px;
-}
-
-.logo {
-width: 80px;
-height: auto;
-filter: drop-shadow(0 0 12px #3b82f6);
-}
-
-.header h1 {
-margin: 0;
-}
+    :root { --bg:#000; --panel:#0c0f14; --line:#1f2733; --text:#f2f4f7; --muted:#b5bdc8; --dim:#7d8794; --accent:#3b82f6; --accent2:#40e0d0; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    a { color: var(--accent2); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    header.top { position: sticky; top: 0; background: rgba(0,0,0,.92); border-bottom:1px solid var(--line); z-index: 5; }
+    header.top .wrap { display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; font-size:1.2rem; }
+    .brand img { width:36px; filter: drop-shadow(0 0 8px var(--accent)); }
+    nav a { color: var(--muted); text-decoration:none; margin-left:18px; font-size:.95rem; }
+    nav a:hover { color: var(--text); }
+    .hero { padding: 72px 0 40px; }
+    .hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 0 0 12px; letter-spacing: 2px; }
+    .hero p.lead { font-size: 1.25rem; color: var(--muted); max-width: 720px; margin: 0 0 8px; }
+    .hero p.motto { color: var(--accent2); font-weight: 700; letter-spacing: 1px; margin: 0 0 28px; }
+    .btn { display:inline-block; padding:11px 18px; border-radius:6px; text-decoration:none; font-weight:700; margin: 0 10px 10px 0; }
+    .btn.primary { background: var(--accent); color:#fff; }
+    .btn.ghost { border:1px solid var(--line); color: var(--text); }
+    section { padding: 44px 0; border-top: 1px solid var(--line); }
+    section h2 { font-size: 1.6rem; margin: 0 0 6px; }
+    section p.sub { color: var(--dim); margin: 0 0 22px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card { background: var(--panel); border:1px solid var(--line); border-radius: 10px; padding: 18px; display:flex; flex-direction:column; }
+    .card h3 { margin: 0 0 6px; font-size: 1.1rem; }
+    .card p { color: var(--muted); margin: 0 0 12px; font-size: .95rem; flex: 1; }
+    .card .meta { color: var(--dim); font-size: .85rem; margin-bottom: 12px; }
+    .card a.go { font-weight: 700; text-decoration: none; }
+    ul.edu { color: var(--muted); padding-left: 20px; margin: 6px 0 14px; }
+    .two { display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .social a { display:inline-block; margin: 0 14px 10px 0; font-weight:700; text-decoration:none; }
+    footer { border-top:1px solid var(--line); padding: 28px 0 40px; color: var(--dim); font-size: .9rem; }
+    footer a { color: var(--muted); }
+    @media (max-width: 720px) { header.top .wrap { flex-wrap:wrap; height:auto; padding-top:10px; padding-bottom:10px; } nav { width:100%; display:flex; flex-wrap:wrap; gap:2px 14px; margin-top:6px; } nav a { margin-left:0; font-size:.9rem; } .two { grid-template-columns: 1fr; } .hero { padding-top: 44px; } }
   </style>
   <!-- omenz-flyers -->
   <link rel="alternate" type="application/feed+json" title="OMENZ flyers" href="/feed.json">
   <link rel="alternate" type="application/json" title="OMENZ flyer index" href="/.well-known/omenz-flyer.json">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"OMENZ","url":"https://www.omenz.org","makesOffer":[{"@type":"Offer","name":"Agent-Ready Checker: can AI assistants find and read a business website? $0.10 per site","url":"https://apify.com/omenz/agent-ready-checker","price":"0.10","priceCurrency":"USD"},{"@type":"Offer","name":"Lead List Website Check: is a business website live, parked, hijacked or bot-walled? $0.002 per site","url":"https://apify.com/omenz/lead-list-website-check","price":"0.002","priceCurrency":"USD"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"OMENZ","url":"https://www.omenz.org","logo":"https://www.omenz.org/omenz-logo.png","email":"hello@omenz.org","slogan":"Evolve or Dissolve","description":"OMENZ builds small, tested tools for AI agents, publishes what its experiments find, offers digital education and consulting, and tells stories from the OMENZ universe.","sameAs":["https://x.com/menz_oscar29819","https://www.threads.com/@omenz.inc","https://www.instagram.com/omenz.inc","https://www.tiktok.com/@oscarmenz2021","https://apify.com/omenz","https://kadeelac.gumroad.com"],"makesOffer":[{"@type":"Offer","name":"Agent-Ready Checker: can AI assistants find and read a business website? $0.10 per site","url":"https://apify.com/omenz/agent-ready-checker","price":"0.10","priceCurrency":"USD"},{"@type":"Offer","name":"Lead List Website Check: is a business website live, parked, hijacked or bot-walled? $0.002 per site","url":"https://apify.com/omenz/lead-list-website-check","price":"0.002","priceCurrency":"USD"},{"@type":"Offer","name":"Changed?: has a page really changed since your last check? $0.001 per page","url":"https://apify.com/omenz/changed-page-check","price":"0.001","priceCurrency":"USD"},{"@type":"Offer","name":"Agent-Ready Check: can AI assistants find your business? (human-reviewed audit)","url":"https://kadeelac.gumroad.com/l/gxdbx","price":"149","priceCurrency":"USD"},{"@type":"Offer","name":"Workflow Diagnostic (pilot)","url":"https://kadeelac.gumroad.com/l/noqcwz","price":"149","priceCurrency":"USD"},{"@type":"Offer","name":"OMENZ Prompt Pack, Volume 1","url":"https://kadeelac.gumroad.com/l/fazlvp","price":"9","priceCurrency":"USD"},{"@type":"Offer","name":"Caught in Code, Chapter One","url":"https://kadeelac.gumroad.com/l/ybgil","price":"10","priceCurrency":"USD"}]}</script>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-<h1>OMENZ</h1>
-<img src="omenz-logo.png" class="logo" alt="OMENZ Logo">
-</div>
-    <p class="tagline">Structured Digital Education & Consulting</p>
-
-    <h2>About OMENZ</h2>
-    <p>
-      OMENZ is a structured digital education and consulting organization focused on
-      helping individuals understand and navigate modern digital systems responsibly.
-      Our work centers on digital literacy, operational structure, AI workflow education,
-      and governance-first learning.
-    </p>
-
-    <h2>Educational Services</h2>
-    <ul>
-      <li>Artificial intelligence literacy and workflow education</li>
-      <li>Structured digital systems guidance</li>
-      <li>Operational and process-oriented consulting</li>
-      <li>Digital asset and technology education</li>
-      <li>Governance-first digital learning and support</li>
-    </ul>
-
-    <h2>How We Deliver</h2>
-    <ul>
-      <li>Online non-downloadable educational content</li>
-      <li>Instructional guidance</li>
-      <li>Educational consulting</li>
-      <li>Structured learning resources</li>
-    </ul>
-
-    <h2>Contact</h2>
-    <p>
-      OMENZ is currently expanding its digital education framework and public-facing resources.
-      More information, educational materials, and communication options will be added soon.
-    </p>
-
-    <div class="footer">
-      <p>© 2026 OMENZ. All rights reserved.</p>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="omenz-logo.png" alt="OMENZ logo">OMENZ</a>
+      <nav>
+        <a href="#tools">Agent Tools</a>
+        <a href="#services">Services</a>
+        <a href="/research/">Research</a>
+        <a href="#ai-stories">AI &amp; Stories</a>
+        <a href="#contact">Contact</a>
+      </nav>
     </div>
-  </div>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <h1>OMENZ</h1>
+      <p class="lead">Tools, research and stories for the agentic internet. We build small tools that AI agents and businesses can rely on, test them in public, and share what we learn.</p>
+      <p class="motto">Evolve or Dissolve.</p>
+      <a class="btn primary" href="#tools">See the tools</a>
+      <a class="btn ghost" href="/research/">Read the research</a>
+    </div>
+
+    <section id="tools">
+      <h2>Agent Tools</h2>
+      <p class="sub">Pay-per-use tools on Apify for developers, pipelines and AI agents. We test tools on data they have never seen and publish the results, misses included.</p>
+      <div class="grid">
+        <div class="card"><h3>Changed?</h3><p>Has a page really changed since your last check, or did it just get a new timestamp? Ignores counters and markup churn; never ignores prices, hours or content.</p><div class="meta">$0.001 per page · tested: 0 of 43 real changes missed</div><a class="go" data-dest="apify:changed-page-check" href="https://apify.com/omenz/changed-page-check?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Open on Apify →</a></div>
+        <div class="card"><h3>Lead List Website Check</h3><p>Is a business website live, parked, hijacked by spam, or behind bot protection? One fast check per URL, with the next action your pipeline should take.</p><div class="meta">$0.002 per site · tested: 40 of 40 on a blind holdout</div><a class="go" data-dest="apify:lead-list-website-check" href="https://apify.com/omenz/lead-list-website-check?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Open on Apify →</a></div>
+        <div class="card"><h3>Agent-Ready Checker</h3><p>Can AI assistants find and read a business website? A 0–100 score with prioritized, plain-language fixes.</p><div class="meta">$0.10 per site</div><a class="go" data-dest="apify:agent-ready-checker" href="https://apify.com/omenz/agent-ready-checker?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Open on Apify →</a></div>
+      </div>
+      <p style="margin-top:16px"><a data-dest="apify:profile" href="https://apify.com/omenz?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">All OMENZ tools on Apify →</a></p>
+    </section>
+
+    <section id="services">
+      <h2>Services &amp; Education</h2>
+      <div class="two">
+        <div>
+          <p>OMENZ is a structured digital education and consulting organization focused on helping individuals understand and navigate modern digital systems responsibly. Our work centers on digital literacy, operational structure, AI workflow education, and governance-first learning.</p>
+          <strong>Educational Services</strong>
+          <ul class="edu">
+            <li>Artificial intelligence literacy and workflow education</li>
+            <li>Structured digital systems guidance</li>
+            <li>Operational and process-oriented consulting</li>
+            <li>Digital asset and technology education</li>
+            <li>Governance-first digital learning and support</li>
+          </ul>
+          <strong>How We Deliver</strong>
+          <ul class="edu">
+            <li>Online non-downloadable educational content</li>
+            <li>Instructional guidance</li>
+            <li>Educational consulting</li>
+            <li>Structured learning resources</li>
+          </ul>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr">
+          <div class="card"><h3>Agent-Ready Check</h3><p>Can AI assistants find your business, and is what they say right? We ask, show you the answers, and give you a plain-language fix list.</p><div class="meta">$149 · human-reviewed</div><a class="go" data-dest="gumroad:agent-ready-check" href="https://kadeelac.gumroad.com/l/gxdbx?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Get it on Gumroad →</a></div>
+          <div class="card"><h3>Workflow Diagnostic</h3><p>A structured look at how your work flows today and where AI and automation genuinely help.</p><div class="meta">$149 · pilot</div><a class="go" data-dest="gumroad:workflow-diagnostic" href="https://kadeelac.gumroad.com/l/noqcwz?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Get it on Gumroad →</a></div>
+          <div class="card"><h3>OMENZ Prompt Pack, Volume 1</h3><p>Structured prompts for everyday AI work.</p><div class="meta">$9</div><a class="go" data-dest="gumroad:prompt-pack" href="https://kadeelac.gumroad.com/l/fazlvp?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Get it on Gumroad →</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="research">
+      <h2>Research (SCRIBE)</h2>
+      <p class="sub">SCRIBE is OMENZ's public record: what we tested, what we expected, what actually happened, and what we changed. Failures included.</p>
+      <div class="grid">
+        <div class="card"><h3>Agents decide to verify before they read</h3><p>Handing AI agents verified evidence didn't stop them re-checking. Stating the claim where they plan did: simple-lookup re-checks fell to 0%.</p><div class="meta">Confío · Oct 2026</div><a class="go" data-dest="research:001" href="/research/#scribe-001">Read →</a></div>
+        <div class="card"><h3>Changed? failed first, then shipped</h3><p>Version 1 missed one page our test said it couldn't. We kept the bar, fixed it, and version 2 missed 0 of 43 real changes.</p><div class="meta">Changed? · Nov 2026</div><a class="go" data-dest="research:002" href="/research/#scribe-002">Read →</a></div>
+        <div class="card"><h3>Open question: token state</h3><p>Do lending markets and agent-payment builders check a token's state before accepting it? We're asking.</p><div class="meta">OKENZ · open</div><a class="go" data-dest="research:okenz-question" href="/research/#okenz-question">Read →</a></div>
+      </div>
+      <p style="margin-top:16px"><a data-dest="research:index" href="/research/">All research →</a></p>
+    </section>
+
+    <section id="ai-stories">
+      <h2>AI &amp; Stories</h2>
+      <p class="sub">The OMENZ universe: characters, chapters and an AI persona you can talk to.</p>
+      <div class="grid">
+        <div class="card"><h3>SheGPT</h3><p>"Born from Ellie + Malik. Programmed by love. Powered by truth." Meet SheGPT and chat with her.</p><a class="go" data-dest="shegpt" href="https://shegpt.online/?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Talk to SheGPT →</a></div>
+        <div class="card"><h3>Caught in Code: Chapter One</h3><p>The first chapter of the OMENZ story.</p><div class="meta">$10</div><a class="go" data-dest="gumroad:caught-in-code" href="https://kadeelac.gumroad.com/l/ybgil?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=frontdoor">Read it on Gumroad →</a></div>
+      </div>
+    </section>
+
+    <section id="developers">
+      <h2>For Developers &amp; Agents</h2>
+      <p class="sub">Machine-readable entry points to everything above.</p>
+      <p><a data-dest="machine:llms" href="/llms.txt">llms.txt</a> · <a data-dest="machine:feed" href="/feed.json">JSON Feed of signed offers</a> · <a data-dest="machine:flyer-index" href="/.well-known/omenz-flyer.json">Signed flyer index</a> · <a data-dest="apify:profile" href="https://apify.com/omenz?utm_source=omenz.org&amp;utm_medium=referral&amp;utm_campaign=developers">Apify API</a></p>
+    </section>
+
+    <section id="follow">
+      <h2>Follow OMENZ</h2>
+      <div class="social">
+        <a data-dest="social:tiktok" href="https://www.tiktok.com/@oscarmenz2021">TikTok</a>
+        <a data-dest="social:instagram" href="https://www.instagram.com/omenz.inc">Instagram</a>
+        <a data-dest="social:threads" href="https://www.threads.com/@omenz.inc">Threads</a>
+        <a data-dest="social:x" href="https://x.com/menz_oscar29819">X</a>
+      </div>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Questions, consulting, partnerships, or research replies: <a data-dest="contact:email" href="mailto:hello@omenz.org">hello@omenz.org</a></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© 2026 OMENZ. All rights reserved. · <a href="/research/">Research</a> · <a href="mailto:hello@omenz.org">hello@omenz.org</a></div>
+  </footer>
+
+  <script>
+  /* OMENZ first-party analytics: page views + outbound clicks. No cookies, no IP stored, honors Do Not Track. */
+  (function () {
+    if (navigator.doNotTrack === "1" || window.doNotTrack === "1") return;
+    var q = new URLSearchParams(location.search);
+    function send(d) {
+      try {
+        d.p = location.pathname; d.r = document.referrer || ""; d.w = window.innerWidth;
+        ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { if (q.get(k)) d[k] = q.get(k); });
+        var b = JSON.stringify(d);
+        if (navigator.sendBeacon) navigator.sendBeacon("/api/t", new Blob([b], { type: "application/json" }));
+        else fetch("/api/t", { method: "POST", body: b, keepalive: true, headers: { "Content-Type": "application/json" } });
+      } catch (e) {}
+    }
+    send({ t: "pv" });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[data-dest]");
+      if (a) send({ t: "click", dest: a.getAttribute("data-dest"), href: a.href });
+    });
+  })();
+  </script>
 </body>
 </html>

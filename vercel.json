@@ -27,6 +27,16 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/hit?f=sitemap"
+    },
+    {
+      "source": "/api/tollbooth/:path*",
+      "destination": "/api/tollbooth"
     }
-  ]
+  ],
+  "functions": {
+    "api/tollbooth.py": {
+      "includeFiles": "api/_tollbooth/**",
+      "maxDuration": 30
+    }
+  }
 }

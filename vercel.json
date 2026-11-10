@@ -38,5 +38,12 @@
       "includeFiles": "api/_tollbooth/**",
       "maxDuration": 30
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/s/run-it",
+      "destination": "https://omenz-shop.fourthwall.com/products/run-it",
+      "permanent": false
+    }
+  ]
 }

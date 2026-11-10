@@ -44,6 +44,11 @@
       "source": "/s/run-it",
       "destination": "https://omenz-shop.fourthwall.com/products/run-it",
       "permanent": false
+    },
+    {
+      "source": "/s/evolve-or-dissolve",
+      "destination": "https://omenz-shop.fourthwall.com/products/evolve-or-dissolve",
+      "permanent": false
     }
   ]
 }

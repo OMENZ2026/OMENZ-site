@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Try the Reply Autopilot | OMENZ</title>
+  <meta name="description" content="Ask a demo restaurant anything a customer would. Watch OMENZ's Local Reply Autopilot answer from the owner's facts in seconds, in English or Spanish." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="Try the Local Reply Autopilot | OMENZ" />
+  <meta property="og:description" content="Customer questions answered in seconds from your own facts. Tricky ones go to you." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#000; --panel:#0c0f14; --line:#1f2733; --text:#f2f4f7; --muted:#b5bdc8; --dim:#7d8794; --accent:#3b82f6; --accent2:#40e0d0; --warn:#f5b94a; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 60px; }
+    header { display:flex; align-items:center; gap:10px; padding:18px 0; border-bottom:1px solid var(--line); }
+    header img { width:34px; filter: drop-shadow(0 0 8px var(--accent)); }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    h1 { font-size: clamp(1.6rem, 6vw, 2.3rem); margin: 28px 0 6px; }
+    p.lead { color: var(--muted); margin: 0 0 20px; }
+    details { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-bottom:18px; color:var(--muted); font-size:.92rem; }
+    summary { cursor:pointer; color:var(--text); font-weight:700; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0 12px; }
+    .chips button { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer; font-size:.9rem; }
+    textarea { width:100%; min-height:80px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:1rem; font-family:inherit; }
+    .go { margin-top:10px; width:100%; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:13px; font-size:1.05rem; font-weight:700; cursor:pointer; }
+    .go:disabled { opacity:.6; cursor:wait; }
+    .hp { position:absolute; left:-9999px; }
+    #out { display:none; background:var(--panel); border:1px solid var(--accent2); border-radius:10px; padding:16px; margin-top:16px; white-space:pre-wrap; }
+    .badge { display:inline-block; font-size:.8rem; font-weight:700; border-radius:6px; padding:2px 8px; margin-bottom:8px; }
+    .ok { background:#0f2f2b; color:var(--accent2); } .owner { background:#3a2a0b; color:var(--warn); }
+    .cta { margin-top:30px; border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--panel); }
+    .cta a.btn { display:inline-block; margin-top:10px; background:var(--accent2); color:#000; font-weight:700; text-decoration:none; border-radius:8px; padding:11px 16px; }
+    .fine { color: var(--dim); font-size: .82rem; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><img src="/omenz-logo.png" alt="OMENZ logo" /><a href="/">OMENZ</a></header>
+    <h1>Try the Local Reply Autopilot</h1>
+    <p class="lead">Ask <strong>Casa Arroyo Taqueria</strong> (a made-up restaurant) anything a customer would. It answers from the owner's facts in seconds, in English or Spanish, and hands the tricky stuff to the owner.</p>
+    <details><summary>What the assistant knows (the owner's facts)</summary>
+      Hours: Mon–Thu 11am–9pm, Fri–Sat 11am–10pm, closed Sunday · 100 Demo St, Pasadena · Tacos $4.50, burritos $12, family taco tray (serves 6) $58 · Reservations for 6+ only · Catering 20–150 guests, $400 minimum, 72 hours notice · Vegetarian options; no dedicated gluten-free kitchen · Free lot behind the building · Cards, Apple Pay, cash.<br/>
+      <em>The owner handles: complaints, refunds, catering quotes, allergies, and anything not listed.</em>
+    </details>
+    <div class="chips" id="chips">
+      <button type="button">Are you open Sunday?</button>
+      <button type="button">¿Tienen opciones vegetarianas?</button>
+      <button type="button">Catering for 80 people next Friday?</button>
+      <button type="button">My son has a peanut allergy. Is the food safe?</button>
+      <button type="button">Table for 8 on Saturday?</button>
+    </div>
+    <form id="f">
+      <textarea id="q" maxlength="500" placeholder="Type a customer question…" required></textarea>
+      <input class="hp" type="text" name="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <button class="go" id="go" type="submit">Ask the restaurant</button>
+    </form>
+    <div id="out"></div>
+    <div class="cta">
+      <strong>Want this for your business?</strong><br/>
+      Every website or email inquiry answered from your own facts in seconds. Complaints, quotes and allergies come straight to you. You approve every reply for the first 2 weeks.<br/>
+      <strong>$800 setup + $500/month</strong>, month-to-month.<br/>
+      <a class="btn" id="interest" href="mailto:hello@omenz.org?subject=Local%20Reply%20Autopilot">Get it for my business</a>
+    </div>
+    <p class="fine">Demo only: the restaurant is fictional. Your question is sent to Anthropic's Claude to draft the reply. We don't store your question text, only anonymous counts. Please don't type personal info. Limit: 5 questions a day. No cookies.</p>
+  </div>
+  <script>
+    const src = new URLSearchParams(location.search).get("src") || "";
+    const post = (body) => fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ src, ...body }) });
+    post({ event: "view" }).catch(() => {});
+    const q = document.getElementById("q"), go = document.getElementById("go"), out = document.getElementById("out");
+    document.getElementById("chips").addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") { q.value = e.target.textContent; q.focus(); } });
+    document.getElementById("interest").addEventListener("click", () => { try { navigator.sendBeacon("/api/demo", new Blob([JSON.stringify({ src, event: "interest" })], { type: "application/json" })); } catch (e) {} });
+    const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    document.getElementById("f").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      go.disabled = true; go.textContent = "Answering…";
+      try {
+        const r = await post({ q: q.value, hp: document.getElementById("hp").value });
+        const d = await r.json();
+        out.style.display = "block";
+        if (!r.ok) { out.innerHTML = esc(d.message || "Something went wrong."); }
+        else if (d.is_spam) { out.innerHTML = '<span class="badge owner">Spam: no reply sent</span>\nThat looks like a sales pitch, so the assistant stays quiet.'; }
+        else {
+          const badge = d.handoff_to_owner ? '<span class="badge owner">Sent to the owner: ' + esc(d.handoff_reason || "") + '</span>' : '<span class="badge ok">Answered from the owner\'s facts</span>';
+          out.innerHTML = badge + "\n" + esc(d.reply) + '\n\n<span class="fine">Drafted in ' + d.seconds + ' seconds</span>';
+        }
+      } catch (err) { out.style.display = "block"; out.textContent = "Network hiccup. Try again."; }
+      go.disabled = false; go.textContent = "Ask the restaurant";
+    });
+  </script>
+</body>
+</html>

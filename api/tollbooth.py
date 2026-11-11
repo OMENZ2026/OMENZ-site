@@ -154,7 +154,7 @@ def _payer(request):
 
 def _ua_class(ua):
     u = (ua or "").lower()
-    for k, c in (("x402", "x402-sdk"), ("python", "sdk"), ("node", "sdk"), ("axios", "sdk"), ("httpx", "sdk"), ("curl", "curl"),
+    for k, c in (("omenz-", "test"), ("x402", "x402-sdk"), ("python", "sdk"), ("node", "sdk"), ("axios", "sdk"), ("httpx", "sdk"), ("curl", "curl"),
                  ("bot", "bot"), ("agent", "agent"), ("mozilla", "browser")):
         if k in u:
             return c

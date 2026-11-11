@@ -49,6 +49,11 @@
       "source": "/s/evolve-or-dissolve",
       "destination": "https://omenz-shop.fourthwall.com/products/evolve-or-dissolve",
       "permanent": false
+    },
+    {
+      "source": "/s/caught-in-code",
+      "destination": "https://omenz-shop.fourthwall.com/products/caught-in-code-the-divine-download-tee",
+      "permanent": false
     }
   ]
 }

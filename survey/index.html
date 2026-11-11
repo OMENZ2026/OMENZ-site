@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OMENZ Survey | What tool would save you time?</title>
+  <meta name="description" content="Two minutes. Tell OMENZ what task wastes your time and what you think of the tools you use. We build what people actually need." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="What tool would save you time? | OMENZ" />
+  <meta property="og:description" content="Two minutes. Tell us what wastes your time. We build what people actually need." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#000; --panel:#0c0f14; --line:#1f2733; --text:#f2f4f7; --muted:#b5bdc8; --dim:#7d8794; --accent:#3b82f6; --accent2:#40e0d0; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 0 16px 60px; }
+    header { display:flex; align-items:center; gap:10px; padding:18px 0; border-bottom:1px solid var(--line); }
+    header img { width:34px; filter: drop-shadow(0 0 8px var(--accent)); }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    h1 { font-size: clamp(1.7rem, 6vw, 2.4rem); margin: 28px 0 6px; }
+    p.lead { color: var(--muted); margin: 0 0 24px; }
+    .q { display:block; font-weight:700; margin: 22px 0 6px; }
+    .hint { color: var(--dim); font-weight: 400; font-size: .9rem; }
+    input[type=text], input[type=email], textarea { width:100%; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:1rem; font-family:inherit; }
+    textarea { min-height: 90px; }
+    .row { display:flex; flex-wrap:wrap; gap:8px; }
+    .row label { display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 12px; cursor:pointer; }
+    button { margin-top: 26px; width:100%; background: var(--accent); color:#fff; border:0; border-radius:8px; padding:14px; font-size:1.05rem; font-weight:700; cursor:pointer; }
+    .hp { position:absolute; left:-9999px; }
+    #done { display:none; background:var(--panel); border:1px solid var(--accent2); border-radius:10px; padding:20px; margin-top:24px; }
+    #done a { color: var(--accent2); }
+    .fine { color: var(--dim); font-size: .85rem; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><img src="/omenz-logo.png" alt="OMENZ logo" /><a href="/">OMENZ</a></header>
+    <h1>What tool would save you time?</h1>
+    <p class="lead">Two minutes. Tell us what wastes your time and what you think of the tools out there. OMENZ builds what people actually need.</p>
+    <form id="f">
+      <span class="q">You are… <span class="hint">(pick one)</span></span>
+      <div class="row">
+        <label><input type="radio" name="who" value="business-owner" required /> Business owner</label>
+        <label><input type="radio" name="who" value="creator" /> Creator</label>
+        <label><input type="radio" name="who" value="developer" /> Developer / AI builder</label>
+        <label><input type="radio" name="who" value="employee" /> I work for someone</label>
+        <label><input type="radio" name="who" value="other" /> Other</label>
+      </div>
+      <label class="q" for="task">1. What task eats your time every week?</label>
+      <textarea id="task" name="task" required placeholder="e.g. answering the same customer questions, posting to every social app, keeping my business info right online"></textarea>
+      <label class="q" for="tools">2. What do you use for it now? <span class="hint">(apps, tools, or "nothing")</span></label>
+      <input type="text" id="tools" name="tools" />
+      <label class="q" for="hate">3. What do you hate about those tools?</label>
+      <textarea id="hate" name="hate"></textarea>
+      <span class="q">4. Would you pay for a tool that fixes it?</span>
+      <div class="row">
+        <label><input type="radio" name="pay" value="no" /> No</label>
+        <label><input type="radio" name="pay" value="under-10" /> Under $10/mo</label>
+        <label><input type="radio" name="pay" value="10-30" /> $10–30/mo</label>
+        <label><input type="radio" name="pay" value="30-100" /> $30–100/mo</label>
+        <label><input type="radio" name="pay" value="one-time" /> One-time price</label>
+      </div>
+      <label class="q" for="rate">5. Tried an OMENZ product? How was it? <span class="hint">(optional)</span></label>
+      <input type="text" id="rate" name="rate" placeholder="e.g. DIG 4/5, the shirts, the Agent-Ready Check…" />
+      <label class="q" for="want">6. If we could build you one tool, what would it do?</label>
+      <textarea id="want" name="want"></textarea>
+      <label class="q" for="email">Email <span class="hint">(optional, only if you want to hear when we build it)</span></label>
+      <input type="email" id="email" name="email" />
+      <input class="hp" type="text" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <button type="submit">Send</button>
+      <p class="fine">No cookies, no tracking. We never sell your answers. Email is optional and only used to tell you when we build it.</p>
+    </form>
+    <div id="done"><strong>Thank you.</strong> Your answer helps decide what OMENZ builds next. <a href="https://omenz-shop.fourthwall.com">See the Chapter 1 shirts</a> or <a href="/">explore OMENZ</a>.</div>
+  </div>
+  <script>
+    const f = document.getElementById("f");
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const d = Object.fromEntries(new FormData(f).entries());
+      d.src = new URLSearchParams(location.search).get("src") || "";
+      try { await fetch("/api/survey", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) }); } catch (err) {}
+      f.style.display = "none"; document.getElementById("done").style.display = "block";
+    });
+  </script>
+</body>
+</html>

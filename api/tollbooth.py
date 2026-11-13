@@ -7,6 +7,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET /api/tollbooth/v1/agent-ready?url=     $0.10
   GET /api/tollbooth/v1/site-check?url=      $0.01
   GET /api/tollbooth/v1/changed?url=         $0.005
+  GET /api/tollbooth/v1/local-facts?url=     $0.01   Local Facts: phone/address/hours/holiday notices from the business's own site
   POST /api/tollbooth/v1/locker/put           $0.002  Agent Locker: check a job's resume packet in (encrypted, <=30 days)
   GET  /api/tollbooth/v1/locker/get?id=       $0.001  check it out (header X-Locker-Key; optional fields=a,b)
   DELETE /api/tollbooth/v1/locker/delete?id=  free    remove it (header X-Locker-Key)
@@ -31,6 +32,7 @@ import changed  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
 import handoff  # noqa: E402
+import local_facts  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
 import site_check  # noqa: E402
@@ -46,10 +48,11 @@ PAY_TO = os.environ.get("X402_PAY_TO", "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e8
 FACILITATOR = os.environ.get("X402_FACILITATOR", "https://facilitator.payai.network")
 BASE = "/api/tollbooth"
 
-PRICES = {"agent-ready": "$0.10", "site-check": "$0.01", "changed": "$0.005"}
+PRICES = {"agent-ready": "$0.10", "site-check": "$0.01", "changed": "$0.005", "local-facts": "$0.01"}
 DESCRIPTIONS = {
     "agent-ready": "Score 0-100 for how well AI assistants and agents can find, read and use a business website, with prioritized plain-language fixes. Deterministic, no AI calls. By OMENZ.",
     "site-check": "Website health and business facts for one URL (alive, still theirs, readable; contact paths, structured data). Deterministic. By OMENZ.",
+    "local-facts": "What a local business's OWN website says right now: phone, address, hours, and holiday/temporary-closure notices quoted word for word, each with its source. Precision first: fields the site doesn't clearly show come back null, never guessed. Flags hidden structured data that disagrees with the page, sites that moved to another domain, and multi-location sites. Deterministic, no AI calls. By OMENZ.",
     "changed": "Did a web page really change since your last visit? Content hash that ignores timestamps and boilerplate. Pass previous=<hash> to compare. By OMENZ.",
 }
 
@@ -203,6 +206,21 @@ def index():
 @app.get(BASE + "/v1/agent-ready")
 def agent_ready(url: str = Query(...)):
     return checker.check(url)
+
+
+@app.get(BASE + "/v1/local-facts")
+def local_facts_route(request: Request, url: str = Query(...)):
+    try:
+        r = local_facts.lookup(url)
+    except Exception:
+        request.state.extra.update({"action": "local_facts", "error": 502})
+        return JSONResponse({"error": "lookup failed; not charged"}, status_code=502)
+    got = [k for k in ("name", "phone", "address") if (r.get(k) or {}).get("value")]
+    request.state.extra.update({"action": "local_facts", "lf_status": r.get("status") or r.get("error"), "fields": len(got),
+                                "notices": len(r.get("notices") or []), "hidden": len(((r.get("hidden_data") or {}).get("items")) or [])})
+    if r.get("error") in ("invalid_url",):
+        return JSONResponse(r, status_code=400)
+    return r
 
 
 @app.get(BASE + "/v1/site-check")

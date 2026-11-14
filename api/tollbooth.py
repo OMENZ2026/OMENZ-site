@@ -18,6 +18,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/quote?url=&method=  $0.001  Price Quote: an x402 endpoint's live payment options, normalized to USD
   POST /api/tollbooth/v1/tx-preflight        $0.002  Transaction Preflight: GO/STOP before paying (budget, recipient, network, drift)
   POST /api/tollbooth/v1/secret-scan         $0.002  Secret-Leak Preflight: CLEAN/REVIEW/BLOCK before a payload leaves (nothing stored)
+  POST /api/tollbooth/v1/spend-gate          $0.001  Spend Gate: ALLOW/DENY/ESCALATE a proposed spend against the owner's policy (caps, recipients, hurdle)
+  GET  /api/tollbooth/v1/branch?url=&city=&zip=&street=  $0.01  Branch Resolver: the matching location page of a multi-location business + its facts
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -39,7 +41,9 @@ import handoff  # noqa: E402
 import local_facts  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
+import branch_resolver  # noqa: E402
 import secret_scan  # noqa: E402
+import spend_gate  # noqa: E402
 import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
@@ -173,6 +177,28 @@ ROUTES[f"POST {BASE}/v1/secret-scan"] = {
         body_type="json"),
 }
 
+ROUTES[f"POST {BASE}/v1/spend-gate"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+    "description": "Spend Gate: ALLOW, DENY or ESCALATE before your agent spends money. Send the owner's policy (per-transaction, daily and monthly caps, approval threshold, recipient/category/network allow and block lists, hurdle: minimum expected return multiple) and the proposed spend; get the decision with every reason and the budget left. Stateless: nothing stored. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"policy": {"max_per_tx_usd": 1, "daily_cap_usd": 5, "escalate_above_usd": 0.5, "allowed_networks": ["base"],
+                          "hurdle": {"min_return_multiple": 1.5}},
+               "spend": {"amount_usd": 0.1, "recipient": "0x...", "network": "base", "category": "data", "expected_value_usd": 0.5,
+                         "spent_today_usd": 1.2}},
+        input_schema={"properties": {"policy": {"type": "object"}, "spend": {"type": "object", "description": "amount_usd required"}},
+                      "required": ["spend"]}, body_type="json"),
+}
+ROUTES[f"GET {BASE}/v1/branch"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.01", "network": NETWORK},
+    "description": "Branch Resolver: which location page of a multi-location business is the one you mean? Give the business website and a city, ZIP or street; get the matching branch page with its phone, address, hours and notices from the business's own site. Ambiguous or missing matches come back as such with candidates, never guessed. Deterministic. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"url": "https://www.example-chain.com", "city": "Pasadena"},
+        input_schema={"properties": {"url": {"type": "string"}, "city": {"type": "string"}, "zip": {"type": "string"},
+                                     "street": {"type": "string"}}, "required": ["url"]}),
+}
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -299,6 +325,30 @@ def secret_scan_route(request: Request, body: dict = Body(...)):
     r = secret_scan.scan(body["payload"])
     request.state.extra.update({"action": "secret_scan", "verdict": r.get("verdict"), "findings": len(r.get("findings") or [])})
     return r
+
+
+@app.post(BASE + "/v1/spend-gate")
+def spend_gate_route(request: Request, body: dict = Body(...)):
+    if not isinstance(body.get("spend"), dict):
+        return JSONResponse({"error": "spend object with amount_usd required"}, status_code=422)
+    r = spend_gate.check(body.get("policy") if isinstance(body.get("policy"), dict) else {}, body["spend"])
+    request.state.extra.update({"action": "spend_gate", "decision": r.get("decision")})
+    if r.get("decision") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/branch")
+def branch_route(request: Request, url: str = Query(...), city: str | None = None, zip: str | None = None, street: str | None = None):
+    if not (city or zip or street):
+        return JSONResponse({"error": "give at least one of city, zip, street"}, status_code=422)
+    try:
+        r = branch_resolver.resolve(url, city, zip, street)
+    except Exception:
+        request.state.extra.update({"action": "branch", "error": 502})
+        return JSONResponse({"error": "lookup failed; not charged"}, status_code=502)
+    request.state.extra.update({"action": "branch", "b_status": r.get("status")})
+    return JSONResponse(json.loads(json.dumps(r, default=list)))
 
 
 @app.get(BASE + "/v1/site-check")

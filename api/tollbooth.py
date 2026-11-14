@@ -505,6 +505,24 @@ app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redo
 _mw = None
 
 
+@app.exception_handler(405)
+async def _wrong_method(request: Request, exc):
+    """Wrong HTTP method: tell the agent the right method, price and an example body instead of a bare 405."""
+    path = request.url.path.rstrip("/")
+    hits = [(k.split(" ", 1)[0], v) for k, v in ROUTES.items() if k.split(" ", 1)[1] == path]
+    body = {"error": "wrong method for this route"}
+    allow = getattr(exc, "headers", None) or {}
+    if hits:
+        m, v = hits[0]
+        info = (v.get("extensions") or {}).get("bazaar", {}).get("info", {}).get("input", {})
+        body.update({"use_method": m, "price_usd": v["accepts"]["price"], "network": "Base (USDC, x402)",
+                     "what_it_does": v.get("description", "")[:300],
+                     "example_body" if m == "POST" else "example_query": info.get("body") or info.get("queryParams"),
+                     "catalog": BASE, "openapi": "/openapi.json"})
+        allow = {"Allow": m}
+    return JSONResponse(body, status_code=405, headers=dict(allow))
+
+
 EVENTS_DATASET = "uO9teiO37CevrQOUy"
 PRICE_OF = {k.split(" ", 1)[1]: v["accepts"]["price"] for k, v in ROUTES.items()}
 

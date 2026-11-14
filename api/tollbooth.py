@@ -59,6 +59,9 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
   POST /api/tollbooth/v1/authorize           $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
   POST /api/tollbooth/v1/split-check         $0.002  Split Check: verify an on-chain revenue split (0xSplits v2) and who gets what
+  POST /api/tollbooth/v1/credits/buy-1 | buy-5   $1 / $5  prepaid credits (one settlement; checks draw from the balance)
+  GET  /api/tollbooth/v1/credits/balance     free    balance + recent charges (X-Credit-Id / X-Credit-Key)
+  POST /api/tollbooth/v1/authorize/credit    credits OMENZ Authorize paid from credits: 2% of the payment, min $0.0003
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -80,6 +83,7 @@ import changed  # noqa: E402
 import claim_evidence  # noqa: E402
 import contracts  # noqa: E402
 import cost_estimate  # noqa: E402
+import credits  # noqa: E402
 import discovery  # noqa: E402
 import event_check  # noqa: E402
 import checker  # noqa: E402
@@ -477,6 +481,12 @@ _paid("POST", "split-check", "$0.002",
       {"address": "0x...", "network": "base", "claimed": {"recipients": ["0xseller...", "0xomenz..."], "allocations": [970000, 30000]}, "beneficiary": "0x..."},
       {"properties": {"address": {"type": "string"}, "network": {"type": "string"}, "claimed": {"type": "object"}, "beneficiary": {"type": "string"}},
        "required": ["address"]}, body=True)
+
+for _usd in (1, 5):
+    _paid("POST", f"credits/buy-{_usd}", f"${_usd}.00",
+          f"OMENZ prepaid credits: ${_usd}.00 balance in one x402 payment. Checks then draw from the balance with no per-check settlement: "
+          "OMENZ Authorize costs 2% of the payment being checked (minimum $0.0003) via POST /v1/authorize/credit. Returns credit_id + credit_key (shown once). By OMENZ.",
+          {}, {"properties": {}}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -1142,6 +1152,41 @@ def split_check_route(request: Request, body: dict = Body(...)):
         return JSONResponse({"error": "claimed must be {recipients: [...], allocations: [...]}"}, status_code=422)
     request.state.extra["verdict"] = r.get("verdict")
     return r
+
+
+@app.post(BASE + "/v1/credits/buy-{usd}")
+def credits_buy(usd: int, request: Request):
+    if usd not in (1, 5):
+        return JSONResponse({"error": "packs: buy-1 or buy-5"}, status_code=404)
+    request.state.extra["action"] = f"credits_buy_{usd}"
+    if getattr(request.state, "ayne", False):
+        return JSONResponse({"error": "credits can't be bought in AYNE"}, status_code=403)
+    return _locker_call(credits.buy, usd)
+
+
+@app.get(BASE + "/v1/credits/balance")
+def credits_balance(request: Request, x_credit_id: str | None = Header(None), x_credit_key: str | None = Header(None)):
+    request.state.extra["action"] = "credits_balance"
+    return _locker_call(credits.balance, x_credit_id, x_credit_key)
+
+
+@app.post(BASE + "/v1/authorize/credit")
+def authorize_credit(request: Request, body: dict = Body(...), x_credit_id: str | None = Header(None), x_credit_key: str | None = Header(None)):
+    request.state.extra["action"] = "authorize_credit"
+    try:
+        credits._load(x_credit_id, x_credit_key)
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    r = authorize.authorize(body)
+    if r.get("decision") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    fee = credits.authorize_fee((r.get("authorization") or {}).get("amount_usd"))
+    try:
+        left = credits.charge(x_credit_id, x_credit_key, fee, "authorize " + str(body.get("url"))[:60])
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    request.state.extra.update({"decision": r.get("decision"), "credit_fee": fee})
+    return {**r, "billing": {"method": "credits", "fee_usd": fee, "balance_usd": left, "rule": "2% of the authorized payment, minimum $0.0003"}}
 
 
 @app.get(BASE + "/v1/site-check")

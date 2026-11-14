@@ -20,7 +20,7 @@ FIELDS = {"need": 1000, "task_context": 1000, "current_workaround": 600, "what_w
           "agent": 80, "operator": 120, "category": 60, "example_input": 1000, "example_output": 1000}
 
 POLICY = {
-    "schema": "omenz.pricing-policy.v0", "updated": "2026-11-14", "publisher": "OMENZ (omenz.org)",
+    "schema": "omenz.pricing-policy.v0", "updated": "2026-11-15", "publisher": "OMENZ (omenz.org)",
     "principles": [
         "Priced per call in USDC on Base via x402: no account, no API key, no subscription.",
         "Prices sit at or below the going rate for comparable listed services (x402 Bazaar median $0.005, Nov 2026); "
@@ -32,6 +32,9 @@ POLICY = {
         "Nothing is stored unless the route says so (Locker/PO Box/Receipt/Failure store by design; scans and checks don't).",
         "Price changes are announced in this policy and in /api/tollbooth before they take effect.",
     ],
+    "credits": "Prepaid credits (POST /v1/credits/buy-1 or buy-5): one payment, then checks draw from the balance with no per-check settlement. OMENZ Authorize via credits: 2% of the payment checked, minimum $0.0003.",
+    "announced_changes": [{"announced": "2026-11-15", "effective": "2026-11-22",
+                           "change": "Routes priced $0.001 per call move to $0.002 per call. Reason: each x402 settlement costs OMENZ about $0.00166 on Base, so $0.001 calls lose money. Prepaid credits stay the cheapest way to make many small checks."}],
     "tell_us": "POST /api/tollbooth/v1/needs (free): what you need, what it's worth to you, how often. We read every one.",
     "contact": "hello@omenz.org",
 }

@@ -26,6 +26,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/passport/issue      $0.002  Permission Passport: signed, expiring, job-scoped permissions (tools, hosts, spend)
   POST /api/tollbooth/v1/passport/check      $0.001  ALLOW/DENY an action against a passport
   GET  /api/tollbooth/v1/passport/key        free    public key to verify passports offline
+  POST /api/tollbooth/v1/needs               free    Agent Needs desk: tell OMENZ what you need, what it's worth, how often
+  GET  /api/tollbooth/v1/pricing-policy      free    machine-readable fair-pricing promise
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -47,6 +49,7 @@ import locker  # noqa: E402
 import failure  # noqa: E402
 import handoff  # noqa: E402
 import local_facts  # noqa: E402
+import needs  # noqa: E402
 import passport  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
@@ -329,7 +332,10 @@ async def x402_mw(request, call_next):
 def index():
     return {"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
             "routes": {k: {"price": v["accepts"]["price"], "description": v["description"]} for k, v in ROUTES.items()},
-            "about": "https://omenz.org"}
+            "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy",
+            "tell_us_what_you_need": {"method": "POST", "path": BASE + "/v1/needs", "price": "free",
+                                      "body": {"need": "required", "would_pay_usd_per_call": "number", "frequency": needs.FREQ,
+                                               "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}
 
 
 @app.get(BASE + "/v1/agent-ready")
@@ -462,6 +468,18 @@ def passport_check(request: Request, body: dict = Body(...)):
 @app.get(BASE + "/v1/passport/key")
 def passport_key():
     return passport.key()
+
+
+@app.post(BASE + "/v1/needs")
+def needs_route(request: Request, body: dict = Body(...)):
+    code, r = needs.submit(body, request.headers.get("user-agent"))
+    request.state.extra.update({"action": "need", "need_ok": code == 200})
+    return JSONResponse(r, status_code=code)
+
+
+@app.get(BASE + "/v1/pricing-policy")
+def pricing_policy():
+    return {**needs.POLICY, "routes": {k: v["accepts"]["price"] for k, v in ROUTES.items()}}
 
 
 @app.get(BASE + "/v1/site-check")

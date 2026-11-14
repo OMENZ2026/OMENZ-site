@@ -28,6 +28,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/passport/key        free    public key to verify passports offline
   POST /api/tollbooth/v1/needs               free    Agent Needs desk: tell OMENZ what you need, what it's worth, how often
   GET  /api/tollbooth/v1/pricing-policy      free    machine-readable fair-pricing promise
+  GET  /api/tollbooth/v1/event-check?company=&claim=&days=  $0.005  Event Check: did the company actually FILE it (SEC 8-K), with the quote
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -44,6 +45,7 @@ from fastapi.responses import JSONResponse
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
 import changed  # noqa: E402
 import cost_estimate  # noqa: E402
+import event_check  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
 import failure  # noqa: E402
@@ -263,6 +265,17 @@ ROUTES[f"POST {BASE}/v1/passport/check"] = {
         input_schema={"properties": {"token": {"type": "string"}, "action": {"type": "object"}}, "required": ["token"]}, body_type="json"),
 }
 
+ROUTES[f"GET {BASE}/v1/event-check"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.005", "network": NETWORK},
+    "description": "Event Check: did a US public company actually FILE this news, or is it just going around? Give a ticker or name and the claim (CEO resigned, acquisition, results, bankruptcy, restatement, cyber incident, layoffs...). We map it to the required SEC 8-K item, pull the company's recent filings from EDGAR, and quote the sentence that states it. FILED only when one sentence carries the claim's names and roles; otherwise FILED_RELATED, NO_FILING_YET (4-business-day filing window), NOT_A_FILING_EVENT or NOT_FOUND. Deterministic. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"company": "NVDA", "claim": "Jensen Huang resigned as CEO", "days": 30},
+        input_schema={"properties": {"company": {"type": "string", "description": "ticker or company name"},
+                                     "claim": {"type": "string"}, "days": {"type": "integer", "description": "lookback window, 1-365 (default 30)"}},
+                      "required": ["company", "claim"]}),
+}
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -480,6 +493,15 @@ def needs_route(request: Request, body: dict = Body(...)):
 @app.get(BASE + "/v1/pricing-policy")
 def pricing_policy():
     return {**needs.POLICY, "routes": {k: v["accepts"]["price"] for k, v in ROUTES.items()}}
+
+
+@app.get(BASE + "/v1/event-check")
+def event_check_route(request: Request, company: str = Query(...), claim: str = Query(...), days: int = 30):
+    r = event_check.check(company, claim, days)
+    request.state.extra.update({"action": "event_check", "ec_verdict": r.get("verdict")})
+    if r.get("verdict") == "ERROR":
+        return JSONResponse(r, status_code=502 if "failed" in (r.get("error") or "") else 422)
+    return r
 
 
 @app.get(BASE + "/v1/site-check")

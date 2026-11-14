@@ -275,3 +275,62 @@ def payee(addr):
             "x402_endpoints": len(hits), "services": hl[:10], "total_calls_30d": sum(h["calls_30d"] for h in hl),
             "note": ("Several unrelated services pay out here (a platform or facilitator wallet): check the endpoint, not just the address."
                      if many else "Address matches the listed payout of these services. Check the endpoint you're paying is one of them.")}
+
+
+def report():
+    """Weekly x402 Market Report: supply side of the agent-payment economy (what's for sale, prices, usage, concentration)."""
+    ix = _index()
+    rows = ix["rows"]
+    priced = sorted(r[3] for r in rows if r[3])
+    sellers = {}
+    for r in rows:
+        h = _host(r[0])
+        s = sellers.setdefault(h, {"host": h, "endpoints": 0, "calls_30d": 0, "payers_30d": 0, "networks": set()})
+        s["endpoints"] += 1
+        s["calls_30d"] += r[5] or 0
+        s["payers_30d"] = max(s["payers_30d"], r[6] or 0)
+        s["networks"].update(r[4] or [])
+    sl = sorted(sellers.values(), key=lambda s: -s["calls_30d"])
+    total_calls = sum(s["calls_30d"] for s in sl) or 1
+    active = [s for s in sl if s["calls_30d"] > 0]
+    nets = {}
+    for r in rows:
+        for n in r[4] or []:
+            nets[n] = nets.get(n, 0) + 1
+    def pct(v, q):
+        return v[min(len(v) - 1, int(q * len(v)))] if v else None
+    return {"version": VERSION, "schema": "omenz.x402-market-report.v0", "index_generated_at": ix["generated_at"],
+            "endpoints": len(rows), "sellers": len(sl), "sellers_with_calls_30d": len(active),
+            "endpoints_with_calls_30d": sum(1 for r in rows if (r[5] or 0) > 0),
+            "calls_30d": sum(r[5] or 0 for r in rows),
+            "price_usd": {"p10": pct(priced, .1), "p25": pct(priced, .25), "median": pct(priced, .5), "p75": pct(priced, .75), "p90": pct(priced, .9)},
+            "concentration": {"top10_sellers_share_of_calls": round(sum(s["calls_30d"] for s in sl[:10]) / total_calls, 3),
+                              "top50_sellers_share_of_calls": round(sum(s["calls_30d"] for s in sl[:50]) / total_calls, 3)},
+            "networks": dict(sorted(nets.items(), key=lambda kv: -kv[1])[:8]),
+            "top_sellers": [{**{k: s[k] for k in ("host", "endpoints", "calls_30d", "payers_30d")}, "networks": sorted(s["networks"])[:4]} for s in sl[:25]],
+            "source": "Coinbase CDP x402 Bazaar discovery index, compiled weekly by OMENZ; usage = listed 30-day calls/unique payers.",
+            "limits": "Listed usage, not verified settlement; wash trading is not removed here. Pair with on-chain checks (wallet/spend, market/payee)."}
+
+
+def sellers_list(q=None, min_payers=1, limit=100):
+    """Seller lead list: x402 sellers (by capability) with endpoints, 30-day calls, unique payers, price range, example endpoint."""
+    ix = _index()
+    qt = list(dict.fromkeys(_toks(q))) if q else []
+    agg = {}
+    for r, ts in zip(ix["rows"], ix["toks"]):
+        if qt and sum(1 for t in qt if t in ts) / len(qt) < 0.67:
+            continue
+        h = _host(r[0])
+        a = agg.setdefault(h, {"host": h, "endpoints": 0, "calls_30d": 0, "payers_30d": 0, "min_price": None, "max_price": None,
+                               "example": r[0], "example_desc": (r[1] or "")[:120], "last_called": ""})
+        a["endpoints"] += 1
+        a["calls_30d"] += r[5] or 0
+        a["payers_30d"] = max(a["payers_30d"], r[6] or 0)
+        if r[3]:
+            a["min_price"] = r[3] if a["min_price"] is None else min(a["min_price"], r[3])
+            a["max_price"] = r[3] if a["max_price"] is None else max(a["max_price"], r[3])
+        a["last_called"] = max(a["last_called"], r[7] or "")
+    out = sorted((a for a in agg.values() if a["payers_30d"] >= int(min_payers or 0)), key=lambda a: -a["calls_30d"])
+    return {"version": VERSION, "query": q, "index_generated_at": ix["generated_at"], "sellers": len(out),
+            "results": out[:max(1, min(int(limit or 100), 500))],
+            "note": "Public listing data (hosts and endpoints sellers published to the x402 Bazaar). No personal data."}

@@ -1841,5 +1841,121 @@
 "expires_in_s": 300,
 "next_action": "pay now (the authorization expires in 5 minutes)"
 }
+},
+"GET /api/tollbooth/v1/market/report": {
+"status": 200,
+"example_input": {},
+"sample_response": {
+"version": "0.1.0",
+"schema": "omenz.x402-market-report.v0",
+"index_generated_at": "2026-11-14T14:38:20Z",
+"endpoints": 34912,
+"sellers": 3230,
+"sellers_with_calls_30d": 3228,
+"endpoints_with_calls_30d": 34786,
+"calls_30d": 1268724,
+"price_usd": {
+"p10": 0.001,
+"p25": 0.0025,
+"median": 0.005,
+"p75": 0.02,
+"p90": 0.05
+},
+"concentration": {
+"top10_sellers_share_of_calls": 0.742,
+"top50_sellers_share_of_calls": 0.902
+},
+"networks": {
+"eip155:8453": 31599,
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": 8526,
+"eip155:137": 6692,
+"eip155:42161": 4202,
+"eip155:143": 2599,
+"eip155:10": 2150,
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k": 1294,
+"eip155:196": 899
+},
+"top_sellers": [
+{
+"host": "console.ax1.vc",
+"endpoints": 1,
+"calls_30d": 412532,
+"payers_30d": 710,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "agent.pocket.network",
+"endpoints": 120,
+"calls_30d": 125545,
+"payers_30d": 45,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "blockrun.ai",
+"endpoints": 130,
+"calls_30d": 93343,
+"payers_30d": 292,
+"networks": [
+"eip155:8453"
+]
+}
+],
+"source": "Coinbase CDP x402 Bazaar discovery index, compiled weekly by OMENZ; usage = listed 30-day calls/unique payers.",
+"limits": "Listed usage, not verified settlement; wash trading is not removed here. Pair with on-chain checks (wallet/spend, market/payee).",
+"note": "AYNE sample: top 3 sellers shown; the paid report has 25"
+}
+},
+"GET /api/tollbooth/v1/market/sellers": {
+"status": 200,
+"example_input": {
+"q": "web search",
+"min_payers": 5
+},
+"sample_response": {
+"version": "0.1.0",
+"query": "web search",
+"index_generated_at": "2026-11-14T14:38:20Z",
+"sellers": 31,
+"results": [
+{
+"host": "stableenrich.dev",
+"endpoints": 2,
+"calls_30d": 39846,
+"payers_30d": 135,
+"min_price": 0.01,
+"max_price": 0.0252,
+"example": "https://stableenrich.dev/api/exa/search",
+"example_desc": "Exa Search - Neural search across the web",
+"last_called": "2026-11-14"
+},
+{
+"host": "agent.pocket.network",
+"endpoints": 1,
+"calls_30d": 7282,
+"payers_30d": 45,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
+"example_desc": "Web search built for agents, served over Pocket Network: POST /v1/search with a query and an optional max_results, and g",
+"last_called": "2026-11-14"
+},
+{
+"host": "blockrun.ai",
+"endpoints": 3,
+"calls_30d": 5054,
+"payers_30d": 46,
+"min_price": 0.011,
+"max_price": 0.081,
+"example": "https://blockrun.ai/api/v1/exa/search",
+"example_desc": "Neural and keyword web search. Optional category filter: company, research paper, news, pdf, github, personal site, link",
+"last_called": "2026-11-14"
+}
+],
+"note": "Public listing data (hosts and endpoints sellers published to the x402 Bazaar). No personal data."
+}
 }
 }

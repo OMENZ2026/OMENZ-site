@@ -62,6 +62,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/credits/buy-1 | buy-5   $1 / $5  prepaid credits (one settlement; checks draw from the balance)
   GET  /api/tollbooth/v1/credits/balance     free    balance + recent charges (X-Credit-Id / X-Credit-Key)
   POST /api/tollbooth/v1/authorize/credit    credits OMENZ Authorize paid from credits: 2% of the payment, min $0.0003
+  GET  /api/tollbooth/v1/market/report      $1.00   weekly x402 Market Report (supply side: endpoints, sellers, prices, concentration, top sellers)
+  GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -487,6 +489,14 @@ for _usd in (1, 5):
           f"OMENZ prepaid credits: ${_usd}.00 balance in one x402 payment. Checks then draw from the balance with no per-check settlement: "
           "OMENZ Authorize costs 2% of the payment being checked (minimum $0.0003) via POST /v1/authorize/credit. Returns credit_id + credit_key (shown once). By OMENZ.",
           {}, {"properties": {}}, body=True)
+
+_paid("GET", "market/report", "$1.00",
+      "x402 Market Report (weekly): the supply side of the agent-payment economy: endpoints and sellers listed, how many get paid calls, price distribution, seller concentration (top 10 / top 50 share of calls), networks, top 25 sellers with usage. Compiled weekly by OMENZ from the x402 Bazaar index. By OMENZ.",
+      {}, {"properties": {}})
+_paid("GET", "market/sellers", "$0.25",
+      "x402 Seller Lead List: sellers offering a capability (or all), with endpoints, 30-day calls, unique payers, price range, last-called date and an example endpoint; up to 500 rows. For payment platforms, investors and sellers sizing a niche. Public listing data. By OMENZ.",
+      {"q": "web search", "min_payers": 5, "limit": 100},
+      {"properties": {"q": {"type": "string"}, "min_payers": {"type": "integer"}, "limit": {"type": "integer"}}})
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -1187,6 +1197,24 @@ def authorize_credit(request: Request, body: dict = Body(...), x_credit_id: str 
         return JSONResponse({"error": e.msg}, status_code=e.status)
     request.state.extra.update({"decision": r.get("decision"), "credit_fee": fee})
     return {**r, "billing": {"method": "credits", "fee_usd": fee, "balance_usd": left, "rule": "2% of the authorized payment, minimum $0.0003"}}
+
+
+@app.get(BASE + "/v1/market/report")
+def market_report(request: Request):
+    request.state.extra["action"] = "market_report"
+    try:
+        return market.report()
+    except Exception:
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
+
+
+@app.get(BASE + "/v1/market/sellers")
+def market_sellers(request: Request, q: str | None = None, min_payers: int = 1, limit: int = 100):
+    request.state.extra["action"] = "market_sellers"
+    try:
+        return market.sellers_list(q, min_payers, limit)
+    except Exception:
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
 
 
 @app.get(BASE + "/v1/site-check")

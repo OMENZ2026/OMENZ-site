@@ -14,7 +14,10 @@ import time
 import urllib.request
 
 VERSION = "0.1.0"
-RPCS = ["https://base-rpc.publicnode.com", "https://mainnet.base.org"]
+# Direct reads go to Coinbase's public Base endpoint first. Log history for our own analytics (spend/runway) uses PublicNode,
+# whose terms allow use inside your own applications but forbid reselling raw RPC/data access (checked 2026-11-14).
+RPCS = ["https://mainnet.base.org", "https://base-rpc.publicnode.com"]
+LOG_RPCS = ["https://base-rpc.publicnode.com", "https://mainnet.base.org"]
 USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 ADDR = re.compile(r"^0x[0-9a-fA-F]{40}$")
@@ -29,7 +32,7 @@ class WalletError(Exception):
 
 def _rpc(method, params):
     last = None
-    for url in RPCS:
+    for url in (LOG_RPCS if method == "eth_getLogs" else RPCS):
         try:
             req = urllib.request.Request(url, data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode(),
                                          headers={"Content-Type": "application/json", "User-Agent": "OMENZ-wallet/0.1"})

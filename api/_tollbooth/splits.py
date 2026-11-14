@@ -17,7 +17,7 @@ from eth_abi import decode, encode
 from eth_utils import keccak
 
 VERSION = "0.1.0"
-RPC = {"base": ["https://base-rpc.publicnode.com", "https://mainnet.base.org"],
+RPC = {"base": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],  # direct reads: Coinbase endpoint first
        "base-sepolia": ["https://base-sepolia-rpc.publicnode.com", "https://sepolia.base.org"]}
 USDC = {"base": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "base-sepolia": "0x036cbd53842c5426634e7929541ec2318f3dcf7e"}
 FACTORY_PUSH_V22 = "0x8E8eB0cC6AE34A38B67D5Cf91ACa38f60bc3Ecf4"  # same address on Base and Base Sepolia (0xSplits deployments)
@@ -34,7 +34,8 @@ class SplitError(Exception):
 
 def _rpc(net, method, params):
     last = None
-    for url in RPC[net]:
+    urls = RPC[net] if method != "eth_getLogs" else list(reversed(RPC[net]))  # log history (our own app use): PublicNode first
+    for url in urls:
         try:
             req = urllib.request.Request(url, data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode(),
                                          headers={"Content-Type": "application/json", "User-Agent": "OMENZ-splits/0.1"})

@@ -105,3 +105,8 @@ def index(paid_routes, base):
                       "SAMPLE = a labeled example of what the paid route returns (OMENZ data and web checks stay paid).",
                       "Anything you try that we don't have is noted as a gap. Tell us directly: POST " + base + "/v1/needs."],
             "paid_versions": base, "privacy": "We record which routes and field names agents use, never field values or IPs."}
+
+
+def internal_secret():
+    """Shared secret for trusted internal AYNE calls (the MCP server), derived from the deployment's storage secret."""
+    return hashlib.sha256(("ayne-internal|" + os.environ.get("APIFY_LOG_TOKEN", "")).encode()).hexdigest()[:32]

@@ -53,6 +53,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
+  GET  /openapi.json  /.well-known/x402  /.well-known/agent-card.json   free  machine discovery (OpenAPI+x402, x402 list, A2A card)
+  POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -73,6 +75,7 @@ import changed  # noqa: E402
 import claim_evidence  # noqa: E402
 import contracts  # noqa: E402
 import cost_estimate  # noqa: E402
+import discovery  # noqa: E402
 import event_check  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
@@ -440,7 +443,7 @@ _paid("POST", "context-diet", "$0.001",
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
-app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None)
+app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 _mw = None
 
 
@@ -520,6 +523,10 @@ async def _ayne(request, call_next, t0):
         return JSONResponse(ayne.index(ROUTES, BASE))
     raw = await request.body()
     ev["fields"] = ayne.field_names(raw) if raw else sorted(request.query_params.keys())[:30]
+    internal = request.headers.get("x-ayne-internal") == ayne.internal_secret()
+    if internal and request.headers.get("x-ayne-visitor"):
+        vis = request.headers["x-ayne-visitor"][:16]
+        ev["visitor"], ev["via"] = vis, "mcp"
     ok, why, n = await run_in_threadpool(ayne.take, vis)
     if not ok:
         ev.update(mode="capped", cap=why)
@@ -935,6 +942,98 @@ def starter_pack():
                 {"name": "Hire another agent", "steps": ["contract/build (acceptance tests)", "contract/accept (neutral PASS/FAIL + escrow verdict)", "reputation"]},
                 {"name": "Keep costs and facts honest", "steps": ["freshness (reuse or refetch?)", "dedupe (already done?)", "finance/watchdog (price drift, terms)", "claim-evidence + event-check (is it true?)"]}],
             "all_endpoints": BASE + "/v1/card", "pricing_policy": BASE + "/v1/pricing-policy", "tell_us_what_you_need": BASE + "/v1/needs"}
+
+
+@app.get("/openapi.json")
+@app.get(BASE + "/openapi.json")
+def openapi_doc():
+    return discovery.openapi(ROUTES, BASE)
+
+
+@app.get("/.well-known/x402")
+@app.get(BASE + "/well-known/x402")
+def well_known_x402():
+    return discovery.well_known_x402(ROUTES, BASE)
+
+
+@app.get("/.well-known/agent-card.json")
+@app.get("/.well-known/agent.json")
+@app.get(BASE + "/agent-card.json")
+def agent_card():
+    return discovery.agent_card(ROUTES, BASE)
+
+
+_MCP_TOOLS = None
+
+
+@app.get("/mcp")
+def mcp_get():
+    return JSONResponse({"error": "use POST (MCP streamable HTTP, JSON responses)", "server": "OMENZ", "tools": len(ROUTES)}, status_code=405)
+
+
+@app.post("/mcp")
+async def mcp_post(request: Request):
+    import httpx
+    from starlette.concurrency import run_in_threadpool
+    global _MCP_TOOLS
+    if _MCP_TOOLS is None:
+        _MCP_TOOLS = discovery.mcp_tools(ROUTES)
+    try:
+        msg = json.loads(await request.body() or b"{}")
+    except Exception:
+        return JSONResponse(discovery.rpc_error(None, -32700, "parse error"), status_code=400)
+    batch = msg if isinstance(msg, list) else [msg]
+    ua = request.headers.get("user-agent", "")
+    vis = ayne.visitor(request.headers.get("x-forwarded-for", "").split(",")[0].strip(), ua)
+    out = []
+    for m in batch:
+        if not isinstance(m, dict):
+            continue
+        mid, meth, params = m.get("id"), m.get("method"), m.get("params") or {}
+        if meth == "initialize":
+            res = {"protocolVersion": params.get("protocolVersion") or discovery.MCP_PROTOCOL,
+                   "capabilities": {"tools": {"listChanged": False}},
+                   "serverInfo": {"name": "omenz-tollbooth", "title": "OMENZ agent tools", "version": "1.0.0"},
+                   "instructions": "OMENZ tools for agents. Calls here run in AYNE, the free playzone (live sandbox or labeled samples, "
+                                   "capped). For production, call the paid x402 URL named in each tool description."}
+        elif meth in ("notifications/initialized", "notifications/cancelled"):
+            continue
+        elif meth == "ping":
+            res = {}
+        elif meth == "tools/list":
+            res = {"tools": [{k: v for k, v in t.items() if not k.startswith("_")} for t in _MCP_TOOLS]}
+        elif meth == "tools/call":
+            t = next((x for x in _MCP_TOOLS if x["name"] == params.get("name")), None)
+            if not t:
+                out.append(discovery.rpc_error(mid, -32602, "unknown tool"))
+                await run_in_threadpool(ayne.log, {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "ayne", "via": "mcp",
+                                                   "mode": "gap", "route": "/" + str(params.get("name"))[:80], "method": "MCP", "visitor": vis})
+                continue
+            args = dict(params.get("arguments") or {})
+            headers = {"x-ayne-internal": ayne.internal_secret(), "x-ayne-visitor": vis, "user-agent": "mcp:" + ua[:150]}
+            for a, h in discovery.HEADER_ARGS.items():
+                if a in args:
+                    headers[h] = str(args.pop(a))
+            path = BASE + "/ayne/v1" + t["_path"].split("/v1", 1)[1]
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://omenz.internal", timeout=28) as cl:
+                if t["_method"] == "GET":
+                    r = await cl.get(path, params={k: (json.dumps(v) if isinstance(v, (dict, list)) else v) for k, v in args.items()}, headers=headers)
+                else:
+                    r = await cl.request(t["_method"], path, json=args, headers=headers)
+            try:
+                body = r.json()
+            except Exception:
+                body = {"raw": r.text[:2000]}
+            res = {"content": [{"type": "text", "text": json.dumps(body, ensure_ascii=False)[:60000]}],
+                   "structuredContent": body if isinstance(body, dict) else {"result": body}, "isError": r.status_code >= 400}
+        else:
+            out.append(discovery.rpc_error(mid, -32601, "method not found"))
+            continue
+        if mid is not None:
+            out.append({"jsonrpc": "2.0", "id": mid, "result": res})
+    if not out:
+        return JSONResponse(None, status_code=202)
+    return JSONResponse(out if isinstance(msg, list) else out[0])
 
 
 @app.get(BASE + "/v1/site-check")

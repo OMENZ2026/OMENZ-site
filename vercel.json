@@ -29,6 +29,26 @@
       "destination": "/api/hit?f=sitemap"
     },
     {
+      "source": "/openapi.json",
+      "destination": "/api/tollbooth"
+    },
+    {
+      "source": "/.well-known/x402",
+      "destination": "/api/tollbooth"
+    },
+    {
+      "source": "/.well-known/agent-card.json",
+      "destination": "/api/tollbooth"
+    },
+    {
+      "source": "/.well-known/agent.json",
+      "destination": "/api/tollbooth"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/api/tollbooth"
+    },
+    {
       "source": "/api/tollbooth/:path*",
       "destination": "/api/tollbooth"
     }

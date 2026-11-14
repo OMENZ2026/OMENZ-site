@@ -192,3 +192,86 @@ def vendor(url, method=None):
     return {"version": VERSION, "url": url, "vendor_host": host, "checked_at": rel["checked_at"], "reliability": rel,
             "domain": {k: sc.get(k) for k in ("status", "final_url", "title", "phone", "notes", "next_action")},
             "terms": terms, "flags": flags, "verdict": "OK" if not flags else "REVIEW"}
+
+
+def _pct(sorted_vals, q):
+    if not sorted_vals:
+        return None
+    i = (len(sorted_vals) - 1) * q
+    lo, hi = int(i), min(int(i) + 1, len(sorted_vals) - 1)
+    return round(sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (i - lo), 6)
+
+
+def price_index(q, price_usd=None, url=None, min_payers=0):
+    """x402 Price Index / Fair Price Check: the going rate for a capability across listed endpoints."""
+    out = {"version": VERSION, "query": q, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    ix = _index()
+    if url and not q:
+        r, _ = _listing(url)
+        if not r:
+            return {**out, "error": "url not in the x402 index; give q (the capability) instead"}
+        q = r[1]
+        price_usd = price_usd if price_usd is not None else r[3]
+        out["query"] = q[:160]
+    qt = list(dict.fromkeys(_toks(q)))
+    if not qt:
+        return {**out, "error": "q (capability) required"}
+    idf = {t: math.log(1 + ix["n"] / (1 + ix["df"].get(t, 0))) for t in qt}
+    need = 0.67 if len(qt) >= 3 else 1.0
+    rows = []
+    for r, ts in zip(ix["rows"], ix["toks"]):
+        if r[3] is None or r[3] <= 0:
+            continue
+        cover = sum(1 for t in qt if t in ts) / len(qt)
+        if cover < need or (r[6] or 0) < int(min_payers or 0):
+            continue
+        rows.append((r, sum(idf[t] for t in qt if t in ts)))
+    if len(rows) < 5:
+        return {**out, "comparables": len(rows), "error": "fewer than 5 comparable priced endpoints; widen the query",
+                "examples": [_row(r) for r, _ in rows]}
+    prices = sorted(r[3] for r, _ in rows)
+    used = sorted((r[3], r[6] or 0) for r, _ in rows if (r[6] or 0) > 0)
+    wmed = None
+    if used:
+        tot, acc = sum(w for _, w in used), 0
+        for p, w in used:
+            acc += w
+            if acc >= tot / 2:
+                wmed = p
+                break
+    res = {**out, "index_generated_at": ix["generated_at"], "comparables": len(rows), "sellers": len({_host(r[0]) for r, _ in rows}),
+           "min": prices[0], "p25": _pct(prices, 0.25), "median": _pct(prices, 0.5), "p75": _pct(prices, 0.75), "max": prices[-1],
+           "usage_weighted_median": wmed, "examples": [_row(r) for r, _ in sorted(rows, key=lambda x: -(x[0][6] or 0))[:5]]}
+    if price_usd is not None:
+        p = float(price_usd)
+        below = sum(1 for x in prices if x < p) / len(prices)
+        res["your_price"] = p
+        res["percentile"] = round(below * 100)
+        res["verdict"] = "HIGH" if p > res["p75"] * 1.5 else "ABOVE_MARKET" if p > res["p75"] else "LOW" if p < res["p25"] else "FAIR"
+    return res
+
+
+def payee(addr):
+    """Payee Check: is this pay-to address a known x402 seller, and which services pay out to it?"""
+    a = (addr or "").strip().lower()
+    out = {"version": VERSION, "address": a, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    if not re.match(r"^(0x[0-9a-f]{40}|[1-9a-hj-np-z]{32,44})$", a):
+        return {**out, "error": "address must be an EVM 0x address or a Solana address"}
+    ix = _index()
+    hits = [r for r in ix["rows"] if a in (r[8] or [])]
+    if not hits:
+        return {**out, "verdict": "UNKNOWN", "index_generated_at": ix["generated_at"], "x402_endpoints": 0,
+                "note": "No listed x402 service pays out to this address. Not proof of fraud, but confirm out of band before paying an unknown recipient."}
+    hosts = {}
+    for r in hits:
+        h = _host(r[0])
+        hosts.setdefault(h, {"host": h, "endpoints": 0, "calls_30d": 0, "payers_30d": 0, "example": r[0]})
+        hosts[h]["endpoints"] += 1
+        hosts[h]["calls_30d"] += r[5] or 0
+        hosts[h]["payers_30d"] = max(hosts[h]["payers_30d"], r[6] or 0)
+    hl = sorted(hosts.values(), key=lambda x: -x["calls_30d"])
+    many = len(hl) > 3
+    return {**out, "verdict": "KNOWN_SELLER" if not many else "SHARED_ADDRESS", "index_generated_at": ix["generated_at"],
+            "x402_endpoints": len(hits), "services": hl[:10], "total_calls_30d": sum(h["calls_30d"] for h in hl),
+            "note": ("Several unrelated services pay out here (a platform or facilitator wallet): check the endpoint, not just the address."
+                     if many else "Address matches the listed payout of these services. Check the endpoint you're paying is one of them.")}

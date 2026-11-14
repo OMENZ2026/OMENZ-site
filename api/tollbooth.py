@@ -55,6 +55,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
   GET  /openapi.json  /.well-known/x402  /.well-known/agent-card.json   free  machine discovery (OpenAPI+x402, x402 list, A2A card)
   POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
+  GET  /api/tollbooth/v1/wallet/{balance,spend,runway}?address=   agent-wallet tools (USDC on Base, public chain data)
+  GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -95,6 +97,7 @@ import branch_resolver  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import terms_changed  # noqa: E402
+import wallet  # noqa: E402
 import workforce  # noqa: E402
 import x402_probe  # noqa: E402
 import site_check  # noqa: E402
@@ -439,6 +442,24 @@ _paid("POST", "context-diet", "$0.001",
       {"packet": {"objective": "ship v2", "notes": "...long..."}, "required": ["objective"], "max_string_chars": 400},
       {"properties": {"packet": {}, "required": {"type": "array"}, "max_string_chars": {"type": "integer"}, "max_list_items": {"type": "integer"}},
        "required": ["packet"]}, body=True)
+
+_paid("GET", "wallet/balance", "$0.001",
+      "Agent Wallet Balance: USDC and ETH balance of any wallet on Base (public chain data). Never moves funds, no key needed. By OMENZ.",
+      {"address": "0x..."}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
+_paid("GET", "wallet/spend", "$0.005",
+      "Agent Wallet Spend Report: what has this wallet been paying for? Outgoing USDC payments on Base over the last N days (max 14), grouped by payee, each payee named with the x402 services that pay out to it (from the ~35k-endpoint x402 index), totals, daily rate, micropayment count, share going to known x402 sellers. Public chain data. By OMENZ.",
+      {"address": "0x...", "days": 7}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"}}, "required": ["address"]})
+_paid("GET", "wallet/runway", "$0.005",
+      "Agent Wallet Runway: how many days before this agent wallet runs dry? USDC balance / recent daily spend -> days left, OK / LOW / CRITICAL, and the top cost drivers by payee. Public chain data on Base. By OMENZ.",
+      {"address": "0x...", "days": 7, "low_days": 3}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"},
+                                                         "low_days": {"type": "number"}, "critical_days": {"type": "number"}}, "required": ["address"]})
+_paid("GET", "market/payee", "$0.001",
+      "Payee Check: before paying an address, is it a known x402 seller? Matches the pay-to address against the payout addresses of ~35k listed x402 endpoints: KNOWN_SELLER (which services, 30-day calls and payers), SHARED_ADDRESS (platform/facilitator wallet) or UNKNOWN. By OMENZ.",
+      {"address": "0x..."}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
+_paid("GET", "market/price-index", "$0.002",
+      "x402 Price Index / Fair Price Check: the going rate for a capability across listed x402 endpoints: comparables, sellers, min / p25 / median / p75 / max and usage-weighted median; pass price_usd (or a listed url) to get its percentile and FAIR / LOW / ABOVE_MARKET / HIGH. By OMENZ.",
+      {"q": "web search", "price_usd": 0.005}, {"properties": {"q": {"type": "string"}, "price_usd": {"type": "number"}, "url": {"type": "string"},
+                                                  "min_payers": {"type": "integer"}}, "required": ["q"]})
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -1040,6 +1061,46 @@ async def mcp_post(request: Request):
     if not out:
         return JSONResponse(None, status_code=202)
     return JSONResponse(out if isinstance(msg, list) else out[0])
+
+
+def _wallet_call(fn, *a):
+    try:
+        return fn(*a)
+    except wallet.WalletError as e:
+        code = 502 if "unavailable" in str(e) else 422
+        return JSONResponse({"error": str(e) + ("; not charged" if code == 502 else "")}, status_code=code)
+
+
+@app.get(BASE + "/v1/wallet/{action}")
+def wallet_route(action: str, request: Request, address: str = Query(...), days: float = 7, low_days: float = 3, critical_days: float = 1):
+    request.state.extra["action"] = "wallet_" + action
+    if action == "balance":
+        return _wallet_call(wallet.balance, address)
+    if action == "spend":
+        return _wallet_call(wallet.spend, address, days)
+    if action == "runway":
+        return _wallet_call(wallet.runway, address, days, low_days, critical_days)
+    return JSONResponse({"error": "unknown wallet action"}, status_code=404)
+
+
+@app.get(BASE + "/v1/market/payee")
+def market_payee(request: Request, address: str = Query(...)):
+    try:
+        r = market.payee(address)
+    except Exception:
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
+    request.state.extra.update({"action": "market_payee", "verdict": r.get("verdict")})
+    return JSONResponse(r, status_code=422) if r.get("error") else r
+
+
+@app.get(BASE + "/v1/market/price-index")
+def market_price_index(request: Request, q: str | None = None, price_usd: float | None = None, url: str | None = None, min_payers: int = 0):
+    try:
+        r = market.price_index(q, price_usd, url, min_payers)
+    except Exception:
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
+    request.state.extra.update({"action": "market_price_index", "n": r.get("comparables")})
+    return JSONResponse(r, status_code=422) if r.get("error") and not r.get("comparables") else r
 
 
 @app.get(BASE + "/v1/site-check")

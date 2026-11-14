@@ -1606,5 +1606,181 @@
 "required_missing": [],
 "note": "cut strings keep their first part + a sha256 so the full text can be fetched from your own store if needed"
 }
+},
+"GET /api/tollbooth/v1/wallet/balance": {
+"status": 200,
+"example_input": {
+"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840"
+},
+"sample_response": {
+"version": "0.1.0",
+"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"network": "base",
+"usdc": 0.0,
+"eth": 0.0,
+"checked_at": "2026-11-14T15:36:44Z"
+}
+},
+"GET /api/tollbooth/v1/wallet/spend": {
+"status": 200,
+"example_input": {
+"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840",
+"days": 7
+},
+"sample_response": {
+"version": "0.1.0",
+"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"network": "base",
+"asset": "USDC",
+"window_days": 7.0,
+"blocks": [
+57098740,
+57401140
+],
+"payments": 0,
+"total_usd": 0.0,
+"daily_rate_usd": 0.0,
+"micropayments_le_10c": 0,
+"payees_count": 0,
+"payees": [],
+"known_x402_share": null,
+"note": "Outgoing USDC transfers only (public chain data). Payees are named from the x402 market index when they run listed services."
+}
+},
+"GET /api/tollbooth/v1/wallet/runway": {
+"status": 200,
+"example_input": {
+"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840",
+"days": 7
+},
+"sample_response": {
+"version": "0.1.0",
+"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"network": "base",
+"usdc_balance": 0.0,
+"eth_balance": 0.0,
+"daily_spend_usd": 0.0,
+"days_left": null,
+"status": "NO_RECENT_SPEND",
+"top_cost_drivers": [],
+"based_on": "last 7.0 days, 0 payments",
+"checked_at": "2026-11-14T15:36:50Z",
+"next_action": "no outgoing USDC in the window"
+}
+},
+"GET /api/tollbooth/v1/market/payee": {
+"status": 200,
+"example_input": {
+"address": "0x17cd53c04d707ef0dd615ef56c633f02915a7905"
+},
+"sample_response": {
+"version": "0.1.0",
+"address": "0x17cd53c04d707ef0dd615ef56c633f02915a7905",
+"checked_at": "2026-11-14T15:36:52Z",
+"verdict": "KNOWN_SELLER",
+"index_generated_at": "2026-11-14T14:38:20Z",
+"x402_endpoints": 3,
+"services": [
+{
+"host": "keyring-agent.blockchhub.link",
+"endpoints": 3,
+"calls_30d": 27713,
+"payers_30d": 1910,
+"example": "https://keyring-agent.blockchhub.link/api/send-native"
+}
+],
+"total_calls_30d": 27713,
+"note": "Address matches the listed payout of these services. Check the endpoint you're paying is one of them."
+}
+},
+"GET /api/tollbooth/v1/market/price-index": {
+"status": 200,
+"example_input": {
+"q": "web search",
+"price_usd": 0.005
+},
+"sample_response": {
+"version": "0.1.0",
+"query": "web search",
+"checked_at": "2026-11-14T15:36:52Z",
+"index_generated_at": "2026-11-14T14:38:20Z",
+"comparables": 233,
+"sellers": 141,
+"min": 0.001,
+"p25": 0.006,
+"median": 0.01,
+"p75": 0.02,
+"max": 0.75,
+"usage_weighted_median": 0.01,
+"examples": [
+{
+"url": "https://stableenrich.dev/api/exa/search",
+"description": "Exa Search - Neural search across the web",
+"method": "POST",
+"price_usd": 0.01,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 35530,
+"payers_30d": 135,
+"last_called": "2026-11-14"
+},
+{
+"url": "https://win.oneshotagent.com/v1/tools/search",
+"description": "Web search returning URLs, titles, and descriptions",
+"method": "POST",
+"price_usd": 0.001,
+"networks": [
+"eip155:8453"
+],
+"calls_30d": 3185,
+"payers_30d": 62,
+"last_called": "2026-11-14"
+},
+{
+"url": "https://blockrun.ai/api/v1/exa/search",
+"description": "Neural and keyword web search. Optional category filter: company, research paper, news, pdf, github, personal site, linkedin profile, financial report.",
+"method": "POST",
+"price_usd": 0.011,
+"networks": [
+"eip155:8453"
+],
+"calls_30d": 1636,
+"payers_30d": 46,
+"last_called": "2026-11-14"
+},
+{
+"url": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
+"description": "Web search built for agents, served over Pocket Network: POST /v1/search with a query and an optional max_results, and get the results back as one JSON object. ",
+"method": "POST",
+"price_usd": 0.005,
+"networks": [
+"eip155:8453"
+],
+"calls_30d": 7282,
+"payers_30d": 45,
+"last_called": "2026-11-14"
+},
+{
+"url": "https://websearch.use.x402atlas.com/search",
+"description": "Real-time web search for AI agents — search the web and get ranked SERP-style results as clean JSON: title, URL, snippet, relevance score, optional LLM-generate",
+"method": "GET",
+"price_usd": 0.01,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 51,
+"payers_30d": 29,
+"last_called": "2026-11-14"
+}
+],
+"your_price": 0.005,
+"percentile": 14,
+"verdict": "LOW"
+}
 }
 }

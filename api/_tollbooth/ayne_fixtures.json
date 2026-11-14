@@ -1,0 +1,1610 @@
+{
+"GET /api/tollbooth/v1/agent-ready": {
+"status": 200,
+"example_input": {
+"url": "https://example.com"
+},
+"sample_response": {
+"url": "https://example.com",
+"checked_at": "2026-11-14T06:58:37",
+"checker_version": "0.1.0",
+"score": 40,
+"findings": [
+{
+"severity": "critical",
+"code": "site_unreachable",
+"what_it_means": "AI assistants could not load the home page (status URLError).",
+"fix": "Make sure the site loads publicly without a login or block page."
+}
+],
+"facts": {}
+}
+},
+"GET /api/tollbooth/v1/site-check": {
+"status": 200,
+"example_input": {
+"url": "https://example.com"
+},
+"sample_response": {
+"url": "https://example.com",
+"version": "0.1.3-local",
+"status": "live",
+"http_status": 200,
+"final_url": "http://example.com",
+"title": "Example Domain",
+"blocked_by": null,
+"js_only": true,
+"placeholder_name": null,
+"name_given": null,
+"name_found": null,
+"phone": null,
+"notes": [
+"HTTPS problem: certificate not trusted",
+"HTTPS failed; HTTP answered",
+"page needs JavaScript; content not checked"
+],
+"requests": 2,
+"working_variant": null,
+"next_action": "needs_browser",
+"seconds": 0.39,
+"checked_at": "2026-11-14T14:58:37Z"
+}
+},
+"GET /api/tollbooth/v1/changed": {
+"status": 200,
+"example_input": {
+"url": "https://example.com"
+},
+"sample_response": {
+"url": "https://example.com",
+"version": "0.1.1-local",
+"state": "UNKNOWN",
+"change_type": null,
+"change_size": null,
+"content_type": "text/html",
+"observed_last_modified": null,
+"final_url": "http://example.com",
+"reason": "page needs a browser (JavaScript shell; only 171 characters readable), so change can't be judged",
+"fingerprint": null,
+"requests": 4,
+"seconds": 0.47,
+"checked_at": "2026-11-14T14:58:38Z"
+}
+},
+"GET /api/tollbooth/v1/local-facts": {
+"status": 200,
+"example_input": {
+"url": "https://example.com"
+},
+"sample_response": {
+"url": "https://example.com",
+"version": "0.2.1",
+"checked_at": "2026-11-14T14:58:38Z",
+"error": "unreachable",
+"status": "URLError",
+"blocked_by": null,
+"note": null
+}
+},
+"POST /api/tollbooth/v1/locker/put": {
+"status": 200,
+"example_input": {
+"packet": {
+"objective": "Finish Q3 vendor report",
+"decisions": [
+"use 2025 prices"
+],
+"next_action": "draft section 2"
+},
+"ttl_days": 7,
+"to": "research-agent"
+},
+"sample_response": {
+"locker_id": "lk_042227ab13ce8ea8c767b8cc",
+"access_key": "4krhaCJmMzNPCCMeYTnFLr3zjR6OxEU5c0QqjWTdtPc",
+"expires_at": 1795273118,
+"bytes": 103,
+"fields": [
+"decisions",
+"next_action",
+"objective"
+],
+"note": "Keep access_key: it's shown once and OMENZ can't recover it (encrypted at rest)."
+}
+},
+"POST /api/tollbooth/v1/pobox/create": {
+"status": 200,
+"example_input": {
+"label": "research-agent inbox"
+},
+"sample_response": {
+"box_id": "pb_f0b6e2d57af0bb25efdbfdf3",
+"owner_key": "CHAT3j5B0rhL626Nzy4JbOYneCv_0HQfNf10oLbjN0M",
+"expires_at": 1797260318,
+"note": "Share box_id so others can drop messages. Keep owner_key private: it's shown once and is the only way to open the box."
+}
+},
+"POST /api/tollbooth/v1/pobox/drop": {
+"status": 404,
+"example_input": {
+"box_id": "pb_0123456789abcdef01234567",
+"message": {
+"task": "summary ready",
+"locker_id": "lk_..."
+},
+"from": "agent-a",
+"subject": "job 42"
+},
+"sample_response": {
+"error": "no such box (or expired)"
+}
+},
+"GET /api/tollbooth/v1/pobox/inbox": {
+"status": 404,
+"example_input": {
+"box_id": "pb_0123456789abcdef01234567",
+"ack": "true"
+},
+"sample_response": {
+"error": "no such box (or expired)"
+}
+},
+"POST /api/tollbooth/v1/receipt/put": {
+"status": 400,
+"example_input": {
+"payer": "0x...",
+"payee": "0x...",
+"amount": "0.001",
+"currency": "USDC",
+"network": "base",
+"tx_hash": "0x...",
+"service": "summarize",
+"job_id": "42"
+},
+"sample_response": {
+"error": "tx_hash must be 0x + 64 hex"
+}
+},
+"POST /api/tollbooth/v1/handoff/pack": {
+"status": 200,
+"example_input": {
+"packet": {
+"objective": "ship v2",
+"next_action": "deploy",
+"decisions": [
+"use Base"
+]
+},
+"include": [
+"decisions"
+],
+"required": [
+"objective",
+"next_action"
+],
+"to": "agent-b",
+"from": "agent-a"
+},
+"sample_response": {
+"locker_id": "lk_eb34dea59d2ccd96d35b4378",
+"access_key": "aEUCqxS4G-XLUxW3eXoBUHG4qHuYgImOj9YmbDlzJM8",
+"expires_at": 1795273118,
+"bytes": 164,
+"fields": [
+"_handoff",
+"decisions",
+"next_action",
+"objective"
+],
+"note": "Keep access_key: it's shown once and OMENZ can't recover it (encrypted at rest).",
+"manifest": {
+"schema": "omenz.handoff.v0",
+"fields": [
+"decisions",
+"next_action",
+"objective"
+],
+"dropped": [],
+"bytes": 164,
+"sha256": "180c30284efd3f5d0328f19f417bb6fbf9e7037b781f09f12fd0d274e0ba2717",
+"nonstandard_fields": []
+}
+}
+},
+"GET /api/tollbooth/v1/locker/get": {
+"status": 400,
+"example_input": {
+"id": "lk_0123456789abcdef01234567",
+"fields": "objective,next_action"
+},
+"sample_response": {
+"error": "locker_id and X-Locker-Key header required"
+}
+},
+"GET /api/tollbooth/v1/alive": {
+"status": 200,
+"example_input": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET"
+},
+"sample_response": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET",
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:38Z",
+"paid": false,
+"verdict": "down",
+"reason": "dns_failed"
+}
+},
+"GET /api/tollbooth/v1/quote": {
+"status": 200,
+"example_input": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET"
+},
+"sample_response": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET",
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:38Z",
+"paid": false,
+"status": "error",
+"reason": "dns_failed",
+"options": []
+}
+},
+"POST /api/tollbooth/v1/tx-preflight": {
+"status": 200,
+"example_input": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET",
+"max_price_usd": 0.01,
+"expected_pay_to": "0x...",
+"networks": [
+"base"
+],
+"listed_price_usd": 0.005
+},
+"sample_response": {
+"url": "https://api.example.com/x402/endpoint",
+"method": "GET",
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:39Z",
+"paid": false,
+"http_status": null,
+"latency_ms": null,
+"verdict": "STOP",
+"chosen": null,
+"reasons": [
+"no usable quote: dns_failed"
+],
+"warnings": [],
+"options_checked": 0
+}
+},
+"POST /api/tollbooth/v1/secret-scan": {
+"status": 200,
+"example_input": {
+"payload": {
+"objective": "ship v2",
+"notes": "config attached"
+}
+},
+"sample_response": {
+"version": "0.1.0",
+"bytes": 52,
+"stored": false,
+"verdict": "CLEAN",
+"counts": {},
+"findings": [],
+"next_action": "send",
+"limits": "Pattern-based: catches known key formats, PEM keys, wallet keys, recovery phrases, card numbers and password assignments. A secret in an unknown format can pass; CLEAN means none of these were found."
+}
+},
+"POST /api/tollbooth/v1/spend-gate": {
+"status": 200,
+"example_input": {
+"policy": {
+"max_per_tx_usd": 1,
+"daily_cap_usd": 5,
+"escalate_above_usd": 0.5,
+"allowed_networks": [
+"base"
+],
+"hurdle": {
+"min_return_multiple": 1.5
+}
+},
+"spend": {
+"amount_usd": 0.1,
+"recipient": "0x...",
+"network": "base",
+"category": "data",
+"expected_value_usd": 0.5,
+"spent_today_usd": 1.2
+}
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:39Z",
+"stored": false,
+"decision": "ALLOW",
+"amount_usd": 0.1,
+"deny_reasons": [],
+"escalate_reasons": [],
+"passed": [
+"per-transaction cap",
+"daily cap",
+"network",
+"hurdle"
+],
+"remaining_today_usd": 3.7
+}
+},
+"GET /api/tollbooth/v1/branch": {
+"status": 200,
+"example_input": {
+"url": "https://www.example-chain.com",
+"city": "Pasadena"
+},
+"sample_response": {
+"url": "https://www.example-chain.com",
+"version": "0.1.0",
+"query": {
+"city": "Pasadena",
+"zip": null,
+"street": null
+},
+"checked_at": "2026-11-14T14:58:39Z",
+"status": "error",
+"error": "fetch_failed",
+"http_status": null
+}
+},
+"POST /api/tollbooth/v1/failure/put": {
+"status": 200,
+"example_input": {
+"failure": {
+"job_id": "job-42",
+"objective": "get today's hours for a restaurant",
+"failed_step": "fetch site",
+"error_class": "rate_limited",
+"attempts": [
+{
+"tool": "local-facts",
+"result": "429"
+}
+],
+"spent_usd": 0.01,
+"suggested_next": "retry after 10 minutes"
+},
+"to": "agent-b",
+"dlq_box_id": "pb_..."
+},
+"sample_response": {
+"locker_id": "lk_84bb1215ea485a7941f9ab02",
+"access_key": "WNOYSSEnMwvLw07oW0mWGPARMcdWAMrmsjw0oz9bcwI",
+"expires_at": 1795877919,
+"bytes": 279,
+"fields": [
+"attempts",
+"error_class",
+"failed_step",
+"job_id",
+"objective"
+],
+"note": "Keep access_key: it's shown once and OMENZ can't recover it (encrypted at rest).",
+"schema": "omenz.failure.v0",
+"error_class": "rate_limited",
+"retryable": true,
+"sha256": "46899e231468bd54407855a8d6a52488db4753b8233424cf742a358617f0e4df",
+"warnings": [],
+"dlq": {
+"box_id": "pb_...",
+"dropped": false,
+"reason": "no such box (or expired)"
+}
+}
+},
+"GET /api/tollbooth/v1/terms-changed": {
+"status": 200,
+"example_input": {
+"url": "https://exa.ai/pricing"
+},
+"sample_response": {
+"url": "https://exa.ai/pricing",
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:59:39Z",
+"final_url": "https://exa.ai/pricing",
+"material_lines": 11,
+"last_updated_stated": null,
+"fingerprint": "tc1.eNp1VU1vGzcQvetXzMGHNpBkyagRIDdZchIDdqvEVtPmxt0daQlzyS0_LCm_Pm-4u7KapoBscMnhfLx58zi6PSharO9o7XWp7W60VseJCpO_XZp8cLQ2ygbaOk-LO3pk5cua5Majjkx3tuIDveeIzVhzPghyoPOBiu-ojrEN7y4v-aCmSl8a04RpPETaBMYVDdfaYOWo0qF0L-yzk9a7KpUxjLHKWY2JX5RJKmpnsVu6plVeh_yR4KpUgbFUO7YR0SP7rSrzjq0ocllbXSpDlStTA5PshwpGXUx8aI3zCELb5FGGn45urSqQ1jf2jjxH3BB7t6V_EnvNIbv1HJKJgXASUts6H7k6ZT4dfZXLKxUVfX718DNTuphfjWezGZzahCRRXKNj01WS…",
+"digest": "60016c922923b5a4",
+"cost": {
+"seconds": 0.27
+},
+"state": "NEW",
+"sample": [
+"Exa API Pricing",
+"Pay-as-You-Go Plans for AI Search Exa Site Index Fetch the Exa site index at: https://exa.ai/llms.txt Use this file to discover Exa products, pricing, evaluations, comparisons, use cases, agent interfaces, and technical documentation before exploring further.",
+"Enable zero retention of queries and results on supported products.",
+"Zero Data Retention on supported products $12,000 annual commitment in API credits 25 Search QPS Upgrade now Read ZDR docs Use cases Coding agents Chatbots News monitoring Enrichments Voice agents People search Company search Coding agents Search over millions of GitHub repos, docs, and Stack Overflow with high-accuracy code retrieval.",
+"Endpoint pricing Endpoint Lite Search Auto Search Deep Search Contents Monitors Answer Base price, with up to 10 results (per 1k requests) $4 $7 $12 $1 (per 1k pages) $2 $5 Cost per additional result above 10 (per 1k requests) $1 $1 $1 - $1 - AI page summaries (per 1k pages) $1 $1 $1 $1 $1 - Agent pricing By default, Agent uses effort: auto."
+]
+}
+},
+"POST /api/tollbooth/v1/cost-estimate": {
+"status": 200,
+"example_input": {
+"job": {
+"models": {
+"big": {
+"input_per_mtok_usd": 8,
+"output_per_mtok_usd": 40
+},
+"small": {
+"input_per_mtok_usd": 0.5,
+"output_per_mtok_usd": 3
+}
+},
+"steps": [
+{
+"name": "extract",
+"model": "big",
+"input_tokens": 1000000,
+"output_tokens": 50000,
+"runs": 2,
+"retry_rate": 0.1
+}
+],
+"tools": [
+{
+"name": "facts",
+"x402_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
+"calls": 10
+}
+],
+"budget_usd": 30,
+"value_usd": 100,
+"alternatives": {
+"extract": "small"
+}
+}
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:39Z",
+"paid_targets": false,
+"status": "ok",
+"total_usd": 22.1,
+"range_usd": [
+17.68,
+33.15
+],
+"lines": [
+{
+"kind": "model",
+"name": "extract",
+"model": "big",
+"usd": 22.0
+},
+{
+"kind": "tool",
+"name": "facts",
+"calls": 10.0,
+"unit_usd": 0.01,
+"price_source": "live x402 quote",
+"usd": 0.1
+}
+],
+"biggest_cost": "extract",
+"share_of_biggest": 0.995,
+"notes": [],
+"range_note": "range = -20% / +50% around the point estimate (output length and retries usually run over)",
+"fits_budget": false,
+"budget_verdict": "may exceed",
+"value_multiple": 4.52,
+"worth_it": true,
+"routing": [
+{
+"step": "extract",
+"from": "big",
+"to": "small",
+"saves_usd": 20.57,
+"saves_share": 0.935
+}
+],
+"routed_total_usd": 1.53
+}
+},
+"POST /api/tollbooth/v1/passport/issue": {
+"status": 200,
+"example_input": {
+"scope": {
+"agent": "research-agent",
+"job_id": "job-42",
+"allow_tools": [
+"search",
+"local-facts"
+],
+"allow_hosts": [
+"exa.ai",
+"omenz.org"
+],
+"max_spend_usd": 0.5,
+"expires_in_minutes": 60
+}
+},
+"sample_response": {
+"token": "eyJhZ2VudCI6InJlc2VhcmNoLWFnZW50IiwiYWxsb3dfaG9zdHMiOlsiZXhhLmFpIiwib21lbnoub3JnIl0sImFsbG93X3Rvb2xzIjpbImxvY2FsLWZhY3RzIiwic2VhcmNoIl0sImRlbnlfaG9zdHMiOltdLCJleHAiOjE3OTQ2NzE5MjMsImlhdCI6MTc5NDY2ODMyMywiaXNzdWVyIjoib21lbnoub3JnIiwiam9iX2lkIjoiam9iLTQyIiwianRpIjoicHBfNDFmM2ZkMWE0Nzc2ZTU4Zjk2ZTciLCJtYXhfc3BlbmRfdXNkIjowLjUsInB1cnBvc2UiOiIiLCJzY2hlbWEiOiJvbWVuei5wYXNzcG9ydC52MCJ9.AEXnopa8YGP9HjcX_Ju…",
+"passport": {
+"schema": "omenz.passport.v0",
+"jti": "pp_41f3fd1a4776e58f96e7",
+"iat": 1794668323,
+"exp": 1794671923,
+"agent": "research-agent",
+"job_id": "job-42",
+"purpose": "",
+"allow_tools": [
+"local-facts",
+"search"
+],
+"allow_hosts": [
+"exa.ai",
+"omenz.org"
+],
+"deny_hosts": [],
+"max_spend_usd": 0.5,
+"issuer": "omenz.org"
+},
+"kid": "11d7eb2b3fe2bac3",
+"note": "Carries permissions, not credentials. Anyone can verify it offline with GET /v1/passport/key."
+}
+},
+"POST /api/tollbooth/v1/passport/check": {
+"status": 200,
+"example_input": {
+"token": "<passport token>",
+"action": {
+"tool": "search",
+"url": "https://api.exa.ai/search",
+"amount_usd": 0.007,
+"spent_so_far_usd": 0.1
+}
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:43Z",
+"stored": false,
+"decision": "DENY",
+"valid": false,
+"reasons": [
+"passport signature invalid or token malformed"
+]
+}
+},
+"GET /api/tollbooth/v1/event-check": {
+"status": 200,
+"example_input": {
+"company": "NVDA",
+"claim": "Jensen Huang resigned as CEO",
+"days": 30
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:43Z",
+"company_query": "NVDA",
+"claim": "Jensen Huang resigned as CEO",
+"source": "SEC EDGAR",
+"company": "NVIDIA CORP",
+"ticker": "NVDA",
+"cik": "0001045810",
+"event_type": [
+"officer/director change"
+],
+"items_checked": [
+"5.02"
+],
+"window_days": 30,
+"recent_8k_count": 1,
+"verdict": "FILED",
+"best_filing": {
+"form": "8-K",
+"filed": "2026-11-12",
+"items": [
+"5.02",
+"9.01"
+],
+"url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000082/nvda-20261111.htm",
+"description": "8-K",
+"claim_words_found": [
+"jensen",
+"huang",
+"ceo",
+"<event verb>"
+],
+"match_share": 1.0,
+"quote": "On November 11, 2026, the Board of Directors, or the Board, of NVIDIA Corporation accepted the resignation of Jen-Hsun Huang, as NVIDIA's President, Chief Executive Officer and member of the Board, effective immediately.",
+"specifics_confirmed": true,
+"specifics_checked": [
+"huang",
+"jensen",
+"ceo"
+]
+},
+"matching_filings": [
+{
+"form": "8-K",
+"filed": "2026-11-12",
+"items": [
+"5.02",
+"9.01"
+],
+"url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000082/nvda-20261111.htm",
+"description": "8-K"
+}
+],
+"note": null
+}
+},
+"POST /api/tollbooth/v1/claim-evidence": {
+"status": 200,
+"example_input": {
+"claim": "Stripe charges 2.9% + 30 cents per successful card charge",
+"url": "https://stripe.com/pricing"
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:44Z",
+"claim": "Stripe charges 2.9% + 30 cents per successful card charge",
+"url": "https://stripe.com/pricing",
+"final_url": "https://stripe.com/pricing",
+"checked_numbers": [
+"2.9%",
+"30"
+],
+"checked_names": [
+"stripe"
+],
+"cost": {
+"seconds": 0.71
+},
+"verdict": "SUPPORTED",
+"quote": "Get started 2.9% + 30¢ per successful transaction for domestic cards Custom Design a custom package— available for businesses with large payments volume or unique business models.",
+"note": null
+}
+},
+"POST /api/tollbooth/v1/preflight": {
+"status": 200,
+"example_input": {
+"job": {
+"tools": [
+{
+"name": "facts",
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
+"calls": 10,
+"max_price_usd": 0.02
+}
+],
+"budget_usd": 1,
+"passport_token": "<optional>"
+}
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:45Z",
+"paid_targets": false,
+"tools": [
+{
+"name": "facts",
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
+"status": "quoted",
+"http_status": 402,
+"latency_ms": 261,
+"unit_usd": 0.01,
+"calls": 10.0,
+"usd": 0.1,
+"passport": "DENY"
+}
+],
+"estimated_total_usd": 0.1,
+"budget_usd": 1.0,
+"verdict": "BLOCKED",
+"blockers": [
+"facts: passport says DENY (passport signature invalid or token malformed)",
+"passport invalid or forged"
+],
+"warnings": [],
+"next_action": "fix the blockers, then start"
+}
+},
+"POST /api/tollbooth/v1/ledger/create": {
+"status": 200,
+"example_input": {
+"job_id": "job-42",
+"objective": "get today's hours for 20 restaurants"
+},
+"sample_response": {
+"ledger_id": "lg_b1843501bf15a5cc2ae413e4",
+"ledger_key": "V-xwfqna2mQdZUzhIKj8HvVkjxf4-XFfjzgGXj7V6A4",
+"expires_at": 1802444325,
+"note": "Keep ledger_key: it's shown once. Send it as header X-Ledger-Key to append or read."
+}
+},
+"POST /api/tollbooth/v1/ledger/append": {
+"status": 400,
+"example_input": {
+"ledger_id": "lg_...",
+"entry": {
+"type": "tool_call",
+"tool": "local-facts",
+"amount_usd": 0.01,
+"result": "ok"
+}
+},
+"sample_response": {
+"error": "ledger id and X-Ledger-Key header required"
+}
+},
+"GET /api/tollbooth/v1/ledger/get": {
+"status": 400,
+"example_input": {
+"id": "lg_...",
+"since_seq": 0
+},
+"sample_response": {
+"error": "ledger id and X-Ledger-Key header required"
+}
+},
+"GET /api/tollbooth/v1/capability-card": {
+"status": 200,
+"example_input": {
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com"
+},
+"sample_response": {
+"schema": "omenz.capability-card.v0",
+"version": "0.1.0",
+"source_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
+"generated_at": "2026-11-14T14:59:38Z",
+"paid": false,
+"built_by": "OMENZ capability-card (third-party view: verify with the publisher)",
+"status": "ok",
+"kind": "single_endpoint",
+"endpoints": [
+{
+"method": "GET",
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https%3A%2F%2Fexample.com&path=v1%2Flocal-facts",
+"description": "What a local business's OWN website says right now: phone, address, hours, and holiday/temporary-closure notices quoted word for word, each with its source. Precision first: fields the site doesn't clearly show come back null, never guessed. Flags hidden structured data that disagrees with the page, sites that moved to another domain, and multi-location sites. Deterministic, no AI calls. By OMENZ.",
+"price_usd": 0.01,
+"options": [
+{
+"scheme": "exact",
+"network": "base",
+"network_id": "eip155:8453",
+"testnet": false,
+"asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+"asset_symbol": "USDC",
+"asset_known": true,
+"amount_atomic": "10000",
+"price_usd": 0.01,
+"pay_to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840",
+"max_timeout_seconds": 300,
+"description": null
+}
+],
+"input_example": {
+"type": "http",
+"queryParams": {
+"url": "https://example.com"
+},
+"method": "GET"
+},
+"output_example": null,
+"live": true,
+"latency_ms": 246
+}
+],
+"endpoint_count": 1,
+"digest": "0f6043cfe66c7c8f"
+}
+},
+"POST /api/tollbooth/v1/queue/create": {
+"status": 200,
+"example_input": {
+"name": "restaurant-hours crew",
+"supervisor_box_id": "pb_...",
+"lease_seconds": 900
+},
+"sample_response": {
+"queue_id": "wq_a8cc9525d18032b3b4acbfed",
+"owner_key": "aXY8Q8_0Z7L3ZYdSbSTGqCJmMM1bScUwMSrvKxfYaj4",
+"worker_key": "Kw8iXMTAXNpQyf2g3U7AzDjcimH7c3voRDqxRo2nhIY",
+"expires_at": 1797260325,
+"note": "Keys are shown once. Give worker_key to your worker agents; keep owner_key. Send either as header X-Queue-Key."
+}
+},
+"POST /api/tollbooth/v1/queue/enqueue": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"title": "get hours for 20 restaurants",
+"payload": {
+"city": "Pasadena"
+},
+"priority": 5
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/claim": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7"
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/heartbeat": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7",
+"item_id": "wi_...",
+"checkpoint": {
+"locker_id": "lk_...",
+"step": 3
+}
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/complete": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7",
+"item_id": "wi_...",
+"result": {
+"ok": true
+}
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/fail": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7",
+"item_id": "wi_...",
+"reason": "site blocked",
+"retry": true
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/escalate": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7",
+"item_id": "wi_...",
+"reason": "customer asked for a refund"
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/resolve": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"item_id": "wi_...",
+"action": "requeue"
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/bid": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"worker_id": "agent-7",
+"item_id": "wi_...",
+"price_usd": 0.02,
+"eta_minutes": 10
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"POST /api/tollbooth/v1/queue/award": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"item_id": "wi_...",
+"worker_id": "agent-7"
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"GET /api/tollbooth/v1/queue/status": {
+"status": 400,
+"example_input": {
+"queue_id": "wq_...",
+"item_id": "(optional)"
+},
+"sample_response": {
+"error": "queue_id and X-Queue-Key header required"
+}
+},
+"GET /api/tollbooth/v1/market/find": {
+"status": 200,
+"example_input": {
+"q": "weather forecast by city",
+"max_price_usd": 0.01,
+"live_check": 2
+},
+"sample_response": {
+"version": "0.1.0",
+"query": "weather forecast by city",
+"checked_at": "2026-11-14T14:59:29Z",
+"paid_targets": false,
+"index_generated_at": "2026-11-14T14:38:20Z",
+"matches_total": 153,
+"results": [
+{
+"url": "https://agent-data-tools.revmesh2074.workers.dev/weather/forecast",
+"description": "Weather forecast by city name or coordinates: current temperature, conditions, precipitation, wind, humidity, cloud cover and pressure, plus an hourly forecast ",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 144,
+"payers_30d": 37,
+"last_called": "2026-11-14",
+"match": 1.0,
+"live": {
+"status": "quoted",
+"price_usd": 0.003,
+"latency_ms": 669,
+"price_drift": true
+}
+},
+{
+"url": "https://agent-data-tools.revmesh2074.workers.dev/weather",
+"description": "Weather forecast. Current weather by city name, or by latitude and longitude, for any place on Earth: temperature in Celsius, conditions (clear, cloudy, rain, s",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 74,
+"payers_30d": 11,
+"last_called": "2026-11-14",
+"match": 1.0,
+"live": {
+"status": "quoted",
+"price_usd": 0.002,
+"latency_ms": 190
+}
+},
+{
+"url": "https://x402.ottoai.services/weather",
+"description": "Live weather for any city or lat/lon worldwide. Returns current conditions — temperature, feels-like, humidity, wind and sky — plus a 5-day forecast with daily ",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 38,
+"payers_30d": 15,
+"last_called": "2026-11-14",
+"match": 1.0
+},
+{
+"url": "https://netintel.dev/weather/current",
+"description": "Current weather for any city or lat/lon worldwide, plus a 3-day forecast — temperature, feels-like, humidity, wind, precipitation, cloud cover, and a plain-lang",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 28,
+"payers_30d": 15,
+"last_called": "2026-11-13",
+"match": 1.0
+},
+{
+"url": "https://quantagentshop.com/v1/weather",
+"description": "Weather forecast for coordinates or a city name: current temperature, humidity, wind, cloud, pressure and conditions, an hourly forecast up to 48 hours, and dai",
+"method": "POST",
+"price_usd": 0.0099,
+"networks": [
+"eip155:8453"
+],
+"calls_30d": 29,
+"payers_30d": 10,
+"last_called": "2026-11-11",
+"match": 1.0
+}
+],
+"cheapest": "https://x402.agentindex.world/weather",
+"most_used": "https://agent-data-tools.revmesh2074.workers.dev/weather/forecast",
+"note": "ranked by match, then real 30-day usage; 'live' = unpaid probe just now"
+}
+},
+"GET /api/tollbooth/v1/market/reliability": {
+"status": 200,
+"example_input": {
+"url": "https://crypto.apitoll.cloud/v1/crypto/price"
+},
+"sample_response": {
+"version": "0.1.0",
+"url": "https://crypto.apitoll.cloud/v1/crypto/price",
+"checked_at": "2026-11-14T14:59:34Z",
+"paid_targets": false,
+"listing": {
+"url": "https://crypto.apitoll.cloud/v1/crypto/price",
+"description": "Latest crypto token prices by ticker symbol, CoinGecko id, or chain:address (BTC, ETH, SOL, or base:0x…): current spot price, token symbol, decimals, and a conf",
+"method": "GET",
+"price_usd": 0.001,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 272,
+"payers_30d": 66,
+"last_called": "2026-11-14",
+"index_generated_at": "2026-11-14T14:38:20Z"
+},
+"live": {
+"status": "quoted",
+"http_status": 402,
+"latency_ms": 649,
+"price_usd": 0.001
+},
+"score": 90,
+"grade": "A",
+"reasons": [
+"+30 usage: 272 calls / 66 unique payers in 30 days",
+"+30 answers now with valid x402 payment requirements",
+"+10 fast (649 ms)",
+"+10 live price matches the listing",
+"+10 pays the same address as listed"
+],
+"limits": "Usage comes from the public Bazaar index (weekly); we can't see whether paid responses were correct. Pair with Claim->Evidence / Acceptance checks on what you receive."
+}
+},
+"GET /api/tollbooth/v1/vendor-check": {
+"status": 200,
+"example_input": {
+"url": "https://crypto.apitoll.cloud/v1/crypto/price"
+},
+"sample_response": {
+"version": "0.1.0",
+"url": "https://crypto.apitoll.cloud/v1/crypto/price",
+"vendor_host": "crypto.apitoll.cloud",
+"checked_at": "2026-11-14T14:59:35Z",
+"reliability": {
+"version": "0.1.0",
+"url": "https://crypto.apitoll.cloud/v1/crypto/price",
+"checked_at": "2026-11-14T14:59:35Z",
+"paid_targets": false,
+"listing": {
+"url": "https://crypto.apitoll.cloud/v1/crypto/price",
+"description": "Latest crypto token prices by ticker symbol, CoinGecko id, or chain:address (BTC, ETH, SOL, or base:0x…): current spot price, token symbol, decimals, and a conf",
+"method": "GET",
+"price_usd": 0.001,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 272,
+"payers_30d": 66,
+"last_called": "2026-11-14",
+"index_generated_at": "2026-11-14T14:38:20Z"
+},
+"live": {
+"status": "quoted",
+"http_status": 402,
+"latency_ms": 614,
+"price_usd": 0.001
+},
+"score": 90,
+"grade": "A",
+"reasons": [
+"+30 usage: 272 calls / 66 unique payers in 30 days",
+"+30 answers now with valid x402 payment requirements",
+"+10 fast (614 ms)",
+"+10 live price matches the listing",
+"+10 pays the same address as listed"
+],
+"limits": "Usage comes from the public Bazaar index (weekly); we can't see whether paid responses were correct. Pair with Claim->Evidence / Acceptance checks on what you receive."
+},
+"domain": {
+"status": "live",
+"final_url": "https://crypto.apitoll.cloud",
+"title": null,
+"phone": null,
+"notes": [],
+"next_action": "proceed"
+},
+"terms": null,
+"flags": [
+"no readable terms/pricing page found"
+],
+"verdict": "REVIEW"
+}
+},
+"POST /api/tollbooth/v1/contract/build": {
+"status": 200,
+"example_input": {
+"terms": {
+"buyer": "agent-a",
+"seller": "agent-b",
+"deliverable": "hours for 3 restaurants",
+"max_spend_usd": 0.1,
+"deadline": 1900000000,
+"acceptance": [
+{
+"type": "min_items",
+"field": "results",
+"n": 3
+},
+{
+"type": "regex",
+"field": "source",
+"pattern": "https://.+"
+}
+]
+}
+},
+"sample_response": {
+"contract": {
+"schema": "omenz.contract.v0",
+"contract_id": "ct_46c529f30157c16794ae",
+"issued": 1794668327,
+"buyer": "agent-a",
+"seller": "agent-b",
+"deliverable": "hours for 3 restaurants",
+"acceptance": [
+{
+"type": "min_items",
+"field": "results",
+"n": 3
+},
+{
+"type": "regex",
+"field": "source",
+"pattern": "https://.+"
+}
+],
+"max_spend_usd": 0.1,
+"deadline": 1900000000,
+"payment": "",
+"issuer": "omenz.org"
+},
+"token": "eyJhY2NlcHRhbmNlIjpbeyJmaWVsZCI6InJlc3VsdHMiLCJuIjozLCJ0eXBlIjoibWluX2l0ZW1zIn0seyJmaWVsZCI6InNvdXJjZSIsInBhdHRlcm4iOiJodHRwczovLy4rIiwidHlwZSI6InJlZ2V4In1dLCJidXllciI6ImFnZW50LWEiLCJjb250cmFjdF9pZCI6ImN0XzQ2YzUyOWYzMDE1N2MxNjc5NGFlIiwiZGVhZGxpbmUiOjE5MDAwMDAwMDAsImRlbGl2ZXJhYmxlIjoiaG91cnMgZm9yIDMgcmVzdGF1cmFudHMiLCJpc3N1ZWQiOjE3OTQ2NjgzMjcsImlzc3VlciI6Im9tZW56Lm9yZyIsIm1heF9zcGVuZF91c2QiOjAuMSwi…",
+"kid": "11d7eb2b3fe2bac3",
+"note": "Both parties keep the token. Deliveries are checked with POST /v1/contract/accept."
+}
+},
+"POST /api/tollbooth/v1/contract/accept": {
+"status": 422,
+"example_input": {
+"token": "<contract token>",
+"delivered": {
+"results": [
+1,
+2,
+3
+],
+"source": "https://example.com"
+}
+},
+"sample_response": {
+"error": "contract token invalid or forged"
+}
+},
+"GET /api/tollbooth/v1/reputation": {
+"status": 200,
+"example_input": {
+"agent": "agent-b"
+},
+"sample_response": {
+"agent": "agent-b",
+"jobs_checked": 0,
+"passed": 0,
+"failed": 0,
+"late": 0,
+"pass_rate": null,
+"distinct_buyers": 0,
+"recent": [],
+"note": "Only jobs checked by OMENZ Acceptance Test count. Few distinct buyers = weak evidence (could be self-dealing)."
+}
+},
+"POST /api/tollbooth/v1/evidence/bundle": {
+"status": 200,
+"example_input": {
+"items": [
+{
+"kind": "receipt",
+"id": "rc_..."
+},
+{
+"kind": "attestation",
+"token": "..."
+}
+],
+"label": "job 42"
+},
+"sample_response": {
+"bundle": {
+"schema": "omenz.evidence-bundle.v0",
+"bundle_id": "eb_4b820eb1a851510778c9",
+"label": "job 42",
+"created": 1794668327,
+"items": [
+{
+"i": 0,
+"sha256": "bd8b9bab0824e3cab8c04a562d6b59ab01b1c3e43adc0c87c984f0caa2c2d42a",
+"kind": "receipt"
+},
+{
+"i": 1,
+"sha256": "b3be2f71d79eab779be6752bc761ad649db70243a988b166da5d7a134f54f4ce",
+"kind": "attestation"
+}
+],
+"root": "9b9158cc1452f6bc911855465d77b3505464bbb2630e454f7e89e44014578b44",
+"issuer": "omenz.org"
+},
+"token": "eyJidW5kbGVfaWQiOiJlYl80YjgyMGViMWE4NTE1MTA3NzhjOSIsImNyZWF0ZWQiOjE3OTQ2NjgzMjcsImlzc3VlciI6Im9tZW56Lm9yZyIsIml0ZW1zIjpbeyJpIjowLCJraW5kIjoicmVjZWlwdCIsInNoYTI1NiI6ImJkOGI5YmFiMDgyNGUzY2FiOGMwNGE1NjJkNmI1OWFiMDFiMWMzZTQzYWRjMGM4N2M5ODRmMGNhYTJjMmQ0MmEifSx7ImkiOjEsImtpbmQiOiJhdHRlc3RhdGlvbiIsInNoYTI1NiI6ImIzYmUyZjcxZDc5ZWFiNzc5YmU2NzUyYmM3NjFhZDY0OWRiNzAyNDNhOTg4YjE2NmRhNWQ3YTEzNGY1NGY0Y2UifV0sImxh…",
+"items": [
+{
+"kind": "receipt",
+"id": "rc_..."
+},
+{
+"kind": "attestation",
+"token": "..."
+}
+],
+"verify": "check each item's sha256 against bundle.items, then the Ed25519 signature on the token with /v1/passport/key"
+}
+},
+"POST /api/tollbooth/v1/finance/reconcile": {
+"status": 200,
+"example_input": {
+"invoice": {
+"payee": "0x...",
+"lines": [
+{
+"desc": "lookups",
+"amount_usd": 0.5
+}
+],
+"total_usd": 0.5
+},
+"payments": [
+{
+"tx_hash": "0x...",
+"payer": "0x...",
+"amount_usd": 0.5
+}
+]
+},
+"sample_response": {
+"version": "0.1.0",
+"verdict": "UNVERIFIED",
+"invoice_total_usd": 0.5,
+"verified_paid_usd": 0.0,
+"difference_usd": -0.5,
+"payments": [
+{
+"tx_hash": "0x...",
+"payer": "0x...",
+"amount_usd": 0.5,
+"status": "UNCHECKABLE"
+}
+],
+"issues": [],
+"note": "Only USDC on Base with 0x addresses is checked on-chain; other payments show as UNCHECKABLE."
+}
+},
+"POST /api/tollbooth/v1/finance/forecast": {
+"status": 200,
+"example_input": {
+"spend": [
+{
+"at": 1763000000,
+"amount_usd": 0.01,
+"tool": "search"
+}
+]
+},
+"sample_response": {
+"version": "0.1.0",
+"observed_days": 1.0,
+"observed_total_usd": 0.01,
+"daily_rate_usd": 0.01,
+"next_7_days_usd": 0.07,
+"next_30_days_usd": 0.3,
+"trend": "falling",
+"biggest_dependencies": [
+{
+"tool": "search",
+"usd": 0.01,
+"share": 1.0
+}
+],
+"note": "linear projection of the observed rate; widen it if the workload is about to change"
+}
+},
+"POST /api/tollbooth/v1/finance/watchdog": {
+"status": 200,
+"example_input": {
+"endpoints": [
+{
+"url": "https://api.example.com/x402/endpoint",
+"expected_price_usd": 0.005,
+"terms_url": "https://example.com/pricing"
+}
+]
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T14:58:47Z",
+"alerts": [
+"https://api.example.com/x402/endpoint: not taking payment (error)"
+],
+"endpoints": [
+{
+"url": "https://api.example.com/x402/endpoint",
+"status": "error",
+"live_price_usd": null,
+"latency_ms": null,
+"terms": {
+"state": "UNKNOWN",
+"kinds": null,
+"money_changed": null,
+"added": null,
+"removed": null,
+"fingerprint": null
+}
+}
+],
+"verdict": "ALERT",
+"note": "keep each terms fingerprint and pass it back next time; we store nothing"
+}
+},
+"POST /api/tollbooth/v1/finance/snapshot": {
+"status": 200,
+"example_input": {
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com"
+},
+"sample_response": {
+"snapshot": {
+"schema": "omenz.purchase-snapshot.v0",
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
+"method": "GET",
+"taken_at": 1794668380,
+"offer": {
+"method": "GET",
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https%3A%2F%2Fexample.com&path=v1%2Flocal-facts",
+"description": "What a local business's OWN website says right now: phone, address, hours, and holiday/temporary-closure notices quoted word for word, each with its source. Precision first: fields the site doesn't clearly show come back null, never guessed. Flags hidden structured data that disagrees with the page, sites that moved to another domain, and multi-location sites. Deterministic, no AI calls. By OMENZ.",
+"price_usd": 0.01,
+"options": [
+{
+"scheme": "exact",
+"network": "base",
+"network_id": "eip155:8453",
+"testnet": false,
+"asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+"asset_symbol": "USDC",
+"asset_known": true,
+"amount_atomic": "10000",
+"price_usd": 0.01,
+"pay_to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840",
+"max_timeout_seconds": 300,
+"description": null
+}
+],
+"input_example": {
+"type": "http",
+"queryParams": {
+"url": "https://example.com"
+},
+"method": "GET"
+},
+"output_example": null,
+"live": true,
+"latency_ms": 355
+},
+"digest": "3e1d11a90de29170",
+"issuer": "omenz.org"
+},
+"token": "eyJkaWdlc3QiOiIzZTFkMTFhOTBkZTI5MTcwIiwiaXNzdWVyIjoib21lbnoub3JnIiwibWV0aG9kIjoiR0VUIiwib2ZmZXIiOnsiZGVzY3JpcHRpb24iOiJXaGF0IGEgbG9jYWwgYnVzaW5lc3MncyBPV04gd2Vic2l0ZSBzYXlzIHJpZ2h0IG5vdzogcGhvbmUsIGFkZHJlc3MsIGhvdXJzLCBhbmQgaG9saWRheS90ZW1wb3JhcnktY2xvc3VyZSBub3RpY2VzIHF1b3RlZCB3b3JkIGZvciB3b3JkLCBlYWNoIHdpdGggaXRzIHNvdXJjZS4gUHJlY2lzaW9uIGZpcnN0OiBmaWVsZHMgdGhlIHNpdGUgZG9lc24ndCBjbGVhcmx5IHNob3cg…",
+"note": "Proof of what was promised when you bought. Attach it to a refund request or dispute; verify with /v1/passport/key."
+}
+},
+"POST /api/tollbooth/v1/finance/refund-request": {
+"status": 200,
+"example_input": {
+"order": {
+"seller": "example-seller",
+"description": "facts lookup",
+"amount_usd": 0.01
+},
+"failure": {
+"error_class": "payment_taken_no_result"
+},
+"receipt_ids": [
+"rc_example"
+],
+"snapshot_token": "eyJkaWdlc3QiOiJlOTdiNGYzMDQyYjhkM2QwIiwiaXNzdWVyIjoib21lbnoub3JnIiwibWV0aG9kIjoiR0VUIiwib2ZmZXIiOnsiZGVzY3JpcHRpb24iOiJXaGF0IGEgbG9jYWwgYnVzaW5lc3MncyBPV04gd2Vic2l0ZSBzYXlzIHJpZ2h0IG5vdzogcGhvbmUsIGFkZHJlc3MsIGhvdXJzLCBhbmQgaG9saWRheS90ZW1wb3JhcnktY2xvc3VyZSBub3RpY2VzIHF1b3RlZCB3b3JkIGZvciB3b3JkLCBlYWNoIHdpdGggaXRzIHNvdXJjZS4gUHJlY2lzaW9uIGZpcnN0OiBmaWVsZHMgdGhlIHNpdGUgZG9lc24ndCBjbGVhcmx5IHNob3cgY29tZSBiYWNrIG51bGwsIG5ldmVyIGd1ZXNzZWQuIEZsYWdzIGhpZGRlbiBzdHJ1Y3R1cmVkIGRhdGEgdGhhdCBkaXNhZ3JlZXMgd2l0aCB0aGUgcGFnZSwgc2l0ZXMgdGhhdCBtb3ZlZCB0byBhbm90aGVyIGRvbWFpbiwgYW5kIG11bHRpLWxvY2F0aW9uIHNpdGVzLiBEZXRlcm1pbmlzdGljLCBubyBBSSBjYWxscy4gQnkgT01FTlouIiwiaW5wdXRfZXhhbXBsZSI6eyJtZXRob2QiOiJHRVQiLCJxdWVyeVBhcmFtcyI6eyJ1cmwiOiJodHRwczovL2V4YW1wbGUuY29tIn0sInR5cGUiOiJodHRwIn0sImxhdGVuY3lfbXMiOjM3MywibGl2ZSI6dHJ1ZSwibWV0aG9kIjoiR0VUIiwib3B0aW9ucyI6W3siYW1vdW50X2F0b21pYyI6IjEwMDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJhc3NldF9rbm93biI6dHJ1ZSwiYXNzZXRfc3ltYm9sIjoiVVNEQyIsImRlc2NyaXB0aW9uIjpudWxsLCJtYXhfdGltZW91dF9zZWNvbmRzIjozMDAsIm5ldHdvcmsiOiJiYXNlIiwibmV0d29ya19pZCI6ImVpcDE1NTo4NDUzIiwicGF5X3RvIjoiMHgxYmQzQWFBOTIyNDNlM2Q0MzUyYmRjRTA3MDUwYWVDNmZjRjVlODQwIiwicHJpY2VfdXNkIjowLjAxLCJzY2hlbWUiOiJleGFjdCIsInRlc3RuZXQiOmZhbHNlfV0sIm91dHB1dF9leGFtcGxlIjpudWxsLCJwcmljZV91c2QiOjAuMDEsInVybCI6Imh0dHBzOi8vd3d3Lm9tZW56Lm9yZy9hcGkvdG9sbGJvb3RoL3YxL2xvY2FsLWZhY3RzP3VybD1odHRwcyUzQSUyRiUyRmV4YW1wbGUuY29tJnBhdGg9djElMkZsb2NhbC1mYWN0cyJ9LCJzY2hlbWEiOiJvbWVuei5wdXJjaGFzZS1zbmFwc2hvdC52MCIsInRha2VuX2F0IjoxNzk0NjY4NDAyLCJ1cmwiOiJodHRwczovL3d3dy5vbWVuei5vcmcvYXBpL3RvbGxib290aC92MS9sb2NhbC1mYWN0cz91cmw9aHR0cHM6Ly9leGFtcGxlLmNvbSJ9.A_ObwUn77f39Ev7SazENy8iIeU0Nf4FVejGYN4OWASrke9mjREvllhyBNgqBnorOU1dtW8xaOMjxi3iuEZmPAw"
+},
+"sample_response": {
+"request": {
+"schema": "omenz.refund-request.v0",
+"request_id": "rr_435485df5e0c400e",
+"created": 1794668402,
+"order": {
+"seller": "example-seller",
+"buyer": null,
+"description": "facts lookup",
+"amount_usd": 0.01,
+"ordered_at": null,
+"tx_hash": null
+},
+"failure": {
+"error_class": "payment_taken_no_result"
+},
+"receipt_ids": [
+"rc_example"
+],
+"promised": {
+"digest": "e97b4f3042b8d3d0",
+"issuer": "omenz.org",
+"method": "GET",
+"offer": {
+"description": "What a local business's OWN website says right now: phone, address, hours, and holiday/temporary-closure notices quoted word for word, each with its source. Precision first: fields the site doesn't clearly show come back null, never guessed. Flags hidden structured data that disagrees with the page, sites that moved to another domain, and multi-location sites. Deterministic, no AI calls. By OMENZ.",
+"input_example": {
+"method": "GET",
+"queryParams": {
+"url": "https://example.com"
+},
+"type": "http"
+},
+"latency_ms": 373,
+"live": true,
+"method": "GET",
+"options": [
+{
+"amount_atomic": "10000",
+"asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+"asset_known": true,
+"asset_symbol": "USDC",
+"description": null,
+"max_timeout_seconds": 300,
+"network": "base",
+"network_id": "eip155:8453",
+"pay_to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840",
+"price_usd": 0.01,
+"scheme": "exact",
+"testnet": false
+}
+],
+"output_example": null,
+"price_usd": 0.01,
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https%3A%2F%2Fexample.com&path=v1%2Flocal-facts"
+},
+"schema": "omenz.purchase-snapshot.v0",
+"taken_at": 1794668402,
+"url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com"
+},
+"remedy": "refund",
+"amount_requested_usd": 0.01,
+"evidence_strength": 3,
+"issuer": "omenz.org"
+},
+"token": "eyJhbW91bnRfcmVxdWVzdGVkX3VzZCI6MC4wMSwiY3JlYXRlZCI6MTc5NDY2ODQwMiwiZXZpZGVuY2Vfc3RyZW5ndGgiOjMsImZhaWx1cmUiOnsiZXJyb3JfY2xhc3MiOiJwYXltZW50X3Rha2VuX25vX3Jlc3VsdCJ9LCJpc3N1ZXIiOiJvbWVuei5vcmciLCJvcmRlciI6eyJhbW91bnRfdXNkIjowLjAxLCJidXllciI6bnVsbCwiZGVzY3JpcHRpb24iOiJmYWN0cyBsb29rdXAiLCJvcmRlcmVkX2F0IjpudWxsLCJzZWxsZXIiOiJleGFtcGxlLXNlbGxlciIsInR4X2hhc2giOm51bGx9LCJwcm9taXNlZCI6eyJkaWdlc3QiOiJlOTdi…",
+"gaps": [],
+"note": "Send the token to the seller (or their PO Box). OMENZ packages and signs the evidence; it doesn't rule on or move money."
+}
+},
+"GET /api/tollbooth/v1/terms-extract": {
+"status": 200,
+"example_input": {
+"url": "https://example.com/terms"
+},
+"sample_response": {
+"version": "0.1.0",
+"url": "https://example.com/terms",
+"checked_at": "2026-11-14T14:58:47Z",
+"status": "unreadable",
+"http_status": null,
+"blocked_by": null
+}
+},
+"GET /api/tollbooth/v1/freshness": {
+"status": 200,
+"example_input": {
+"url": "https://example.com/pricing",
+"kind": "price"
+},
+"sample_response": {
+"version": "0.1.0",
+"url": "https://example.com/pricing",
+"kind": "price",
+"checked_at": "2026-11-14T14:58:47Z",
+"status": "unreachable",
+"error": "URLError",
+"reuse_seconds": 0,
+"refetch": true
+}
+},
+"POST /api/tollbooth/v1/dedupe": {
+"status": 200,
+"example_input": {
+"namespace_key": "your-private-team-key-16+",
+"task": {
+"q": "hours for Flemings Pasadena",
+"day": "2026-11-14"
+},
+"result_pointer": "lk_...",
+"ttl_hours": 24
+},
+"sample_response": {
+"verdict": "MISS",
+"fingerprint": "56fc5a708067be7e8867a9ea423ec30949e42ef76675cf9329898976575d9619",
+"registered": true,
+"reuse_until": 1794754727
+}
+},
+"POST /api/tollbooth/v1/context-diet": {
+"status": 200,
+"example_input": {
+"packet": {
+"objective": "ship v2",
+"notes": "...long..."
+},
+"required": [
+"objective"
+],
+"max_string_chars": 400
+},
+"sample_response": {
+"packet": {
+"objective": "ship v2",
+"notes": "...long..."
+},
+"bytes_before": 47,
+"bytes_after": 47,
+"saved_share": 0.0,
+"approx_tokens_saved": 0,
+"cuts": [],
+"required_missing": [],
+"note": "cut strings keep their first part + a sha256 so the full text can be fetched from your own store if needed"
+}
+}
+}

@@ -52,6 +52,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
+  ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -66,6 +67,7 @@ from fastapi import Body, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
+import ayne  # noqa: E402
 import capability_card  # noqa: E402
 import changed  # noqa: E402
 import claim_evidence  # noqa: E402
@@ -487,6 +489,9 @@ async def x402_mw(request, call_next):
         _mw = payment_middleware(ROUTES, server)
     t0 = time.time()
     request.state.extra = {}
+    request.state.ayne = False
+    if request.url.path.startswith(BASE + "/ayne"):
+        return await _ayne(request, call_next, t0)
     resp = await _mw(request, call_next)
     path = request.url.path
     if path.startswith(BASE + "/v1/"):
@@ -500,11 +505,66 @@ async def x402_mw(request, call_next):
     return resp
 
 
+async def _ayne(request, call_next, t0):
+    from starlette.concurrency import run_in_threadpool
+    path = request.url.path
+    sub = path[len(BASE + "/ayne/v1"):] if path.startswith(BASE + "/ayne/v1/") else ""
+    method = request.method.upper()
+    ua = request.headers.get("user-agent", "")
+    vis = ayne.visitor(request.headers.get("x-forwarded-for", "").split(",")[0].strip(), ua)
+    ev = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "ayne", "route": sub or "/", "method": method,
+          "visitor": vis, "ua_class": _ua_class(ua), "country": request.headers.get("x-vercel-ip-country", "")}
+    if not sub or sub == "/":
+        ev["mode"] = "index"
+        await run_in_threadpool(ayne.log, ev)
+        return JSONResponse(ayne.index(ROUTES, BASE))
+    raw = await request.body()
+    ev["fields"] = ayne.field_names(raw) if raw else sorted(request.query_params.keys())[:30]
+    ok, why, n = await run_in_threadpool(ayne.take, vis)
+    if not ok:
+        ev.update(mode="capped", cap=why)
+        await run_in_threadpool(ayne.log, ev)
+        return JSONResponse({"error": f"AYNE {why} cap reached ({ayne.DAILY_CAP}/day total, {ayne.VISITOR_CAP}/day per visitor). "
+                                      "The paid routes are always open: " + BASE, "ayne": True}, status_code=429)
+    key = f"{method} {sub}"
+    paid_key = f"{method} {BASE}/v1{sub}"
+    if key in ayne.LIVE:
+        if len(raw) > ayne.MAX_BODY:
+            ev.update(mode="too_big")
+            await run_in_threadpool(ayne.log, ev)
+            return JSONResponse({"error": f"AYNE bodies are limited to {ayne.MAX_BODY} bytes; the paid route takes more", "ayne": True}, status_code=413)
+        request.scope["path"] = BASE + "/v1" + sub
+        request.scope["raw_path"] = request.scope["path"].encode()
+        request.state.ayne = True
+        resp = await call_next(request)
+        resp.headers["x-ayne"] = "live"
+        ev.update(mode="live", status=resp.status_code)
+    elif paid_key in ROUTES:
+        fx = ayne.fixtures().get(paid_key) or {}
+        resp = JSONResponse({"ayne": True, "sample": True, "note": "Sample response from AYNE. The paid route runs it on your real input.",
+                             "paid_route": {"method": method, "url": "https://www.omenz.org" + BASE + "/v1" + sub,
+                                            "price": ROUTES[paid_key]["accepts"]["price"]},
+                             "description": ROUTES[paid_key]["description"], "example_input": fx.get("example_input"),
+                             "sample_response": fx.get("sample_response")})
+        resp.headers["x-ayne"] = "sample"
+        ev.update(mode="sample", status=200)
+    else:
+        alt = [k.split(" ", 1)[0] for k in ROUTES if k.split(" ", 1)[1] == BASE + "/v1" + sub]
+        resp = JSONResponse({"ayne": True, "error": "OMENZ doesn't have this yet" if not alt else f"this route takes {', '.join(alt)}",
+                             "noted": True, "tell_us_what_you_need": BASE + "/v1/needs (free)", "all_routes": BASE + "/ayne/v1/"},
+                            status_code=404 if not alt else 405)
+        ev.update(mode="gap" if not alt else "wrong_method", status=resp.status_code)
+    ev["latency_ms"] = int((time.time() - t0) * 1000)
+    await run_in_threadpool(ayne.log, ev)
+    return resp
+
+
 @app.get(BASE)
 def index():
     return {"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
             "routes": {k: {"price": v["accepts"]["price"], "description": v["description"]} for k, v in ROUTES.items()},
             "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy", "capability_card": BASE + "/v1/card",
+            "playzone": {"name": "AYNE", "url": BASE + "/ayne/v1/", "price": "free", "cap": "2000 requests/day"},
             "tell_us_what_you_need": {"method": "POST", "path": BASE + "/v1/needs", "price": "free",
                                       "body": {"need": "required", "would_pay_usd_per_call": "number", "frequency": needs.FREQ,
                                                "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}
@@ -788,7 +848,7 @@ def contract_build(request: Request, body: dict = Body(...)):
 
 @app.post(BASE + "/v1/contract/accept")
 def contract_accept(request: Request, body: dict = Body(...)):
-    r = _locker_call(contracts.accept, body.get("token"), body.get("delivered"))
+    r = _locker_call(contracts.accept, body.get("token"), body.get("delivered"), not getattr(request.state, "ayne", False))
     request.state.extra.update({"action": "contract_accept", "verdict": r.get("verdict") if isinstance(r, dict) else None})
     return r
 
@@ -895,8 +955,9 @@ def _locker_call(fn, *a):
 
 
 @app.post(BASE + "/v1/locker/put")
-def locker_put(body: dict = Body(...)):
-    return _locker_call(locker.put, body.get("packet"), body.get("ttl_days", 7), body.get("to"), body.get("from"))
+def locker_put(request: Request, body: dict = Body(...)):
+    ttl = 1 if getattr(request.state, "ayne", False) else body.get("ttl_days", 7)  # AYNE lockers last 1 day
+    return _locker_call(locker.put, body.get("packet"), ttl, body.get("to"), body.get("from"))
 
 
 @app.get(BASE + "/v1/locker/get")

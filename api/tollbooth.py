@@ -944,6 +944,12 @@ def starter_pack():
             "all_endpoints": BASE + "/v1/card", "pricing_policy": BASE + "/v1/pricing-policy", "tell_us_what_you_need": BASE + "/v1/needs"}
 
 
+@app.get("/.well-known/mcp-registry-auth")
+def mcp_registry_auth():
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(discovery.MCP_REGISTRY_AUTH)
+
+
 @app.get("/openapi.json")
 @app.get(BASE + "/openapi.json")
 def openapi_doc():

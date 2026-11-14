@@ -44,8 +44,9 @@ def openapi(routes, base):
         schema = ((b.get("schema") or {}).get("properties") or {}).get("input", {}).get("properties", {})
         inp = (b.get("info") or {}).get("input") or {}
         op = {"operationId": tool_name(p, m), "summary": v["description"].split(":")[0][:120], "description": v["description"],
-              "x-payment-info": {"protocol": "x402", "version": 2, "price": v["accepts"]["price"], "network": v["accepts"]["network"],
-                                 "asset": "USDC", "payTo": v["accepts"]["payTo"], "scheme": v["accepts"]["scheme"]},
+              "x-payment-info": {"protocols": ["x402"], "x402Version": 2,
+                                 "price": {"mode": "fixed", "currency": "USD", "amount": v["accepts"]["price"].lstrip("$")},
+                                 "network": v["accepts"]["network"], "asset": "USDC", "payTo": v["accepts"]["payTo"], "scheme": v["accepts"]["scheme"]},
               "responses": {"200": {"description": "Result (JSON)"}, "402": {"description": "Payment required (x402 v2 'payment-required' header)"},
                             "422": {"description": "Invalid input (not charged)"}}}
         if m == "GET":
@@ -64,8 +65,12 @@ def openapi(routes, base):
                                     f"Free playzone: {ORIGIN}{base}/ayne/v1 . Pricing policy: {ORIGIN}{base}/v1/pricing-policy .",
                      "contact": {"name": "OMENZ", "email": "hello@omenz.org", "url": "https://omenz.org"}},
             "servers": [{"url": ORIGIN}], "paths": paths,
-            "x-discovery": {"agent_card": ORIGIN + "/.well-known/agent-card.json", "x402": ORIGIN + "/.well-known/x402",
-                            "mcp": ORIGIN + "/mcp", "llms_txt": ORIGIN + "/llms.txt"}}
+            "x-discovery": {"ownershipProofs": [_pay_to(routes)], "agent_card": ORIGIN + "/.well-known/agent-card.json",
+                            "x402": ORIGIN + "/.well-known/x402", "mcp": ORIGIN + "/mcp", "llms_txt": ORIGIN + "/llms.txt"}}
+
+
+def _pay_to(routes):
+    return next(iter(routes.values()))["accepts"]["payTo"]
 
 
 def well_known_x402(routes, base):
@@ -75,8 +80,10 @@ def well_known_x402(routes, base):
         res.append({"resource": ORIGIN + p, "method": m, "description": v["description"], "price": v["accepts"]["price"],
                     "network": v["accepts"]["network"], "asset": "USDC", "payTo": v["accepts"]["payTo"], "scheme": v["accepts"]["scheme"],
                     "input": (_info(v).get("info") or {}).get("input")})
-    return {"x402Version": 2, "publisher": "OMENZ", "homepage": "https://omenz.org", "resources": res, "count": len(res),
-            "playzone": ORIGIN + base + "/ayne/v1", "openapi": ORIGIN + "/openapi.json"}
+    return {"version": 1, "x402Version": 2, "resources": [r["resource"] for r in res], "ownershipProofs": [_pay_to(routes)],
+            "instructions": "Pay-per-call tools for AI agents by OMENZ. Call any resource without payment to get its 402 requirements. "
+                            "Free playzone: " + ORIGIN + base + "/ayne/v1 . OpenAPI: " + ORIGIN + "/openapi.json",
+            "publisher": "OMENZ", "homepage": "https://omenz.org", "details": res, "count": len(res)}
 
 
 def agent_card(routes, base):
@@ -128,3 +135,5 @@ HEADER_ARGS = {"x_ledger_key": "X-Ledger-Key", "x_queue_key": "X-Queue-Key", "x_
 
 def rpc_error(id_, code, msg):
     return {"jsonrpc": "2.0", "id": id_, "error": {"code": code, "message": msg}}
+
+MCP_REGISTRY_AUTH = "v=MCPv1; k=ed25519; p=RPSb9vYjD13nMgn7cnq5YXQpdnkzA5iCbynSsh5fEpo="  # public proof record (private key in omenz-stack/data/secrets)

@@ -14,6 +14,10 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/pobox/create         $0.001  Agent PO Box: get a box_id (share it) + owner_key (private)
   POST /api/tollbooth/v1/pobox/drop           $0.001  leave a sealed message for a box (any agent with the box_id)
   GET  /api/tollbooth/v1/pobox/inbox?box_id=  $0.001  owner opens waiting messages (header X-Owner-Key; ack=true clears)
+  GET  /api/tollbooth/v1/alive?url=&method=  $0.001  Proof-of-Life: is this endpoint answering right now (up/paywalled/down...)
+  GET  /api/tollbooth/v1/quote?url=&method=  $0.001  Price Quote: an x402 endpoint's live payment options, normalized to USD
+  POST /api/tollbooth/v1/tx-preflight        $0.002  Transaction Preflight: GO/STOP before paying (budget, recipient, network, drift)
+  POST /api/tollbooth/v1/secret-scan         $0.002  Secret-Leak Preflight: CLEAN/REVIEW/BLOCK before a payload leaves (nothing stored)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -35,6 +39,8 @@ import handoff  # noqa: E402
 import local_facts  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
+import secret_scan  # noqa: E402
+import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
 from x402 import x402ResourceServer  # noqa: E402
@@ -131,6 +137,42 @@ ROUTES[f"GET {BASE}/v1/locker/get"] = {
         input_schema={"properties": {"id": {"type": "string"}, "fields": {"type": "string", "description": "Optional comma list of top-level keys"}}, "required": ["id"]}),
 }
 
+PROBE_DESC = {
+    "alive": "Proof-of-Life: is this API/endpoint answering right now, before you spend money calling it? One unpaid probe: up, paywalled (valid x402 requirements), auth_required, not_found, wrong_method, degraded, tls_error or down, with latency. Never pays the target. By OMENZ.",
+    "quote": "Price Quote: the live x402 payment options of any endpoint, normalized: USD price, network, stablecoin, payTo, scheme, timeout; cheapest option. Reads the 402 (v1 body or v2 header) without paying. By OMENZ.",
+}
+for _n in ("alive", "quote"):
+    ROUTES[f"GET {BASE}/v1/{_n}"] = {
+        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+        "description": PROBE_DESC[_n], "mimeType": "application/json",
+        "extensions": declare_discovery_extension(
+            input={"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+            input_schema={"properties": {"url": {"type": "string", "description": "Endpoint URL to probe"},
+                                         "method": {"type": "string", "description": "HTTP method the endpoint expects (default GET)"}},
+                          "required": ["url"]}),
+    }
+ROUTES[f"POST {BASE}/v1/tx-preflight"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
+    "description": "Transaction Preflight: GO or STOP before your agent pays an x402 endpoint. Checks it answers, the live price is within max_price_usd, payTo matches expected_pay_to, the network is allowed, the asset is a known USD stablecoin, and flags drift from the price you were quoted/listed. Never pays the target. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"url": "https://api.example.com/x402/endpoint", "method": "GET", "max_price_usd": 0.01,
+               "expected_pay_to": "0x...", "networks": ["base"], "listed_price_usd": 0.005},
+        input_schema={"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"},
+                                     "expected_pay_to": {"type": "string"}, "networks": {"type": "array"},
+                                     "listed_price_usd": {"type": "number"}, "allow_testnet": {"type": "boolean"}},
+                      "required": ["url"]}, body_type="json"),
+}
+ROUTES[f"POST {BASE}/v1/secret-scan"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
+    "description": "Secret-Leak Preflight: before a handoff, prompt or payload leaves your boundary, scan it for API keys (Anthropic, OpenAI, AWS, GitHub, Stripe, Slack, Google...), PEM keys, wallet private keys, recovery phrases, DB passwords, JWTs and card numbers. CLEAN / REVIEW / BLOCK with JSON path + offset and redacted previews. Scanned in memory, never stored or logged. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"payload": {"objective": "ship v2", "notes": "config attached"}},
+        input_schema={"properties": {"payload": {"description": "String or JSON (<=256 KB) to check"}}, "required": ["payload"]},
+        body_type="json"),
+}
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -220,6 +262,42 @@ def local_facts_route(request: Request, url: str = Query(...)):
                                 "notices": len(r.get("notices") or []), "hidden": len(((r.get("hidden_data") or {}).get("items")) or [])})
     if r.get("error") in ("invalid_url",):
         return JSONResponse(r, status_code=400)
+    return r
+
+
+@app.get(BASE + "/v1/alive")
+def alive_route(request: Request, url: str = Query(...), method: str = "GET"):
+    r = x402_probe.alive(url, method)
+    request.state.extra.update({"action": "alive", "verdict": r.get("verdict")})
+    return r
+
+
+@app.get(BASE + "/v1/quote")
+def quote_route(request: Request, url: str = Query(...), method: str = "GET"):
+    r = x402_probe.quote(url, method)
+    request.state.extra.update({"action": "quote", "q_status": r.get("status"), "options": len(r.get("options") or [])})
+    return r
+
+
+@app.post(BASE + "/v1/tx-preflight")
+def tx_preflight_route(request: Request, body: dict = Body(...)):
+    if not isinstance(body.get("url"), str):
+        return JSONResponse({"error": "url required"}, status_code=422)
+    try:
+        r = x402_probe.preflight(body["url"], body.get("method", "GET"), body.get("max_price_usd"), body.get("expected_pay_to"),
+                                 body.get("networks"), body.get("listed_price_usd"), bool(body.get("allow_testnet")))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "max_price_usd / listed_price_usd must be numbers, networks a list"}, status_code=422)
+    request.state.extra.update({"action": "tx_preflight", "verdict": r.get("verdict")})
+    return r
+
+
+@app.post(BASE + "/v1/secret-scan")
+def secret_scan_route(request: Request, body: dict = Body(...)):
+    if "payload" not in body:
+        return JSONResponse({"error": "payload required"}, status_code=422)
+    r = secret_scan.scan(body["payload"])
+    request.state.extra.update({"action": "secret_scan", "verdict": r.get("verdict"), "findings": len(r.get("findings") or [])})
     return r
 
 

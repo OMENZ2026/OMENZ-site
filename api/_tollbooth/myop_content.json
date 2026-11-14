@@ -1,0 +1,72 @@
+{
+ "squeeze": [
+  {"id": "m1", "title": "The Taco Truck Heist",
+   "brief": "Your crew must deliver a sealed cooler to the Westside Night Market. Pickup is at Pier 9, slot B, at 6:40 PM. The cooler is green with a red lid and holds 40 birria tacos. The market contact is a woman named Lupe who wears a yellow beanie. The password is 'salsa verde twice'. Do NOT use Main Street: it is closed for a parade. Take Elm Avenue instead. Lupe pays $220 cash on delivery. If Lupe is not there, hand the cooler to the stall with the blue umbrella and text the code 7731. The truck's spare key is taped under the left mirror.",
+   "questions": [
+    {"q": "Where and at what time is the pickup?", "keys": [["pier 9"], ["6:40", "640", "6.40", "18:40"]]},
+    {"q": "What is the password?", "keys": [["salsa verde twice"]]},
+    {"q": "Which street must be avoided, and which one should be used?", "keys": [["main"], ["elm"]]},
+    {"q": "How much does Lupe pay on delivery?", "keys": [["220"]]},
+    {"q": "If Lupe is missing, who gets the cooler and what code is texted?", "keys": [["blue umbrella"], ["7731"]]}
+   ]},
+  {"id": "m2", "title": "Server Room Rescue",
+   "brief": "The OMENZ test server in rack 14 keeps rebooting. Root cause suspected: fan #3 on the top unit. The replacement fan is in drawer C, labeled 'NF-A8'. Before touching anything, put the rack in maintenance mode with the command 'maint on 14'. The rack door code is 0419. Only the top unit's power can be cut; never cut power to the bottom unit, it runs the payment queue. After replacing the fan, run 'maint off 14' and watch the temperature: it must read under 45 C within ten minutes. Report the result to the channel #ops-night. The on-call engineer is Dev, reachable at extension 512.",
+   "questions": [
+    {"q": "Which rack and which part are the problem?", "keys": [["14"], ["fan"]]},
+    {"q": "What is the rack door code?", "keys": [["0419", "419"]]},
+    {"q": "Which unit must never lose power, and why?", "keys": [["bottom"], ["payment"]]},
+    {"q": "What temperature must it read after the fix, and within how long?", "keys": [["45"], ["ten", "10"]]},
+    {"q": "Where is the result reported, and what extension reaches the on-call engineer?", "keys": [["ops-night", "ops night"], ["512"]]}
+   ]},
+  {"id": "m3", "title": "Granny's Birthday Op",
+   "brief": "Surprise party for Granny on Saturday at 3 PM at the community hall on 5th and Oak. She thinks she's going to a church bake sale. Cousin Rae drives her and must arrive at 3:15 sharp, after everyone is hidden. The cake is coconut, not chocolate: Granny hates chocolate. Pick up the cake from Lorenzo's Bakery, order number 88. Balloons are gold and white only. The DJ plays nothing before 3:15 and the first song is 'Happy Birthday' in Spanish. Budget left: $140. The hall key is with Mr. Bell in apartment 2C.",
+   "questions": [
+    {"q": "When does Granny arrive, and who brings her?", "keys": [["3:15", "315", "3.15", "15:15"], ["rae"]]},
+    {"q": "What flavor is the cake and what flavor must be avoided?", "keys": [["coconut"], ["chocolate"]]},
+    {"q": "Where is the cake picked up and what is the order number?", "keys": [["lorenzo"], ["88"]]},
+    {"q": "What is the first song and in what language?", "keys": [["happy birthday"], ["spanish"]]},
+    {"q": "Who has the hall key and in which apartment?", "keys": [["bell"], ["2c"]]}
+   ]},
+  {"id": "m4", "title": "Signal in the Desert",
+   "brief": "A research drone went down 12 km north of Camp Delta. Its beacon transmits on 433.9 MHz every 90 seconds. The drone carries a sealed data card in the left wing: recover the card, not the whole drone. Storm expected at 16:00, so the team must be back at camp by 15:30. Use vehicle 3; vehicle 2 has a cracked radiator. Water: 4 liters per person minimum. If the beacon stops, switch to the backup coordinates written on the whiteboard in tent B. Radio check-ins every 30 minutes on channel 6.",
+   "questions": [
+    {"q": "How far and in which direction is the drone?", "keys": [["12"], ["north"]]},
+    {"q": "What frequency and how often does the beacon transmit?", "keys": [["433.9", "433,9"], ["90"]]},
+    {"q": "What must be recovered and from where?", "keys": [["card"], ["left wing", "left"]]},
+    {"q": "Which vehicle is used and what is wrong with the other one?", "keys": [["3", "three"], ["radiator"]]},
+    {"q": "By what time must the team be back, and on which channel are check-ins?", "keys": [["15:30", "1530", "3:30"], ["6", "six"]]}
+   ]},
+  {"id": "m5", "title": "The Merch Drop",
+   "brief": "Limited drop: 100 'Run It' tees go live Friday at 9 AM Pacific. Price $29.99, no discount codes on launch day. Sizes S to 3XL; 3XL costs $2 more. Each customer can buy at most 2. The announcement goes out on Threads first, then X ten minutes later. The QR on the back links to omenz.org/s/run-it. If the store crashes, post the backup link from the pinned note and pause ads. Customer questions go to hello@omenz.org. Restock is NOT promised: never say 'restock soon'.",
+   "questions": [
+    {"q": "When does the drop go live and how many tees are there?", "keys": [["friday"], ["9"], ["100"]]},
+    {"q": "What is the price and what costs extra?", "keys": [["29.99"], ["3xl"]]},
+    {"q": "What is the per-customer limit?", "keys": [["2", "two"]]},
+    {"q": "Which platform is first, and how long until the second?", "keys": [["threads"], ["ten", "10"]]},
+    {"q": "What must never be promised?", "keys": [["restock"]]}
+   ]},
+  {"id": "m6", "title": "Lost Dog Protocol",
+   "brief": "Jimmy, a brown pit mix with one white ear, slipped out at 7 AM near Maple Park. He answers to a whistle, not his name. He is scared of bikes and will run from them. Do not chase him: sit down and offer chicken. He is microchipped; the chip company line is 1-800-555-0142, chip ID ends in 6610. His owner is Marcus at 555-0188. Last seen heading toward the school on Birch Street. He takes heart medicine at noon, so time matters.",
+   "questions": [
+    {"q": "Describe the dog and say what he answers to.", "keys": [["brown"], ["white ear", "white"], ["whistle"]]},
+    {"q": "What should you never do, and what should you do instead?", "keys": [["chase"], ["chicken", "sit"]]},
+    {"q": "What is he afraid of?", "keys": [["bike"]]},
+    {"q": "What does the chip ID end in?", "keys": [["6610"]]},
+    {"q": "Why does time matter, and when?", "keys": [["medic"], ["noon", "12"]]}
+   ]}
+ ],
+ "trust": [
+  {"id": "t1", "claim": "The bakery is open on Sundays.", "evidence": ["Sign on the door: 'Hours: Mon-Sat 7am-6pm.'", "A 2019 review says 'great Sunday brunch spot'."], "truth": "CONTRADICTED", "why": "The current posted hours exclude Sunday; an old review doesn't override the current sign."},
+  {"id": "t2", "claim": "The package was delivered to the customer.", "evidence": ["Tracking page: 'Out for delivery' at 9:12 AM.", "No later tracking events."], "truth": "NOT_ENOUGH", "why": "'Out for delivery' is not 'delivered'."},
+  {"id": "t3", "claim": "The API costs $0.01 per call.", "evidence": ["Live 402 quote from the endpoint: amount 10000 (USDC, 6 decimals).", "Directory listing says $0.005."], "truth": "SUPPORTED", "why": "10000 units of a 6-decimal token = $0.01; the live quote beats a stale listing."},
+  {"id": "t4", "claim": "Dana is the new CEO of Brightline.", "evidence": ["Company press release: 'Brightline names Dana Ortiz Chief Executive Officer, effective March 1.'", "Dana's profile still says 'COO'."], "truth": "SUPPORTED", "why": "The company's own announcement is primary; profiles lag."},
+  {"id": "t5", "claim": "The concert was cancelled.", "evidence": ["A fan account posts: 'heard it's cancelled??'", "The venue's event page still shows tickets for sale."], "truth": "NOT_ENOUGH", "why": "A rumor with question marks is not confirmation, and the venue hasn't changed anything; nothing confirms the cancellation either way."},
+  {"id": "t6", "claim": "The bridge is closed to trucks.", "evidence": ["City notice: 'Effective today, vehicles over 10 tons are prohibited on the Harbor Bridge.'", "A truck driver says he crossed yesterday."], "truth": "SUPPORTED", "why": "The notice is current and official; yesterday predates it."},
+  {"id": "t7", "claim": "The store has the jacket in size M.", "evidence": ["Product page: size M button greyed out, label 'Sold out'.", "Store chat bot: 'We carry sizes S-XL.'"], "truth": "CONTRADICTED", "why": "Carrying a size range is not having stock; the product page shows M sold out."},
+  {"id": "t8", "claim": "The wallet that received the payment belongs to the seller.", "evidence": ["The seller's own 402 response lists payTo 0xA1...F3.", "The payment went to 0xA1...F3."], "truth": "SUPPORTED", "why": "The payment matches the payTo the seller itself published."},
+  {"id": "t9", "claim": "The meeting moved to Thursday.", "evidence": ["Calendar invite (updated 2 hours ago): Thursday 2 PM.", "An email from last week says Wednesday."], "truth": "SUPPORTED", "why": "The newest authoritative source wins; the email is older."},
+  {"id": "t10", "claim": "The restaurant is vegan.", "evidence": ["Menu lists 'oat milk available'.", "Menu lists 'beef birria' and 'chicken tinga'."], "truth": "CONTRADICTED", "why": "Meat dishes on the menu contradict 'vegan'."},
+  {"id": "t11", "claim": "The tool returned the right answer.", "evidence": ["The tool's output: 'Hours: 9-5'.", "No source URL or quote attached."], "truth": "NOT_ENOUGH", "why": "An answer without evidence can't be confirmed or refuted."},
+  {"id": "t12", "claim": "The refund was issued.", "evidence": ["Merchant email: 'Your refund of $42.10 was processed today; allow 5-10 business days.'", "Bank app doesn't show it yet."], "truth": "SUPPORTED", "why": "Issued (processed by the merchant) is not the same as posted; the bank lag is expected."}
+ ]
+}

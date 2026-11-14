@@ -52,6 +52,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
+  GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
   GET  /openapi.json  /.well-known/x402  /.well-known/agent-card.json   free  machine discovery (OpenAPI+x402, x402 list, A2A card)
   POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
@@ -98,6 +99,7 @@ import ledger  # noqa: E402
 import local_facts  # noqa: E402
 import market  # noqa: E402
 import needs  # noqa: E402
+import myop  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -783,6 +785,52 @@ def passport_check(request: Request, body: dict = Body(...)):
 @app.get(BASE + "/v1/passport/key")
 def passport_key():
     return passport.key()
+
+
+@app.get(BASE + "/myop/v1")
+def myop_index():
+    return myop.index(BASE)
+
+
+def _myop(fn, *a):
+    try:
+        return fn(*a)
+    except myop.MyopError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+
+
+@app.post(BASE + "/myop/v1/new/{game}")
+def myop_new(game: str, request: Request):
+    request.state.extra["action"] = "myop_new"
+    return _myop(myop.new, game, BASE)
+
+
+@app.post(BASE + "/myop/v1/{gid}/note")
+def myop_note(gid: str, body: dict = Body(None)):
+    return _myop(myop.post_note, gid, body)
+
+
+@app.get(BASE + "/myop/v1/{gid}/agent")
+def myop_agent_view(gid: str, request: Request):
+    request.state.extra["action"] = "myop_agent"
+    return _myop(myop.agent_view, gid, BASE)
+
+
+@app.post(BASE + "/myop/v1/{gid}/agent")
+def myop_agent_answer(gid: str, body: dict = Body(None)):
+    return _myop(myop.agent_answer, gid, body)
+
+
+@app.post(BASE + "/myop/v1/{gid}/final")
+def myop_final(gid: str, body: dict = Body(None)):
+    return _myop(myop.final, gid, body)
+
+
+@app.get(BASE + "/myop/v1/{gid}")
+def myop_status(gid: str):
+    return _myop(myop.status, gid)
 
 
 @app.post(BASE + "/v1/needs")

@@ -29,6 +29,13 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/needs               free    Agent Needs desk: tell OMENZ what you need, what it's worth, how often
   GET  /api/tollbooth/v1/pricing-policy      free    machine-readable fair-pricing promise
   GET  /api/tollbooth/v1/event-check?company=&claim=&days=  $0.005  Event Check: did the company actually FILE it (SEC 8-K), with the quote
+  POST /api/tollbooth/v1/claim-evidence      $0.005  Claim -> Evidence: does this source say what you claim? quote, or what's missing
+  POST /api/tollbooth/v1/preflight           $0.005  Agent Preflight: READY/BLOCKED before a job (tools live + priced, budget, passport)
+  POST /api/tollbooth/v1/ledger/create       $0.002  Job Ledger: hash-chained, append-only record of a job (key shown once)
+  POST /api/tollbooth/v1/ledger/append       $0.001  add an entry (tool_call/spend/receipt/handoff/failure/output/status/note/decision)
+  GET  /api/tollbooth/v1/ledger/get?id=      $0.001  entries + totals + chain_intact
+  GET  /api/tollbooth/v1/capability-card?url= $0.002 Capability Card for any x402 service (index or endpoint)
+  GET  /api/tollbooth/v1/card                free    OMENZ's own capability card
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -43,16 +50,20 @@ from fastapi import Body, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
+import capability_card  # noqa: E402
 import changed  # noqa: E402
+import claim_evidence  # noqa: E402
 import cost_estimate  # noqa: E402
 import event_check  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
 import failure  # noqa: E402
 import handoff  # noqa: E402
+import ledger  # noqa: E402
 import local_facts  # noqa: E402
 import needs  # noqa: E402
 import passport  # noqa: E402
+import preflight  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
@@ -276,6 +287,43 @@ ROUTES[f"GET {BASE}/v1/event-check"] = {
                       "required": ["company", "claim"]}),
 }
 
+ROUTES[f"POST {BASE}/v1/claim-evidence"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.005", "network": NETWORK},
+    "description": "Claim -> Evidence: does this source actually say what you're about to cite it for? Send a claim and the source URL; get SUPPORTED with the exact sentence, PARTIAL with the closest sentences and which numbers/names are missing, NOT_FOUND, or CHECK_NEGATION when the matching sentence denies it. Strict: every number must appear next to the claim's own names (no borrowing another plan's price). Deterministic, no AI calls. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"claim": "Stripe charges 2.9% + 30 cents per successful card charge", "url": "https://stripe.com/pricing"},
+        input_schema={"properties": {"claim": {"type": "string"}, "url": {"type": "string"}}, "required": ["claim", "url"]}, body_type="json"),
+}
+
+def _paid(method, path, price, desc, inp, schema, body=False):
+    ROUTES[f"{method} {BASE}/v1/{path}"] = {
+        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": price, "network": NETWORK}, "description": desc,
+        "mimeType": "application/json",
+        "extensions": declare_discovery_extension(input=inp, input_schema=schema, **({"body_type": "json"} if body else {}))}
+
+
+_paid("POST", "preflight", "$0.005",
+      "Agent Preflight: can this agent finish the job with what it has, BEFORE it spends? Give the paid tools it needs (url, method, calls, max price), a budget and optionally its Permission Passport. We check each tool is answering and its live x402 price (never paying), the total against the budget, and the passport against each host and the total. READY, or BLOCKED with exactly what's missing. By OMENZ.",
+      {"job": {"tools": [{"name": "facts", "url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com", "calls": 10, "max_price_usd": 0.02}],
+               "budget_usd": 1, "passport_token": "<optional>"}},
+      {"properties": {"job": {"type": "object"}}, "required": ["job"]}, body=True)
+_paid("POST", "ledger/create", "$0.002",
+      "Agent Job Ledger: open an append-only, hash-chained record for one job (tool calls, spend, receipts, handoffs, failures, outputs, status). Returns ledger_id + ledger_key (shown once). Kept 90 days. By OMENZ.",
+      {"job_id": "job-42", "objective": "get today's hours for 20 restaurants"},
+      {"properties": {"job_id": {"type": "string"}, "objective": {"type": "string"}}}, body=True)
+_paid("POST", "ledger/append", "$0.001",
+      "Agent Job Ledger: append one entry (type tool_call|spend|receipt|handoff|failure|output|status|note|decision, any fields, amount_usd optional). Each entry is chained to the previous by sha256; secrets are refused. Header X-Ledger-Key. By OMENZ.",
+      {"ledger_id": "lg_...", "entry": {"type": "tool_call", "tool": "local-facts", "amount_usd": 0.01, "result": "ok"}},
+      {"properties": {"ledger_id": {"type": "string"}, "entry": {"type": "object"}}, "required": ["ledger_id", "entry"]}, body=True)
+_paid("GET", "ledger/get", "$0.001",
+      "Agent Job Ledger: read entries (since_seq for only new ones), totals (spent, counts by type, last status) and chain_intact: proof nothing was edited or removed. Header X-Ledger-Key. By OMENZ.",
+      {"id": "lg_...", "since_seq": 0}, {"properties": {"id": {"type": "string"}, "since_seq": {"type": "integer"}}, "required": ["id"]})
+_paid("GET", "capability-card", "$0.002",
+      "Agent Capability Card: a standard machine-readable card (omenz.capability-card.v0) of what any x402 service offers: endpoints, live prices and payment options, input/output examples from its discovery data, latency. Works on a service index or a single endpoint; never pays. By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -345,7 +393,7 @@ async def x402_mw(request, call_next):
 def index():
     return {"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
             "routes": {k: {"price": v["accepts"]["price"], "description": v["description"]} for k, v in ROUTES.items()},
-            "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy",
+            "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy", "capability_card": BASE + "/v1/card",
             "tell_us_what_you_need": {"method": "POST", "path": BASE + "/v1/needs", "price": "free",
                                       "body": {"need": "required", "would_pay_usd_per_call": "number", "frequency": needs.FREQ,
                                                "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}
@@ -502,6 +550,58 @@ def event_check_route(request: Request, company: str = Query(...), claim: str = 
     if r.get("verdict") == "ERROR":
         return JSONResponse(r, status_code=502 if "failed" in (r.get("error") or "") else 422)
     return r
+
+
+@app.post(BASE + "/v1/claim-evidence")
+def claim_evidence_route(request: Request, body: dict = Body(...)):
+    if not (isinstance(body.get("claim"), str) and isinstance(body.get("url"), str)):
+        return JSONResponse({"error": "claim and url (strings) required"}, status_code=422)
+    r = claim_evidence.check(body["claim"][:600], body["url"])
+    request.state.extra.update({"action": "claim_evidence", "ce_verdict": r.get("verdict")})
+    if r.get("verdict") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/preflight")
+def preflight_route(request: Request, body: dict = Body(...)):
+    r = preflight.check(body.get("job") if isinstance(body.get("job"), dict) else None)
+    request.state.extra.update({"action": "preflight", "pf_verdict": r.get("verdict")})
+    if r.get("verdict") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/ledger/create")
+def ledger_create(request: Request, body: dict = Body(default={})):
+    request.state.extra["action"] = "ledger_create"
+    return _locker_call(ledger.create, body.get("job_id"), body.get("objective"))
+
+
+@app.post(BASE + "/v1/ledger/append")
+def ledger_append(request: Request, body: dict = Body(...), x_ledger_key: str | None = Header(None)):
+    request.state.extra["action"] = "ledger_append"
+    return _locker_call(ledger.append, body.get("ledger_id"), x_ledger_key, body.get("entry"))
+
+
+@app.get(BASE + "/v1/ledger/get")
+def ledger_get(request: Request, id: str = Query(...), since_seq: int = 0, x_ledger_key: str | None = Header(None)):
+    request.state.extra["action"] = "ledger_get"
+    return _locker_call(ledger.get, id, x_ledger_key, since_seq)
+
+
+@app.get(BASE + "/v1/capability-card")
+def capability_card_route(request: Request, url: str = Query(...), method: str = "GET"):
+    r = capability_card.card(url, method)
+    request.state.extra.update({"action": "capability_card", "cc_status": r.get("status")})
+    if r.get("status") == "error":
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/card")
+def own_card():
+    return capability_card.own_card(ROUTES, "https://www.omenz.org", BASE + "/v1/pricing-policy", BASE + "/v1/needs")
 
 
 @app.get(BASE + "/v1/site-check")

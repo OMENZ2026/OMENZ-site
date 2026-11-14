@@ -20,6 +20,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/secret-scan         $0.002  Secret-Leak Preflight: CLEAN/REVIEW/BLOCK before a payload leaves (nothing stored)
   POST /api/tollbooth/v1/spend-gate          $0.001  Spend Gate: ALLOW/DENY/ESCALATE a proposed spend against the owner's policy (caps, recipients, hurdle)
   GET  /api/tollbooth/v1/branch?url=&city=&zip=&street=  $0.01  Branch Resolver: the matching location page of a multi-location business + its facts
+  POST /api/tollbooth/v1/failure/put         $0.002  Failure Receipt: standard why-it-failed record in a Locker for the next agent; optional PO Box dead-letter drop
+  GET  /api/tollbooth/v1/terms-changed?url=&previous=  $0.005  Terms Changed?: only material pricing/limit/terms lines, diffed (stateless fingerprint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -37,6 +39,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_to
 import changed  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
+import failure  # noqa: E402
 import handoff  # noqa: E402
 import local_facts  # noqa: E402
 import pobox  # noqa: E402
@@ -44,6 +47,7 @@ import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
+import terms_changed  # noqa: E402
 import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
@@ -199,6 +203,28 @@ ROUTES[f"GET {BASE}/v1/branch"] = {
                                      "street": {"type": "string"}}, "required": ["url"]}),
 }
 
+ROUTES[f"POST {BASE}/v1/failure/put"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
+    "description": "Failure Receipt + Dead-Letter Queue: when a job fails, record WHY in a standard machine-readable form (omenz.failure.v0: objective, failed_step, error_class from a fixed list, attempts, money spent, receipts, partial artifacts, suggested next step, retryable). Secret-scanned first (secrets = refused, not stored, not charged). Stored encrypted in an Agent Locker for the next agent; pass dlq_box_id to also drop a sealed pointer into an Agent PO Box used as your dead-letter queue. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"failure": {"job_id": "job-42", "objective": "get today's hours for a restaurant", "failed_step": "fetch site",
+                           "error_class": "rate_limited", "attempts": [{"tool": "local-facts", "result": "429"}], "spent_usd": 0.01,
+                           "suggested_next": "retry after 10 minutes"}, "to": "agent-b", "dlq_box_id": "pb_..."},
+        input_schema={"properties": {"failure": {"type": "object", "description": "objective and failed_step required"},
+                                     "to": {"type": "string"}, "from": {"type": "string"}, "dlq_box_id": {"type": "string"},
+                                     "ttl_days": {"type": "integer"}}, "required": ["failure"]}, body_type="json"),
+}
+ROUTES[f"GET {BASE}/v1/terms-changed"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.005", "network": NETWORK},
+    "description": "Terms Changed?: did an API or tool's pricing, limits or terms page change in a way that MATTERS? Keeps only material lines (prices, numbers with units, rate limits/quotas, commercial-use, prohibitions, refunds, data retention) and diffs them against your last fingerprint: exact lines added/removed, money_changed flag. Footer/date churn ignored. Stateless: keep the fingerprint, pass it as previous=. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"url": "https://example.com/pricing", "previous": "tc1.…"},
+        input_schema={"properties": {"url": {"type": "string"}, "previous": {"type": "string", "description": "fingerprint from your last call"}},
+                      "required": ["url"]}),
+}
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -349,6 +375,26 @@ def branch_route(request: Request, url: str = Query(...), city: str | None = Non
         return JSONResponse({"error": "lookup failed; not charged"}, status_code=502)
     request.state.extra.update({"action": "branch", "b_status": r.get("status")})
     return JSONResponse(json.loads(json.dumps(r, default=list)))
+
+
+@app.post(BASE + "/v1/failure/put")
+def failure_put(request: Request, body: dict = Body(...)):
+    r = _locker_call(failure.put, body.get("failure"), body.get("to"), body.get("from"), body.get("dlq_box_id"), body.get("ttl_days", 14))
+    request.state.extra["action"] = "failure_put"
+    if isinstance(r, dict):
+        request.state.extra.update({"error_class": r.get("error_class"), "dlq": bool(r.get("dlq"))})
+    else:
+        request.state.extra["error"] = r.status_code
+    return r
+
+
+@app.get(BASE + "/v1/terms-changed")
+def terms_changed_route(request: Request, url: str = Query(...), previous: str | None = None):
+    r = terms_changed.check(url, previous)
+    request.state.extra.update({"action": "terms_changed", "tc_state": r.get("state")})
+    if r.get("state") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/site-check")

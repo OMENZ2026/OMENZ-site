@@ -45,6 +45,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/contract/accept     $0.005  Acceptance Test as a Service -> PASS/FAIL, escrow verdict, signed attestation (reputation)
   GET  /api/tollbooth/v1/reputation?agent=   $0.001  Reputation Receipts: an agent's OMENZ-checked job history
   POST /api/tollbooth/v1/evidence/bundle     $0.002  Machine Evidence Bundle (signed, hash-listed)
+  POST /api/tollbooth/v1/finance/{reconcile,forecast,watchdog,snapshot,refund-request}  Agent finance back office
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -68,6 +69,7 @@ import event_check  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
 import failure  # noqa: E402
+import finance  # noqa: E402
 import handoff  # noqa: E402
 import ledger  # noqa: E402
 import local_facts  # noqa: E402
@@ -393,6 +395,21 @@ _paid("POST", "evidence/bundle", "$0.002",
       "Machine Evidence Bundle: package receipts, ledger heads, attestation tokens, claims and sources into one signed, hash-listed bundle (merkle-style root) that any agent can verify offline. For disputes, audits, refunds and handoffs. By OMENZ.",
       {"items": [{"kind": "receipt", "id": "rc_..."}, {"kind": "attestation", "token": "..."}], "label": "job 42"},
       {"properties": {"items": {"type": "array"}, "label": {"type": "string"}}, "required": ["items"]}, body=True)
+
+FIN = {
+    "reconcile": ("$0.005", "Invoice/Payment Reconciler: invoice lines vs USDC-on-Base payments, each transaction checked on-chain (payer, payee, amount): MATCH / UNDERPAID / OVERPAID / MISSING / UNVERIFIED, duplicates and line-total errors flagged.",
+                  {"invoice": {"payee": "0x...", "lines": [{"desc": "lookups", "amount_usd": 0.5}], "total_usd": 0.5}, "payments": [{"tx_hash": "0x...", "payer": "0x...", "amount_usd": 0.5}]}),
+    "forecast": ("$0.002", "Agent Budget Forecaster: spend history -> daily rate, next 7/30-day projection, trend, biggest dependencies.",
+                 {"spend": [{"at": 1763000000, "amount_usd": 0.01, "tool": "search"}]}),
+    "watchdog": ("$0.005", "Subscription Watchdog: the paid endpoints your agent business relies on (up to 8): live price vs expected, down/up, terms/pricing page changed (pass back fingerprints).",
+                 {"endpoints": [{"url": "https://api.example.com/x402/endpoint", "expected_price_usd": 0.005, "terms_url": "https://example.com/pricing"}]}),
+    "snapshot": ("$0.002", "Machine Warranty / Purchase Snapshot: signed record of exactly what a paid endpoint promised (live x402 requirements, description, examples) at purchase time.",
+                 {"url": "https://api.example.com/x402/endpoint", "method": "GET"}),
+    "refund-request": ("$0.002", "Structured Refund Request: order + failure receipt + payment receipts + purchase snapshot -> a standard signed dispute object with evidence strength and gaps. OMENZ packages evidence; it doesn't rule or move money.",
+                       {"order": {"seller": "svc", "description": "lookup", "amount_usd": 0.01}, "failure": {"error_class": "payment_taken_no_result"}, "receipt_ids": ["rc_..."], "snapshot_token": "...", "remedy": "refund"}),
+}
+for _a, (_p, _d, _i) in FIN.items():
+    _paid("POST", "finance/" + _a, _p, _d + " Deterministic; never pays a target. By OMENZ.", _i, {"properties": {k: {} for k in _i}}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -762,6 +779,21 @@ def reputation_route(request: Request, agent: str = Query(...)):
 def evidence_bundle(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "evidence_bundle"
     return _locker_call(contracts.bundle, body.get("items"), body.get("label"))
+
+
+@app.post(BASE + "/v1/finance/{action}")
+def finance_post(action: str, request: Request, body: dict = Body(default={})):
+    request.state.extra["action"] = "finance_" + action
+    b = body
+    calls = {"reconcile": lambda: finance.reconcile(b.get("invoice"), b.get("payments")),
+             "forecast": lambda: finance.forecast(b.get("spend")),
+             "watchdog": lambda: finance.watchdog(b.get("endpoints")),
+             "snapshot": lambda: finance.snapshot(b.get("url"), b.get("method", "GET")),
+             "refund-request": lambda: finance.refund_request(b.get("order"), b.get("failure"), b.get("receipt_ids"),
+                                                              b.get("snapshot_token"), b.get("remedy", "refund"), b.get("amount_usd"))}
+    if action not in calls:
+        return JSONResponse({"error": "unknown finance action"}, status_code=404)
+    return _locker_call(calls[action])
 
 
 @app.get(BASE + "/v1/site-check")

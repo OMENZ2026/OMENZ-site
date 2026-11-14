@@ -38,6 +38,9 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/card                free    OMENZ's own capability card
   POST /api/tollbooth/v1/queue/{create,enqueue,claim,heartbeat,complete,fail,escalate,resolve,bid,award}, GET queue/status
                                              Agent Workforce: work queue with leases, checkpoints/recovery, escalation, bidding, roster, scheduling
+  GET  /api/tollbooth/v1/market/find?q=      $0.002  Capability Finder / Procurement / Quote Comparator / Substitute / Rate-Limit Router over ~35k x402 endpoints
+  GET  /api/tollbooth/v1/market/reliability?url= $0.002 Micropayment Reliability Score 0-100 with reasons
+  GET  /api/tollbooth/v1/vendor-check?url=   $0.01   Vendor Due-Diligence Pack
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -63,6 +66,7 @@ import failure  # noqa: E402
 import handoff  # noqa: E402
 import ledger  # noqa: E402
 import local_facts  # noqa: E402
+import market  # noqa: E402
 import needs  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
@@ -354,6 +358,19 @@ for _a, (_p, _d, _i) in WQ.items():
 _paid("GET", "queue/status", "$0.001",
       "Agent Workforce: who is responsible for what right now (holders + lease time left), counts by state, escalations, roster (available/last seen/current job), scheduled jobs; or one item's full history with item_id. Header X-Queue-Key. By OMENZ.",
       {"queue_id": "wq_...", "item_id": "(optional)"}, {"properties": {"queue_id": {"type": "string"}, "item_id": {"type": "string"}}, "required": ["queue_id"]})
+
+_paid("GET", "market/find", "$0.002",
+      "Agent Market: find the paid tool for a capability across ~35,000 x402 endpoints (Bazaar index, refreshed weekly). Ranked by match, then real 30-day usage (calls, unique payers); filter by max_price_usd and network; exclude= a vendor to get substitutes (tool down or rate-limited); the top picks are probed live (never paid) for status, price and drift. Capability Finder, Procurement Desk, Quote Comparator, Tool Substitute Finder and Rate-Limit Router in one call. By OMENZ.",
+      {"q": "weather forecast by city", "max_price_usd": 0.01, "network": "base", "exclude": "", "limit": 10, "live_check": 3},
+      {"properties": {"q": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "exclude": {"type": "string"},
+                      "limit": {"type": "integer"}, "live_check": {"type": "integer"}, "min_payers": {"type": "integer"}}, "required": ["q"]})
+_paid("GET", "market/reliability", "$0.002",
+      "Micropayment Reliability Score: should your agent trust this paid endpoint? 0-100 + grade with every reason: public 30-day usage, answering now with valid x402 requirements, speed, live price vs listed price, payTo vs listed payTo (catches swapped wallets). Never pays. By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
+_paid("GET", "vendor-check", "$0.01",
+      "Vendor Due-Diligence Pack: before your agent depends on an unknown paid API: reliability score + the vendor domain's health (live/parked/moved) + its terms/pricing page digest (material lines) + flags. Never pays. By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint"}, {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -666,6 +683,38 @@ def queue_post(action: str, request: Request, body: dict = Body(default={}), x_q
 def queue_status(request: Request, queue_id: str = Query(...), item_id: str | None = None, x_queue_key: str | None = Header(None)):
     request.state.extra["action"] = "queue_status"
     return _locker_call(workforce.status, queue_id, x_queue_key, item_id)
+
+
+@app.get(BASE + "/v1/market/find")
+def market_find(request: Request, q: str = Query(...), max_price_usd: float | None = None, network: str | None = None,
+                exclude: str | None = None, limit: int = 10, live_check: int = 3, min_payers: int = 0):
+    try:
+        r = market.find(q, max_price_usd, network, [e for e in (exclude or "").split(",") if e], limit, live_check, min_payers)
+    except Exception:
+        request.state.extra.update({"action": "market_find", "error": 502})
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
+    request.state.extra.update({"action": "market_find", "results": len(r.get("results") or [])})
+    return JSONResponse(r, status_code=422) if r.get("error") else r
+
+
+@app.get(BASE + "/v1/market/reliability")
+def market_reliability(request: Request, url: str = Query(...), method: str | None = None):
+    try:
+        r = market.reliability(url, method)
+    except Exception:
+        return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
+    request.state.extra.update({"action": "market_reliability", "score": r.get("score")})
+    return r
+
+
+@app.get(BASE + "/v1/vendor-check")
+def vendor_check(request: Request, url: str = Query(...), method: str | None = None):
+    try:
+        r = market.vendor(url, method)
+    except Exception:
+        return JSONResponse({"error": "vendor check failed; not charged"}, status_code=502)
+    request.state.extra.update({"action": "vendor_check", "verdict": r.get("verdict")})
+    return r
 
 
 @app.get(BASE + "/v1/site-check")

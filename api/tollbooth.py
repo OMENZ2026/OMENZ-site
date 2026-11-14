@@ -22,6 +22,10 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/branch?url=&city=&zip=&street=  $0.01  Branch Resolver: the matching location page of a multi-location business + its facts
   POST /api/tollbooth/v1/failure/put         $0.002  Failure Receipt: standard why-it-failed record in a Locker for the next agent; optional PO Box dead-letter drop
   GET  /api/tollbooth/v1/terms-changed?url=&previous=  $0.005  Terms Changed?: only material pricing/limit/terms lines, diffed (stateless fingerprint)
+  POST /api/tollbooth/v1/cost-estimate       $0.002  Cost-to-Complete: job cost before it starts (model + paid tools, live x402 quotes), budget/value check, cheaper routing
+  POST /api/tollbooth/v1/passport/issue      $0.002  Permission Passport: signed, expiring, job-scoped permissions (tools, hosts, spend)
+  POST /api/tollbooth/v1/passport/check      $0.001  ALLOW/DENY an action against a passport
+  GET  /api/tollbooth/v1/passport/key        free    public key to verify passports offline
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -37,11 +41,13 @@ from fastapi.responses import JSONResponse
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
 import changed  # noqa: E402
+import cost_estimate  # noqa: E402
 import checker  # noqa: E402
 import locker  # noqa: E402
 import failure  # noqa: E402
 import handoff  # noqa: E402
 import local_facts  # noqa: E402
+import passport  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
@@ -225,6 +231,35 @@ ROUTES[f"GET {BASE}/v1/terms-changed"] = {
                       "required": ["url"]}),
 }
 
+ROUTES[f"POST {BASE}/v1/cost-estimate"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
+    "description": "Cost-to-Complete Estimate: what will this agent job cost BEFORE it starts? Give the steps (model, input/output tokens, runs, retry rate) with your model prices, and paid tool calls (price, or an x402 URL we quote live without paying). Get the total, a realistic range, the biggest cost, budget fit, value multiple, and how much routing named steps to a cheaper model saves. Deterministic arithmetic. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"job": {"models": {"big": {"input_per_mtok_usd": 8, "output_per_mtok_usd": 40}, "small": {"input_per_mtok_usd": 0.5, "output_per_mtok_usd": 3}},
+                       "steps": [{"name": "extract", "model": "big", "input_tokens": 1000000, "output_tokens": 50000, "runs": 2, "retry_rate": 0.1}],
+                       "tools": [{"name": "facts", "x402_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com", "calls": 10}],
+                       "budget_usd": 30, "value_usd": 100, "alternatives": {"extract": "small"}}},
+        input_schema={"properties": {"job": {"type": "object"}}, "required": ["job"]}, body_type="json"),
+}
+ROUTES[f"POST {BASE}/v1/passport/issue"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
+    "description": "Permission Passport: issue a signed (Ed25519), expiring, job-scoped permission ticket for an agent: which tools, which hosts (plus explicit denies), how much it may spend, for how long (max 7 days). Carries permissions, never credentials. Any tool can check it with /passport/check or verify it offline with the public key. Limits damage when an agent is hijacked. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"scope": {"agent": "research-agent", "job_id": "job-42", "allow_tools": ["search", "local-facts"],
+                         "allow_hosts": ["exa.ai", "omenz.org"], "max_spend_usd": 0.5, "expires_in_minutes": 60}},
+        input_schema={"properties": {"scope": {"type": "object"}}, "required": ["scope"]}, body_type="json"),
+}
+ROUTES[f"POST {BASE}/v1/passport/check"] = {
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+    "description": "Permission Passport check: ALLOW or DENY an agent's next action (tool, URL/host, amount, spent so far) against its passport, with reasons, spend left and time left. Rejects forged or expired passports. By OMENZ.",
+    "mimeType": "application/json",
+    "extensions": declare_discovery_extension(
+        input={"token": "<passport token>", "action": {"tool": "search", "url": "https://api.exa.ai/search", "amount_usd": 0.007, "spent_so_far_usd": 0.1}},
+        input_schema={"properties": {"token": {"type": "string"}, "action": {"type": "object"}}, "required": ["token"]}, body_type="json"),
+}
+
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
 
@@ -395,6 +430,38 @@ def terms_changed_route(request: Request, url: str = Query(...), previous: str |
     if r.get("state") == "ERROR":
         return JSONResponse(r, status_code=422)
     return r
+
+
+@app.post(BASE + "/v1/cost-estimate")
+def cost_estimate_route(request: Request, body: dict = Body(...)):
+    r = cost_estimate.estimate(body.get("job") if isinstance(body.get("job"), dict) else None)
+    request.state.extra.update({"action": "cost_estimate", "ce_status": r.get("status")})
+    if r.get("status") == "error":
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/passport/issue")
+def passport_issue(request: Request, body: dict = Body(...)):
+    r = passport.issue(body.get("scope"))
+    request.state.extra["action"] = "passport_issue"
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/passport/check")
+def passport_check(request: Request, body: dict = Body(...)):
+    if not body.get("token"):
+        return JSONResponse({"error": "token required"}, status_code=422)
+    r = passport.check(body["token"], body.get("action") if isinstance(body.get("action"), dict) else {})
+    request.state.extra.update({"action": "passport_check", "decision": r.get("decision")})
+    return r
+
+
+@app.get(BASE + "/v1/passport/key")
+def passport_key():
+    return passport.key()
 
 
 @app.get(BASE + "/v1/site-check")

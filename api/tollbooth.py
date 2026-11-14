@@ -41,6 +41,10 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/market/find?q=      $0.002  Capability Finder / Procurement / Quote Comparator / Substitute / Rate-Limit Router over ~35k x402 endpoints
   GET  /api/tollbooth/v1/market/reliability?url= $0.002 Micropayment Reliability Score 0-100 with reasons
   GET  /api/tollbooth/v1/vendor-check?url=   $0.01   Vendor Due-Diligence Pack
+  POST /api/tollbooth/v1/contract/build      $0.002  A2A Contract Builder (signed terms + deterministic acceptance tests)
+  POST /api/tollbooth/v1/contract/accept     $0.005  Acceptance Test as a Service -> PASS/FAIL, escrow verdict, signed attestation (reputation)
+  GET  /api/tollbooth/v1/reputation?agent=   $0.001  Reputation Receipts: an agent's OMENZ-checked job history
+  POST /api/tollbooth/v1/evidence/bundle     $0.002  Machine Evidence Bundle (signed, hash-listed)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -58,6 +62,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_to
 import capability_card  # noqa: E402
 import changed  # noqa: E402
 import claim_evidence  # noqa: E402
+import contracts  # noqa: E402
 import cost_estimate  # noqa: E402
 import event_check  # noqa: E402
 import checker  # noqa: E402
@@ -371,6 +376,23 @@ _paid("GET", "market/reliability", "$0.002",
 _paid("GET", "vendor-check", "$0.01",
       "Vendor Due-Diligence Pack: before your agent depends on an unknown paid API: reliability score + the vendor domain's health (live/parked/moved) + its terms/pricing page digest (material lines) + flags. Never pays. By OMENZ.",
       {"url": "https://api.example.com/x402/endpoint"}, {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
+
+_paid("POST", "contract/build", "$0.002",
+      "A2A Contract Builder: turn a machine job into signed terms both agents hold: deliverable, deterministic acceptance tests (required_fields, field_types, regex, min_items, max_bytes, equals, url_alive, claim_evidence), max spend, deadline, parties. Ed25519-signed by OMENZ; verify offline with /v1/passport/key. By OMENZ.",
+      {"terms": {"buyer": "agent-a", "seller": "agent-b", "deliverable": "hours for 3 restaurants", "max_spend_usd": 0.1, "deadline": 1900000000,
+                 "acceptance": [{"type": "min_items", "field": "results", "n": 3}, {"type": "regex", "field": "source", "pattern": "https://.+"}]}},
+      {"properties": {"terms": {"type": "object"}}, "required": ["terms"]}, body=True)
+_paid("POST", "contract/accept", "$0.005",
+      "Acceptance Test as a Service + escrow verdict: a neutral party runs the contract's tests on what was delivered. PASS/FAIL per test, escrow_verdict RELEASE/REFUND (OMENZ never holds funds: the payer acts on it), and a signed attestation that feeds the seller's Reputation Receipts. By OMENZ.",
+      {"token": "<contract token>", "delivered": {"results": [1, 2, 3], "source": "https://example.com"}},
+      {"properties": {"token": {"type": "string"}, "delivered": {}}, "required": ["token", "delivered"]}, body=True)
+_paid("GET", "reputation", "$0.001",
+      "Reputation Receipts: an agent's job history as checked by OMENZ Acceptance Test: jobs, passed, failed, late, pass rate, distinct buyers (low = weak evidence), recent attestations. Not self-reported. By OMENZ.",
+      {"agent": "agent-b"}, {"properties": {"agent": {"type": "string"}}, "required": ["agent"]})
+_paid("POST", "evidence/bundle", "$0.002",
+      "Machine Evidence Bundle: package receipts, ledger heads, attestation tokens, claims and sources into one signed, hash-listed bundle (merkle-style root) that any agent can verify offline. For disputes, audits, refunds and handoffs. By OMENZ.",
+      {"items": [{"kind": "receipt", "id": "rc_..."}, {"kind": "attestation", "token": "..."}], "label": "job 42"},
+      {"properties": {"items": {"type": "array"}, "label": {"type": "string"}}, "required": ["items"]}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -715,6 +737,31 @@ def vendor_check(request: Request, url: str = Query(...), method: str | None = N
         return JSONResponse({"error": "vendor check failed; not charged"}, status_code=502)
     request.state.extra.update({"action": "vendor_check", "verdict": r.get("verdict")})
     return r
+
+
+@app.post(BASE + "/v1/contract/build")
+def contract_build(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "contract_build"
+    return _locker_call(contracts.build, body.get("terms"))
+
+
+@app.post(BASE + "/v1/contract/accept")
+def contract_accept(request: Request, body: dict = Body(...)):
+    r = _locker_call(contracts.accept, body.get("token"), body.get("delivered"))
+    request.state.extra.update({"action": "contract_accept", "verdict": r.get("verdict") if isinstance(r, dict) else None})
+    return r
+
+
+@app.get(BASE + "/v1/reputation")
+def reputation_route(request: Request, agent: str = Query(...)):
+    request.state.extra["action"] = "reputation"
+    return _locker_call(contracts.reputation, agent)
+
+
+@app.post(BASE + "/v1/evidence/bundle")
+def evidence_bundle(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "evidence_bundle"
+    return _locker_call(contracts.bundle, body.get("items"), body.get("label"))
 
 
 @app.get(BASE + "/v1/site-check")

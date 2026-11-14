@@ -551,7 +551,7 @@ async def _ayne(request, call_next, t0):
     else:
         alt = [k.split(" ", 1)[0] for k in ROUTES if k.split(" ", 1)[1] == BASE + "/v1" + sub]
         resp = JSONResponse({"ayne": True, "error": "OMENZ doesn't have this yet" if not alt else f"this route takes {', '.join(alt)}",
-                             "noted": True, "tell_us_what_you_need": BASE + "/v1/needs (free)", "all_routes": BASE + "/ayne/v1/"},
+                             "noted": True, "tell_us_what_you_need": BASE + "/v1/needs (free)", "all_routes": BASE + "/ayne/v1"},
                             status_code=404 if not alt else 405)
         ev.update(mode="gap" if not alt else "wrong_method", status=resp.status_code)
     ev["latency_ms"] = int((time.time() - t0) * 1000)
@@ -564,7 +564,7 @@ def index():
     return {"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
             "routes": {k: {"price": v["accepts"]["price"], "description": v["description"]} for k, v in ROUTES.items()},
             "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy", "capability_card": BASE + "/v1/card",
-            "playzone": {"name": "AYNE", "url": BASE + "/ayne/v1/", "price": "free", "cap": "2000 requests/day"},
+            "playzone": {"name": "AYNE", "url": BASE + "/ayne/v1", "price": "free", "cap": "2000 requests/day"},
             "tell_us_what_you_need": {"method": "POST", "path": BASE + "/v1/needs", "price": "free",
                                       "body": {"need": "required", "would_pay_usd_per_call": "number", "frequency": needs.FREQ,
                                                "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}

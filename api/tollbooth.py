@@ -46,6 +46,12 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/reputation?agent=   $0.001  Reputation Receipts: an agent's OMENZ-checked job history
   POST /api/tollbooth/v1/evidence/bundle     $0.002  Machine Evidence Bundle (signed, hash-listed)
   POST /api/tollbooth/v1/finance/{reconcile,forecast,watchdog,snapshot,refund-request}  Agent finance back office
+  GET  /api/tollbooth/v1/terms-extract?url=  $0.005  API Terms / Data-License Checker
+  GET  /api/tollbooth/v1/freshness?url=&kind= $0.001 Source Freshness / Result TTL
+  POST /api/tollbooth/v1/dedupe              $0.001  Duplicate-Work Detector (private namespace)
+  POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
+  GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
+  GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -71,6 +77,7 @@ import locker  # noqa: E402
 import failure  # noqa: E402
 import finance  # noqa: E402
 import handoff  # noqa: E402
+import hygiene  # noqa: E402
 import ledger  # noqa: E402
 import local_facts  # noqa: E402
 import market  # noqa: E402
@@ -410,6 +417,23 @@ FIN = {
 }
 for _a, (_p, _d, _i) in FIN.items():
     _paid("POST", "finance/" + _a, _p, _d + " Deterministic; never pays a target. By OMENZ.", _i, {"properties": {k: {} for k in _i}}, body=True)
+
+_paid("GET", "terms-extract", "$0.005",
+      "API Terms Extractor / Data-License Checker: before your agent uses a dataset or API commercially: a terms/license page -> clauses by category (commercial use, attribution, rate limits, retention, training on your data, prohibited uses, resale, refunds, liability, termination, license type) with quotes, plus plain flags (no_commercial_use, attribution_required, may_train_on_your_data, no_resale, no_scraping, non_refundable). Pattern-based, not legal advice. By OMENZ.",
+      {"url": "https://example.com/terms"}, {"properties": {"url": {"type": "string"}}, "required": ["url"]})
+_paid("GET", "freshness", "$0.001",
+      "Source Freshness / Result TTL: how long can your agent reuse a result before paying to fetch it again? The source's own Last-Modified, ETag and Cache-Control + a reuse window by data kind (price, quote, hours, weather, news, stock, crypto, business_facts, terms, docs, filing, profile, search) + how to revalidate cheaply (304). By OMENZ.",
+      {"url": "https://example.com/pricing", "kind": "price"}, {"properties": {"url": {"type": "string"}, "kind": {"type": "string"}}, "required": ["url"]})
+_paid("POST", "dedupe", "$0.001",
+      "Duplicate-Work Detector: before your agent pays to run a task, check whether someone in your team (same private namespace_key) already did it: normalized fingerprint -> HIT with the earlier result pointer, or MISS (pass result_pointer to register this run). By OMENZ.",
+      {"namespace_key": "your-private-team-key-16+", "task": {"q": "hours for Flemings Pasadena", "day": "2026-11-14"}, "result_pointer": "lk_...", "ttl_hours": 24},
+      {"properties": {"namespace_key": {"type": "string"}, "task": {}, "result_pointer": {"type": "string"}, "ttl_hours": {"type": "integer"}},
+       "required": ["namespace_key", "task"]}, body=True)
+_paid("POST", "context-diet", "$0.001",
+      "Context Diet: shrink a packet before it fills your context: drops empty fields, dedupes lists, cuts long strings to a head + sha256 pointer, caps list length, always keeps required fields; reports bytes and approximate tokens saved. By OMENZ.",
+      {"packet": {"objective": "ship v2", "notes": "...long..."}, "required": ["objective"], "max_string_chars": 400},
+      {"properties": {"packet": {}, "required": {"type": "array"}, "max_string_chars": {"type": "integer"}, "max_list_items": {"type": "integer"}},
+       "required": ["packet"]}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -794,6 +818,63 @@ def finance_post(action: str, request: Request, body: dict = Body(default={})):
     if action not in calls:
         return JSONResponse({"error": "unknown finance action"}, status_code=404)
     return _locker_call(calls[action])
+
+
+@app.get(BASE + "/v1/terms-extract")
+def terms_extract(request: Request, url: str = Query(...)):
+    r = hygiene.terms(url)
+    request.state.extra.update({"action": "terms_extract", "te_status": r.get("status")})
+    return r
+
+
+@app.get(BASE + "/v1/freshness")
+def freshness_route(request: Request, url: str = Query(...), kind: str = "generic"):
+    request.state.extra["action"] = "freshness"
+    return hygiene.freshness(url, kind)
+
+
+@app.post(BASE + "/v1/dedupe")
+def dedupe_route(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "dedupe"
+    return _locker_call(hygiene.dedupe, body.get("namespace_key"), body.get("task"), body.get("result_pointer"), body.get("ttl_hours", 168))
+
+
+@app.post(BASE + "/v1/context-diet")
+def context_diet(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "context_diet"
+    return _locker_call(hygiene.diet, body.get("packet"), body.get("required"), body.get("max_string_chars", 400), body.get("max_list_items", 50))
+
+
+@app.get(BASE + "/v1/status")
+def status_page():
+    from concurrent.futures import ThreadPoolExecutor
+    sample = [("GET", "local-facts?url=https://example.com"), ("GET", "alive?url=https://www.omenz.org"), ("POST", "secret-scan"),
+              ("GET", "market/find?q=weather"), ("POST", "queue/create"), ("POST", "finance/forecast")]
+
+    def probe(mp):
+        m, pth = mp
+        r = x402_probe.alive("https://www.omenz.org" + BASE + "/v1/" + pth, m)
+        return {"route": m + " /v1/" + pth.split("?")[0], "verdict": r.get("verdict"), "latency_ms": r.get("latency_ms")}
+    with ThreadPoolExecutor(6) as ex:
+        checks = list(ex.map(probe, sample))
+    up = all(c["verdict"] == "paywalled" for c in checks)
+    return {"service": "OMENZ x402 tollbooth", "status": "operational" if up else "degraded",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "paid_routes": len(ROUTES), "sample_checks": checks,
+            "prices": BASE + "/v1/pricing-policy", "card": BASE + "/v1/card"}
+
+
+@app.get(BASE + "/v1/starter-pack")
+def starter_pack():
+    return {"schema": "omenz.starter-pack.v0", "for": "a one-person or one-agent business running on paid machine services",
+            "recipes": [
+                {"name": "Before any paid call", "steps": ["market/find (pick a tool)", "market/reliability (trust it?)", "tx-preflight (GO/STOP)", "spend-gate (owner policy)"]},
+                {"name": "Run a job safely", "steps": ["passport/issue (job-scoped permissions)", "preflight (READY?)", "cost-estimate", "ledger/create + ledger/append for every step"]},
+                {"name": "Team of agents", "steps": ["queue/create (supervisor PO Box)", "queue/enqueue", "queue/claim + heartbeat checkpoints", "queue/escalate when stuck", "queue/status"]},
+                {"name": "Hand work over", "steps": ["context-diet", "secret-scan", "handoff/pack", "pobox/drop"]},
+                {"name": "When it fails", "steps": ["failure/put (+ dead-letter PO Box)", "finance/snapshot (what was promised)", "finance/refund-request", "evidence/bundle"]},
+                {"name": "Hire another agent", "steps": ["contract/build (acceptance tests)", "contract/accept (neutral PASS/FAIL + escrow verdict)", "reputation"]},
+                {"name": "Keep costs and facts honest", "steps": ["freshness (reuse or refetch?)", "dedupe (already done?)", "finance/watchdog (price drift, terms)", "claim-evidence + event-check (is it true?)"]}],
+            "all_endpoints": BASE + "/v1/card", "pricing_policy": BASE + "/v1/pricing-policy", "tell_us_what_you_need": BASE + "/v1/needs"}
 
 
 @app.get(BASE + "/v1/site-check")

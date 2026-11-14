@@ -57,6 +57,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
   GET  /api/tollbooth/v1/wallet/{balance,spend,runway}?address=   agent-wallet tools (USDC on Base, public chain data)
   GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
+  POST /api/tollbooth/v1/authorize           $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -71,6 +72,7 @@ from fastapi import Body, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
+import authorize  # noqa: E402
 import ayne  # noqa: E402
 import capability_card  # noqa: E402
 import changed  # noqa: E402
@@ -460,6 +462,13 @@ _paid("GET", "market/price-index", "$0.002",
       "x402 Price Index / Fair Price Check: the going rate for a capability across listed x402 endpoints: comparables, sellers, min / p25 / median / p75 / max and usage-weighted median; pass price_usd (or a listed url) to get its percentile and FAIR / LOW / ABOVE_MARKET / HIGH. By OMENZ.",
       {"q": "web search", "price_usd": 0.005}, {"properties": {"q": {"type": "string"}, "price_usd": {"type": "number"}, "url": {"type": "string"},
                                                   "min_payers": {"type": "integer"}}, "required": ["q"]})
+
+_paid("POST", "authorize", "$0.001",
+      "OMENZ Authorize: the authorization step for agent payments. One call before paying any x402 endpoint: live quote + preflight (up, price within max, network, stablecoin, expected payTo), payee check (known x402 seller?), fair-price check vs comparable endpoints, the owner's spend policy and Permission Passport if sent -> APPROVE / REVIEW / DECLINE with reasons and a signed 5-minute authorization code anyone can verify. Never pays the target. By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint", "method": "POST", "max_price_usd": 0.05, "expected_pay_to": "0x...",
+       "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
+                      "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -1101,6 +1110,15 @@ def market_price_index(request: Request, q: str | None = None, price_usd: float 
         return JSONResponse({"error": "market index unavailable; not charged"}, status_code=502)
     request.state.extra.update({"action": "market_price_index", "n": r.get("comparables")})
     return JSONResponse(r, status_code=422) if r.get("error") and not r.get("comparables") else r
+
+
+@app.post(BASE + "/v1/authorize")
+def authorize_route(request: Request, body: dict = Body(...)):
+    r = authorize.authorize(body)
+    request.state.extra.update({"action": "authorize", "decision": r.get("decision")})
+    if r.get("decision") == "ERROR":
+        return JSONResponse(r, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/site-check")

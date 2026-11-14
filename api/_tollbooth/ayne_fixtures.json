@@ -1782,5 +1782,64 @@
 "percentile": 14,
 "verdict": "LOW"
 }
+},
+"POST /api/tollbooth/v1/authorize": {
+"status": 200,
+"example_input": {
+"url": "https://stableenrich.dev/api/exa/search",
+"method": "POST",
+"max_price_usd": 0.05
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-14T16:16:32Z",
+"paid_targets": false,
+"decision": "APPROVE",
+"decline_reasons": [],
+"review_reasons": [],
+"passed": [
+"preflight",
+"payee known",
+"price fair"
+],
+"checks": {
+"preflight": {
+"verdict": "GO",
+"reasons": [
+"all checks passed for the chosen option"
+],
+"warnings": [
+"no expected_pay_to given: recipient not checked"
+]
+},
+"payee": {
+"verdict": "KNOWN_SELLER",
+"x402_endpoints": 14
+},
+"price": {
+"comparables": 8,
+"median": 0.01,
+"p75": 0.01125,
+"percentile": 12,
+"verdict": "FAIR"
+}
+},
+"authorization": {
+"schema": "omenz.authorization.v0",
+"auth_id": "az_c941b286d0ccb86a9f82",
+"decision": "APPROVE",
+"url": "https://stableenrich.dev/api/exa/search",
+"method": "POST",
+"pay_to": "0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+"amount_usd": 0.01,
+"network": "base",
+"issued": 1794672995,
+"expires": 1794673295,
+"issuer": "omenz.org"
+},
+"authorization_token": "eyJhbW91bnRfdXNkIjowLjAxLCJhdXRoX2lkIjoi…",
+"expires_in_s": 300,
+"next_action": "pay now (the authorization expires in 5 minutes)"
+}
 }
 }

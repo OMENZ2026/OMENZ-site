@@ -36,6 +36,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/ledger/get?id=      $0.001  entries + totals + chain_intact
   GET  /api/tollbooth/v1/capability-card?url= $0.002 Capability Card for any x402 service (index or endpoint)
   GET  /api/tollbooth/v1/card                free    OMENZ's own capability card
+  POST /api/tollbooth/v1/queue/{create,enqueue,claim,heartbeat,complete,fail,escalate,resolve,bid,award}, GET queue/status
+                                             Agent Workforce: work queue with leases, checkpoints/recovery, escalation, bidding, roster, scheduling
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -70,6 +72,7 @@ import branch_resolver  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import terms_changed  # noqa: E402
+import workforce  # noqa: E402
 import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
@@ -323,6 +326,34 @@ _paid("GET", "capability-card", "$0.002",
       "Agent Capability Card: a standard machine-readable card (omenz.capability-card.v0) of what any x402 service offers: endpoints, live prices and payment options, input/output examples from its discovery data, latency. Works on a service index or a single endpoint; never pays. By OMENZ.",
       {"url": "https://api.example.com/x402/endpoint", "method": "GET"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
+
+WQ = {
+    "create": ("$0.002", "Agent Workforce: create a work queue for a team of agents. Returns queue_id + owner_key + worker_key (shown once). Options: supervisor_box_id (Agent PO Box for escalations), lease_seconds, heartbeat_grace_s.",
+               {"name": "restaurant-hours crew", "supervisor_box_id": "pb_...", "lease_seconds": 900}),
+    "enqueue": ("$0.001", "Agent Workforce: add a job (title, payload, priority, not_before, repeat_every_minutes, max_attempts, bidding). Owner key. Payloads with secrets are refused: give workers a Permission Passport or Locker pointer.",
+                {"queue_id": "wq_...", "title": "get hours for 20 restaurants", "payload": {"city": "Pasadena"}, "priority": 5}),
+    "claim": ("$0.001", "Agent Workforce: a worker claims the highest-priority ready job and gets a LEASE (it is now responsible). Expired leases come back with the last checkpoint so a replacement can resume.",
+              {"queue_id": "wq_...", "worker_id": "agent-7"}),
+    "heartbeat": ("$0.001", "Agent Workforce: worker is alive; extends its lease and stores a checkpoint (e.g. a Locker id + step) for dead-agent recovery.",
+                  {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "checkpoint": {"locker_id": "lk_...", "step": 3}}),
+    "complete": ("$0.001", "Agent Workforce: worker finishes its leased job with a result; repeating jobs are rescheduled automatically.",
+                 {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "result": {"ok": True}}),
+    "fail": ("$0.001", "Agent Workforce: worker reports failure; the job retries until max_attempts, then goes dead.",
+             {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "reason": "site blocked", "retry": True}),
+    "escalate": ("$0.001", "Agent Workforce: hand a job up to the supervisor (sealed drop into the supervisor's Agent PO Box).",
+                 {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "reason": "customer asked for a refund"}),
+    "resolve": ("$0.001", "Agent Workforce: owner resolves an escalated/dead job: requeue, close or kill.",
+                {"queue_id": "wq_...", "item_id": "wi_...", "action": "requeue"}),
+    "bid": ("$0.001", "Agent Workforce: worker bids on a job open for bidding (price_usd, eta_minutes).",
+            {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "price_usd": 0.02, "eta_minutes": 10}),
+    "award": ("$0.001", "Agent Workforce: owner awards a bidding job to one bidder; the award becomes that worker's lease.",
+              {"queue_id": "wq_...", "item_id": "wi_...", "worker_id": "agent-7"}),
+}
+for _a, (_p, _d, _i) in WQ.items():
+    _paid("POST", "queue/" + _a, _p, _d + " Header X-Queue-Key. By OMENZ.", _i, {"properties": {k: {} for k in _i}}, body=True)
+_paid("GET", "queue/status", "$0.001",
+      "Agent Workforce: who is responsible for what right now (holders + lease time left), counts by state, escalations, roster (available/last seen/current job), scheduled jobs; or one item's full history with item_id. Header X-Queue-Key. By OMENZ.",
+      {"queue_id": "wq_...", "item_id": "(optional)"}, {"properties": {"queue_id": {"type": "string"}, "item_id": {"type": "string"}}, "required": ["queue_id"]})
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -602,6 +633,39 @@ def capability_card_route(request: Request, url: str = Query(...), method: str =
 @app.get(BASE + "/v1/card")
 def own_card():
     return capability_card.own_card(ROUTES, "https://www.omenz.org", BASE + "/v1/pricing-policy", BASE + "/v1/needs")
+
+
+def _wq(fn, *a):
+    r = _locker_call(fn, *a)
+    return r
+
+
+@app.post(BASE + "/v1/queue/{action}")
+def queue_post(action: str, request: Request, body: dict = Body(default={}), x_queue_key: str | None = Header(None)):
+    request.state.extra["action"] = "queue_" + action
+    b, q, k = body, body.get("queue_id"), x_queue_key
+    calls = {
+        "create": lambda: workforce.create(b.get("name"), b.get("supervisor_box_id"), b.get("lease_seconds", 900), b.get("heartbeat_grace_s", 300)),
+        "enqueue": lambda: workforce.enqueue(q, k, b.get("title"), b.get("payload"), b.get("priority", 0), b.get("not_before"),
+                                             b.get("repeat_every_minutes"), b.get("max_attempts", 3), bool(b.get("bidding"))),
+        "claim": lambda: workforce.claim(q, k, b.get("worker_id")),
+        "heartbeat": lambda: workforce.heartbeat(q, k, b.get("worker_id"), b.get("item_id"), b.get("checkpoint"), b.get("status")),
+        "complete": lambda: workforce.complete(q, k, b.get("worker_id"), b.get("item_id"), b.get("result")),
+        "fail": lambda: workforce.fail(q, k, b.get("worker_id"), b.get("item_id"), b.get("reason"), b.get("retry", True)),
+        "escalate": lambda: workforce.escalate(q, k, b.get("worker_id"), b.get("item_id"), b.get("reason")),
+        "resolve": lambda: workforce.resolve(q, k, b.get("item_id"), b.get("action", "requeue"), b.get("note")),
+        "bid": lambda: workforce.bid(q, k, b.get("worker_id"), b.get("item_id"), b.get("price_usd"), b.get("eta_minutes"), b.get("note")),
+        "award": lambda: workforce.award(q, k, b.get("item_id"), b.get("worker_id")),
+    }
+    if action not in calls:
+        return JSONResponse({"error": "unknown queue action"}, status_code=404)
+    return _locker_call(calls[action])
+
+
+@app.get(BASE + "/v1/queue/status")
+def queue_status(request: Request, queue_id: str = Query(...), item_id: str | None = None, x_queue_key: str | None = Header(None)):
+    request.state.extra["action"] = "queue_status"
+    return _locker_call(workforce.status, queue_id, x_queue_key, item_id)
 
 
 @app.get(BASE + "/v1/site-check")

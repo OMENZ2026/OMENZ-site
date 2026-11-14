@@ -2,3 +2,5 @@ fastapi>=0.115
 x402[fastapi,evm,extensions]==2.27.0
 cryptography>=42
 httpx>=0.27
+eth-abi>=5
+eth-utils>=4

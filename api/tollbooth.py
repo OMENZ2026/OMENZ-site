@@ -58,6 +58,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/wallet/{balance,spend,runway}?address=   agent-wallet tools (USDC on Base, public chain data)
   GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
   POST /api/tollbooth/v1/authorize           $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
+  POST /api/tollbooth/v1/split-check         $0.002  Split Check: verify an on-chain revenue split (0xSplits v2) and who gets what
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
@@ -98,6 +99,7 @@ import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
+import splits  # noqa: E402
 import terms_changed  # noqa: E402
 import wallet  # noqa: E402
 import workforce  # noqa: E402
@@ -469,6 +471,12 @@ _paid("POST", "authorize", "$0.001",
        "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
+
+_paid("POST", "split-check", "$0.002",
+      "Split Check: before paying into (or trusting) an on-chain revenue split, verify what it actually pays. Detects 0xSplits v2 splits on Base / Base Sepolia, proves a claimed recipients+allocations config against the on-chain splitHash (or discovers it from recent events), shows each recipient's share, whether a given beneficiary is included, whether the split is immutable (no owner), and USDC waiting to be distributed. Read-only. By OMENZ.",
+      {"address": "0x...", "network": "base", "claimed": {"recipients": ["0xseller...", "0xomenz..."], "allocations": [970000, 30000]}, "beneficiary": "0x..."},
+      {"properties": {"address": {"type": "string"}, "network": {"type": "string"}, "claimed": {"type": "object"}, "beneficiary": {"type": "string"}},
+       "required": ["address"]}, body=True)
 
 server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
@@ -1118,6 +1126,21 @@ def authorize_route(request: Request, body: dict = Body(...)):
     request.state.extra.update({"action": "authorize", "decision": r.get("decision")})
     if r.get("decision") == "ERROR":
         return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/split-check")
+def split_check_route(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "split_check"
+    try:
+        r = splits.check(body.get("address"), body.get("network", "base"), body.get("claimed") if isinstance(body.get("claimed"), dict) else None,
+                         body.get("beneficiary"))
+    except splits.SplitError as e:
+        code = 502 if "unavailable" in str(e) else 422
+        return JSONResponse({"error": str(e) + ("; not charged" if code == 502 else "")}, status_code=code)
+    except (KeyError, TypeError, ValueError):
+        return JSONResponse({"error": "claimed must be {recipients: [...], allocations: [...]}"}, status_code=422)
+    request.state.extra["verdict"] = r.get("verdict")
     return r
 
 

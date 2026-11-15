@@ -78,6 +78,21 @@
       "source": "/s/caught-in-code",
       "destination": "https://omenz-shop.fourthwall.com/products/caught-in-code-the-divine-download-tee",
       "permanent": false
+    },
+    {
+      "source": "/s/dont-chip-flash-me-bro",
+      "destination": "https://omenz-shop.fourthwall.com/products/dont-chip-flash-me-bro",
+      "permanent": false
+    },
+    {
+      "source": "/s/human-difficulties-detected",
+      "destination": "https://omenz-shop.fourthwall.com/products/human-difficulties-detected",
+      "permanent": false
+    },
+    {
+      "source": "/s/ai-shole",
+      "destination": "https://omenz-shop.fourthwall.com/products/ai-shole",
+      "permanent": false
     }
   ],
   "crons": [

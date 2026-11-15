@@ -79,5 +79,11 @@
       "destination": "https://omenz-shop.fourthwall.com/products/caught-in-code-the-divine-download-tee",
       "permanent": false
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/tollbooth/v1/track-record/rollup",
+      "schedule": "15 7 * * *"
+    }
   ]
 }

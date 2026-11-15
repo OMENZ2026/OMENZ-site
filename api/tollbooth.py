@@ -53,6 +53,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
+  POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.001  Job Jacket: check a job's minimum working state out/in
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
@@ -104,6 +105,7 @@ import needs  # noqa: E402
 import myop  # noqa: E402
 import track_record  # noqa: E402
 import swapmeet  # noqa: E402
+import jacket  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -504,6 +506,22 @@ _paid("GET", "market/sellers", "$0.25",
       "x402 Seller Lead List: sellers offering a capability (or all), with endpoints, 30-day calls, unique payers, price range, last-called date and an example endpoint; up to 500 rows. For payment platforms, investors and sellers sizing a niche. Public listing data. By OMENZ.",
       {"q": "web search", "min_payers": 5, "limit": 100},
       {"properties": {"q": {"type": "string"}, "min_payers": {"type": "integer"}, "limit": {"type": "integer"}}})
+
+_paid("POST", "jacket/create", "$0.002",
+      "Job Jacket: create the portable minimum working state for one assignment (objective, instructions, state, checkpoint, optional Permission Passport + Job Ledger link). Encrypted with a key only you hold, up to 30 days, 64 KB. Returns jacket_id + jacket_key (shown once). Credentials are refused: keep reference names only. By OMENZ.",
+      {"job_id": "job-42", "objective": "get today's hours for 20 restaurants", "instructions": "precision first", "state": {"done": [], "todo": ["a.com", "b.com"]}, "worker": "agent-a"},
+      {"properties": {"objective": {"type": "string"}, "job_id": {"type": "string"}, "instructions": {"type": "string"}, "state": {"type": "object"}, "checkpoint": {"type": "string"}, "passport_token": {"type": "string"}, "ledger_id": {"type": "string"}, "ttl_days": {"type": "integer"}}, "required": ["objective"]}, body=True)
+_paid("POST", "jacket/checkout", "$0.002",
+      "Job Jacket checkout: start a shift. Returns only what this worker needs (objective, instructions, checkpoint, state trimmed to requested fields / size, Passport verdict) and a lease so no other worker holds it at the same time; take_over for dead workers. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
+      {"worker": "agent-b", "fields": ["todo"], "max_string_chars": 400, "lease_minutes": 60},
+      {"properties": {"worker": {"type": "string"}, "fields": {"type": "array"}, "max_string_chars": {"type": "integer"}, "lease_minutes": {"type": "integer"}, "take_over": {"type": "boolean"}}, "required": ["worker"]}, body=True)
+_paid("POST", "jacket/checkin", "$0.002",
+      "Job Jacket checkin: end a shift. state_patch merges (null deletes a key) or state replaces; new checkpoint and note; the jacket becomes a new version and the lease is released. Optional Job Ledger entry (header X-Ledger-Key). Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
+      {"worker": "agent-b", "state_patch": {"done": ["a.com"], "todo": ["b.com"]}, "checkpoint": "1 of 2 done", "note": "a.com closed Sundays"},
+      {"properties": {"worker": {"type": "string"}, "state_patch": {"type": "object"}, "state": {"type": "object"}, "checkpoint": {"type": "string"}, "note": {"type": "string"}, "keep_lease": {"type": "boolean"}}, "required": ["worker"]}, body=True)
+_paid("GET", "jacket/history", "$0.001",
+      "Job Jacket history: every version (who, when, checkpoint, note, state hash; never the contents) and the current lease. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
+      {}, {"properties": {}})
 
 # Facilitator: Coinbase CDP when the founder has set CDP_API_KEY_ID/SECRET in Vercel (settlements then index our routes in
 # the CDP Bazaar, where Coinbase's agents shop); otherwise PayAI (keyless). An explicit X402_FACILITATOR env var wins.
@@ -1344,6 +1362,40 @@ def _locker_call(fn, *a):
         return fn(*a)
     except locker.LockerError as e:
         return JSONResponse({"error": e.msg}, status_code=e.status)
+
+
+@app.post(BASE + "/v1/jacket/create")
+def jacket_create(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "jacket_create"
+    if getattr(request.state, "ayne", False):
+        body = {**body, "ttl_days": 1}
+    return _locker_call(jacket.create, body)
+
+
+@app.post(BASE + "/v1/jacket/checkout")
+def jacket_checkout(request: Request, body: dict = Body(None), x_jacket_id: str | None = Header(None), x_jacket_key: str | None = Header(None)):
+    request.state.extra["action"] = "jacket_checkout"
+    return _locker_call(jacket.checkout, x_jacket_id, x_jacket_key, body)
+
+
+@app.post(BASE + "/v1/jacket/checkin")
+def jacket_checkin(request: Request, body: dict = Body(None), x_jacket_id: str | None = Header(None), x_jacket_key: str | None = Header(None),
+                   x_ledger_key: str | None = Header(None)):
+    request.state.extra["action"] = "jacket_checkin"
+    return _locker_call(jacket.checkin, x_jacket_id, x_jacket_key, body, x_ledger_key)
+
+
+@app.get(BASE + "/v1/jacket/history")
+def jacket_history(request: Request, x_jacket_id: str | None = Header(None), x_jacket_key: str | None = Header(None)):
+    return _locker_call(jacket.history, x_jacket_id, x_jacket_key)
+
+
+@app.get(BASE + "/v1/track-record/rollup")
+def track_record_rollup():
+    try:
+        return track_record.rollup()
+    except Exception as e:
+        return JSONResponse({"error": "rollup failed", "detail": str(e)[:160]}, status_code=503)
 
 
 @app.post(BASE + "/v1/locker/put")

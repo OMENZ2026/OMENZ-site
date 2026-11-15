@@ -93,6 +93,16 @@
       "source": "/s/ai-shole",
       "destination": "https://omenz-shop.fourthwall.com/products/ai-shole",
       "permanent": false
+    },
+    {
+      "source": "/s/irregular-high-frequency",
+      "destination": "https://omenz-shop.fourthwall.com/products/irregular-high-frequency",
+      "permanent": false
+    },
+    {
+      "source": "/s/cultural-malware",
+      "destination": "https://omenz-shop.fourthwall.com/products/cultural-malware",
+      "permanent": false
     }
   ],
   "crons": [

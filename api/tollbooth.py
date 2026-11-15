@@ -52,6 +52,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
+  GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
@@ -102,6 +103,7 @@ import market  # noqa: E402
 import needs  # noqa: E402
 import myop  # noqa: E402
 import track_record  # noqa: E402
+import swapmeet  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -796,6 +798,34 @@ def passport_check(request: Request, body: dict = Body(...)):
 @app.get(BASE + "/v1/passport/key")
 def passport_key():
     return passport.key()
+
+
+@app.get(BASE + "/swapmeet/v1")
+def swapmeet_aisles(request: Request):
+    request.state.extra["action"] = "swapmeet_aisles"
+    try:
+        return swapmeet.aisles()
+    except Exception as e:
+        return JSONResponse({"error": "market index unavailable", "detail": str(e)[:120]}, status_code=503)
+
+
+@app.get(BASE + "/swapmeet/v1/search")
+def swapmeet_search(request: Request, q: str = Query("")):
+    request.state.extra["action"] = "swapmeet_search"
+    r = swapmeet.search(q)
+    return JSONResponse(r, status_code=422 if "error" in r else 200)
+
+
+@app.get(BASE + "/swapmeet/v1/new")
+def swapmeet_new():
+    return swapmeet.new_arrivals()
+
+
+@app.post(BASE + "/swapmeet/v1/booth")
+def swapmeet_booth(request: Request, body: dict = Body(None)):
+    request.state.extra["action"] = "swapmeet_booth"
+    code, r = swapmeet.bring_booth(body)
+    return JSONResponse(r, status_code=code)
 
 
 @app.get(BASE + "/myop/v1")

@@ -103,6 +103,11 @@
       "source": "/s/cultural-malware",
       "destination": "https://omenz-shop.fourthwall.com/products/cultural-malware",
       "permanent": false
+    },
+    {
+      "source": "/s/wifey-protocol",
+      "destination": "https://omenz-shop.fourthwall.com/products/wifey-protocol",
+      "permanent": false
     }
   ],
   "crons": [

@@ -52,6 +52,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
+  GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
   GET  /openapi.json  /.well-known/x402  /.well-known/agent-card.json   free  machine discovery (OpenAPI+x402, x402 list, A2A card)
@@ -100,6 +101,7 @@ import local_facts  # noqa: E402
 import market  # noqa: E402
 import needs  # noqa: E402
 import myop  # noqa: E402
+import track_record  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -847,6 +849,11 @@ def needs_route(request: Request, body: dict = Body(...)):
     code, r = needs.submit(body, request.headers.get("user-agent"))
     request.state.extra.update({"action": "need", "need_ok": code == 200})
     return JSONResponse(r, status_code=code)
+
+
+@app.get(BASE + "/v1/track-record")
+def track_record_route():
+    return track_record.build(ROUTES, BASE)
 
 
 @app.get(BASE + "/v1/pricing-policy")

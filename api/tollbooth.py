@@ -115,7 +115,8 @@ import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
 from x402 import x402ResourceServer  # noqa: E402
-from x402.extensions.bazaar import declare_discovery_extension  # noqa: E402
+from x402.extensions.bazaar import bazaar_resource_server_extension, declare_discovery_extension  # noqa: E402
+import cdp_auth  # noqa: E402
 from x402.http import HTTPFacilitatorClient  # noqa: E402
 from x402.http.middleware.fastapi import payment_middleware  # noqa: E402
 from x402.mechanisms.evm.exact import ExactEvmServerScheme  # noqa: E402
@@ -500,8 +501,16 @@ _paid("GET", "market/sellers", "$0.25",
       {"q": "web search", "min_payers": 5, "limit": 100},
       {"properties": {"q": {"type": "string"}, "min_payers": {"type": "integer"}, "limit": {"type": "integer"}}})
 
-server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
+# Facilitator: Coinbase CDP when the founder has set CDP_API_KEY_ID/SECRET in Vercel (settlements then index our routes in
+# the CDP Bazaar, where Coinbase's agents shop); otherwise PayAI (keyless). An explicit X402_FACILITATOR env var wins.
+if cdp_auth.configured() and not os.environ.get("X402_FACILITATOR"):
+    FACILITATOR, FACILITATOR_NAME = cdp_auth.URL, "coinbase-cdp"
+    server = x402ResourceServer(HTTPFacilitatorClient({"url": cdp_auth.URL, "create_headers": cdp_auth.create_headers}))
+else:
+    FACILITATOR_NAME = "coinbase-cdp" if "cdp.coinbase" in FACILITATOR else "payai" if "payai" in FACILITATOR else FACILITATOR
+    server = x402ResourceServer(HTTPFacilitatorClient({"url": FACILITATOR}))
 server.register("eip155:*", ExactEvmServerScheme())
+server.register_extension(bazaar_resource_server_extension)
 
 app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 _mw = None
@@ -1050,7 +1059,7 @@ def status_page():
         checks = list(ex.map(probe, sample))
     up = all(c["verdict"] == "paywalled" for c in checks)
     return {"service": "OMENZ x402 tollbooth", "status": "operational" if up else "degraded",
-            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "paid_routes": len(ROUTES), "sample_checks": checks,
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "paid_routes": len(ROUTES), "facilitator": FACILITATOR_NAME, "sample_checks": checks,
             "prices": BASE + "/v1/pricing-policy", "card": BASE + "/v1/card"}
 
 

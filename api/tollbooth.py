@@ -62,7 +62,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
   GET  /api/tollbooth/v1/wallet/{balance,spend,runway}?address=   agent-wallet tools (USDC on Base, public chain data)
   GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
-  POST /api/tollbooth/v1/authorize           $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
+  GET|POST /api/tollbooth/v1/authorize       $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
   POST /api/tollbooth/v1/split-check         $0.002  Split Check: verify an on-chain revenue split (0xSplits v2) and who gets what
   POST /api/tollbooth/v1/credits/buy-1 | buy-5   $1 / $5  prepaid credits (one settlement; checks draw from the balance)
   GET  /api/tollbooth/v1/credits/balance     free    balance + recent charges (X-Credit-Id / X-Credit-Key)
@@ -488,6 +488,12 @@ _paid("POST", "authorize", "$0.001",
        "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
+
+_paid("GET", "authorize", "$0.001",
+      "OMENZ Authorize (GET form): same APPROVE / REVIEW / DECLINE check before paying an x402 endpoint, with query params: url, method, max_price_usd, expected_pay_to, daily_cap_usd, spent_today_usd. Returns reasons + a signed 5-minute authorization code. Never pays the target. By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint", "method": "GET", "max_price_usd": 0.05},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
+                      "daily_cap_usd": {"type": "number"}, "spent_today_usd": {"type": "number"}}, "required": ["url"]})
 
 _paid("POST", "split-check", "$0.002",
       "Split Check: before paying into (or trusting) an on-chain revenue split, verify what it actually pays. Detects 0xSplits v2 splits on Base / Base Sepolia, proves a claimed recipients+allocations config against the on-chain splitHash (or discovers it from recent events), shows each recipient's share, whether a given beneficiary is included, whether the split is immutable (no owner), and USDC waiting to be distributed. Read-only. By OMENZ.",
@@ -1293,6 +1299,21 @@ def authorize_route(request: Request, body: dict = Body(...)):
     if r.get("decision") == "ERROR":
         return JSONResponse(r, status_code=422)
     return r
+
+
+@app.get(BASE + "/v1/authorize")
+def authorize_get(request: Request, url: str = Query(""), method: str = Query("GET"), max_price_usd: float | None = Query(None),
+                  expected_pay_to: str | None = Query(None), daily_cap_usd: float | None = Query(None), spent_today_usd: float | None = Query(None)):
+    body = {"url": url, "method": method}
+    if max_price_usd is not None:
+        body["max_price_usd"] = max_price_usd
+    if expected_pay_to:
+        body["expected_pay_to"] = expected_pay_to
+    if daily_cap_usd is not None:
+        body["policy"] = {"daily_cap_usd": daily_cap_usd}
+    if spent_today_usd is not None:
+        body["spend"] = {"spent_today_usd": spent_today_usd}
+    return authorize_route(request, body)
 
 
 @app.post(BASE + "/v1/split-check")

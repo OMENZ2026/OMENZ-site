@@ -1542,6 +1542,21 @@ def pobox_inbox(request: Request, box_id: str = Query(...), ack: bool = False, x
     return r
 
 
+# doubled_path_fix (2026-11-16): some clients join paths wrongly (e.g. /api/tollbooth/v1/local-facts/api/tollbooth/v1/pobox/inbox,
+# about 530 hits in 2 days). Redirect (308 keeps the method + body) to the last /api/tollbooth/ segment so they reach the real route.
+from starlette.responses import RedirectResponse  # noqa: E402
+
+
+@app.middleware("http")
+async def doubled_path_fix(request: Request, call_next):
+    p = request.url.path
+    i = p.rfind("/api/tollbooth/")
+    if i > 0 and p.count("/api/tollbooth/") >= 2:
+        q = ("?" + request.url.query) if request.url.query else ""
+        return RedirectResponse(p[i:] + q, status_code=308)
+    return await call_next(request)
+
+
 # CORS (2026-11-16): browser-based agents send an OPTIONS preflight before POST/custom headers; it was getting 405,
 # so they could never reach the paywall. Added last = outermost, so preflight is answered before x402/AYNE.
 from starlette.middleware.cors import CORSMiddleware  # noqa: E402

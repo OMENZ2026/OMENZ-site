@@ -226,7 +226,7 @@ for _n in ("alive", "quote"):
         "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
         "description": PROBE_DESC[_n], "mimeType": "application/json",
         "extensions": declare_discovery_extension(
-            input={"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+            input={"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"},
             input_schema={"properties": {"url": {"type": "string", "description": "Endpoint URL to probe"},
                                          "method": {"type": "string", "description": "HTTP method the endpoint expects (default GET)"}},
                           "required": ["url"]}),
@@ -236,8 +236,8 @@ ROUTES[f"POST {BASE}/v1/tx-preflight"] = {
     "description": "Transaction Preflight: GO or STOP before your agent pays an x402 endpoint. Checks it answers, the live price is within max_price_usd, payTo matches expected_pay_to, the network is allowed, the asset is a known USD stablecoin, and flags drift from the price you were quoted/listed. Never pays the target. By OMENZ.",
     "mimeType": "application/json",
     "extensions": declare_discovery_extension(
-        input={"url": "https://api.example.com/x402/endpoint", "method": "GET", "max_price_usd": 0.01,
-               "expected_pay_to": "0x...", "networks": ["base"], "listed_price_usd": 0.005},
+        input={"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "max_price_usd": 0.01,
+               "expected_pay_to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "networks": ["base"], "listed_price_usd": 0.005},
         input_schema={"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"},
                                      "expected_pay_to": {"type": "string"}, "networks": {"type": "array"},
                                      "listed_price_usd": {"type": "number"}, "allow_testnet": {"type": "boolean"}},
@@ -371,7 +371,7 @@ _paid("GET", "ledger/get", "$0.001",
       {"id": "lg_...", "since_seq": 0}, {"properties": {"id": {"type": "string"}, "since_seq": {"type": "integer"}}, "required": ["id"]})
 _paid("GET", "capability-card", "$0.002",
       "Agent Capability Card: a standard machine-readable card (omenz.capability-card.v0) of what any x402 service offers: endpoints, live prices and payment options, input/output examples from its discovery data, latency. Works on a service index or a single endpoint; never pays. By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 
 WQ = {
@@ -409,11 +409,11 @@ _paid("GET", "market/find", "$0.002",
                       "limit": {"type": "integer"}, "live_check": {"type": "integer"}, "min_payers": {"type": "integer"}}, "required": ["q"]})
 _paid("GET", "market/reliability", "$0.002",
       "Micropayment Reliability Score: should your agent trust this paid endpoint? 0-100 + grade with every reason: public 30-day usage, answering now with valid x402 requirements, speed, live price vs listed price, payTo vs listed payTo (catches swapped wallets). Never pays. By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint", "method": "GET"},
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 _paid("GET", "vendor-check", "$0.01",
       "Vendor Due-Diligence Pack: before your agent depends on an unknown paid API: reliability score + the vendor domain's health (live/parked/moved) + its terms/pricing page digest (material lines) + flags. Never pays. By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint"}, {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive"}, {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 
 _paid("POST", "contract/build", "$0.002",
       "A2A Contract Builder: turn a machine job into signed terms both agents hold: deliverable, deterministic acceptance tests (required_fields, field_types, regex, min_items, max_bytes, equals, url_alive, claim_evidence), max spend, deadline, parties. Ed25519-signed by OMENZ; verify offline with /v1/passport/key. By OMENZ.",
@@ -438,9 +438,9 @@ FIN = {
     "forecast": ("$0.002", "Agent Budget Forecaster: spend history -> daily rate, next 7/30-day projection, trend, biggest dependencies.",
                  {"spend": [{"at": 1763000000, "amount_usd": 0.01, "tool": "search"}]}),
     "watchdog": ("$0.005", "Subscription Watchdog: the paid endpoints your agent business relies on (up to 8): live price vs expected, down/up, terms/pricing page changed (pass back fingerprints).",
-                 {"endpoints": [{"url": "https://api.example.com/x402/endpoint", "expected_price_usd": 0.005, "terms_url": "https://example.com/pricing"}]}),
+                 {"endpoints": [{"url": "https://www.omenz.org/api/tollbooth/v1/alive", "expected_price_usd": 0.005, "terms_url": "https://www.omenz.org/llms.txt"}]}),
     "snapshot": ("$0.002", "Machine Warranty / Purchase Snapshot: signed record of exactly what a paid endpoint promised (live x402 requirements, description, examples) at purchase time.",
-                 {"url": "https://api.example.com/x402/endpoint", "method": "GET"}),
+                 {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"}),
     "refund-request": ("$0.002", "Structured Refund Request: order + failure receipt + payment receipts + purchase snapshot -> a standard signed dispute object with evidence strength and gaps. OMENZ packages evidence; it doesn't rule or move money.",
                        {"order": {"seller": "svc", "description": "lookup", "amount_usd": 0.01}, "failure": {"error_class": "payment_taken_no_result"}, "receipt_ids": ["rc_..."], "snapshot_token": "...", "remedy": "refund"}),
 }
@@ -484,14 +484,14 @@ _paid("GET", "market/price-index", "$0.002",
 
 _paid("POST", "authorize", "$0.001",
       "OMENZ Authorize: the authorization step for agent payments. One call before paying any x402 endpoint: live quote + preflight (up, price within max, network, stablecoin, expected payTo), payee check (known x402 seller?), fair-price check vs comparable endpoints, the owner's spend policy and Permission Passport if sent -> APPROVE / REVIEW / DECLINE with reasons and a signed 5-minute authorization code anyone can verify. Never pays the target. By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint", "method": "POST", "max_price_usd": 0.05, "expected_pay_to": "0x...",
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "POST", "max_price_usd": 0.05, "expected_pay_to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
        "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
 
 _paid("GET", "authorize", "$0.001",
       "OMENZ Authorize (GET form): same APPROVE / REVIEW / DECLINE check before paying an x402 endpoint, with query params: url, method, max_price_usd, expected_pay_to, daily_cap_usd, spent_today_usd. Returns reasons + a signed 5-minute authorization code. Never pays the target. By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint", "method": "GET", "max_price_usd": 0.05},
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "max_price_usd": 0.05},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "daily_cap_usd": {"type": "number"}, "spent_today_usd": {"type": "number"}}, "required": ["url"]})
 
@@ -533,7 +533,7 @@ _paid("GET", "jacket/history", "$0.001",
 
 _paid("POST", "uptime/watch", "$0.01",
       "Uptime Watch: register a paid endpoint your agent depends on; OMENZ checks it daily (and on each report) for 30 days: up/down, latency, live x402 price and payTo, so you catch outages, price drift and swapped payout wallets before paying. Never pays the endpoint. Returns watch_id + watch_key (shown once). By OMENZ.",
-      {"url": "https://api.example.com/x402/endpoint", "method": "GET", "days": 30},
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "days": 30},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "days": {"type": "integer"}}, "required": ["url"]}, body=True)
 _paid("GET", "uptime/report", "$0.001",
       "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. Header X-Watch-Key. By OMENZ.",

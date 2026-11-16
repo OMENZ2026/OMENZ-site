@@ -1540,3 +1540,11 @@ def pobox_inbox(request: Request, box_id: str = Query(...), ack: bool = False, x
     else:
         request.state.extra["error"] = r.status_code
     return r
+
+
+# CORS (2026-11-16): browser-based agents send an OPTIONS preflight before POST/custom headers; it was getting 405,
+# so they could never reach the paywall. Added last = outermost, so preflight is answered before x402/AYNE.
+from starlette.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "HEAD", "OPTIONS"], allow_headers=["*"],
+                   expose_headers=["PAYMENT-REQUIRED", "Payment-Required", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE", "x-ayne"], max_age=86400)

@@ -54,6 +54,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
   POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.001  Job Jacket: check a job's minimum working state out/in
+  POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.001   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
@@ -106,6 +107,7 @@ import myop  # noqa: E402
 import track_record  # noqa: E402
 import swapmeet  # noqa: E402
 import jacket  # noqa: E402
+import uptime  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -522,6 +524,14 @@ _paid("POST", "jacket/checkin", "$0.002",
 _paid("GET", "jacket/history", "$0.001",
       "Job Jacket history: every version (who, when, checkpoint, note, state hash; never the contents) and the current lease. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
       {}, {"properties": {}})
+
+_paid("POST", "uptime/watch", "$0.01",
+      "Uptime Watch: register a paid endpoint your agent depends on; OMENZ checks it daily (and on each report) for 30 days: up/down, latency, live x402 price and payTo, so you catch outages, price drift and swapped payout wallets before paying. Never pays the endpoint. Returns watch_id + watch_key (shown once). By OMENZ.",
+      {"url": "https://api.example.com/x402/endpoint", "method": "GET", "days": 30},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "days": {"type": "integer"}}, "required": ["url"]}, body=True)
+_paid("GET", "uptime/report", "$0.001",
+      "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. Header X-Watch-Key. By OMENZ.",
+      {"id": "uw_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 
 # Facilitator: Coinbase CDP when the founder has set CDP_API_KEY_ID/SECRET in Vercel (settlements then index our routes in
 # the CDP Bazaar, where Coinbase's agents shop); otherwise PayAI (keyless). An explicit X402_FACILITATOR env var wins.
@@ -1396,6 +1406,27 @@ def track_record_rollup():
         return track_record.rollup()
     except Exception as e:
         return JSONResponse({"error": "rollup failed", "detail": str(e)[:160]}, status_code=503)
+
+
+@app.post(BASE + "/v1/uptime/watch")
+def uptime_watch(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "uptime_watch"
+    days = 1 if getattr(request.state, "ayne", False) else body.get("days", 30)
+    return _locker_call(uptime.watch, body.get("url"), body.get("method", "GET"), days)
+
+
+@app.get(BASE + "/v1/uptime/report")
+def uptime_report(request: Request, id: str = Query(""), x_watch_key: str | None = Header(None)):
+    request.state.extra["action"] = "uptime_report"
+    return _locker_call(uptime.report, id, x_watch_key)
+
+
+@app.get(BASE + "/v1/uptime/run")
+def uptime_run():
+    try:
+        return uptime.run_due()
+    except Exception as e:
+        return JSONResponse({"error": "uptime run failed", "detail": str(e)[:160]}, status_code=503)
 
 
 @app.post(BASE + "/v1/locker/put")

@@ -114,6 +114,10 @@
     {
       "path": "/api/tollbooth/v1/track-record/rollup",
       "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/tollbooth/v1/uptime/run",
+      "schedule": "45 13 * * *"
     }
   ]
 }

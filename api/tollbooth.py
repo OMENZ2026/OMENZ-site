@@ -676,9 +676,15 @@ async def _ayne(request, call_next, t0):
         ev.update(mode="sample", status=200)
     else:
         alt = [k.split(" ", 1)[0] for k in ROUTES if k.split(" ", 1)[1] == BASE + "/v1" + sub]
-        resp = JSONResponse({"ayne": True, "error": "OMENZ doesn't have this yet" if not alt else f"this route takes {', '.join(alt)}",
-                             "noted": True, "tell_us_what_you_need": BASE + "/v1/needs (free)", "all_routes": BASE + "/ayne/v1"},
-                            status_code=404 if not alt else 405)
+        body = {"ayne": True, "error": "OMENZ doesn't have this yet" if not alt else f"this route takes {', '.join(alt)}",
+                "noted": True, "tell_us_what_you_need": BASE + "/v1/needs (free)", "all_routes": BASE + "/ayne/v1"}
+        if alt:
+            k = alt[0] + " " + BASE + "/v1" + sub
+            fx = ayne.fixtures().get(k) or {}
+            body.update({"use_method": alt[0], "try_free_here": {"method": alt[0], "url": "https://www.omenz.org" + BASE + "/ayne/v1" + sub,
+                         "example_body": fx.get("example_input")}, "paid_route": {"method": alt[0], "url": "https://www.omenz.org" + BASE + "/v1" + sub,
+                         "price": ROUTES[k]["accepts"]["price"]}, "description": ROUTES[k]["description"]})
+        resp = JSONResponse(body, status_code=404 if not alt else 405)
         ev.update(mode="gap" if not alt else "wrong_method", status=resp.status_code)
     ev["latency_ms"] = int((time.time() - t0) * 1000)
     await run_in_threadpool(ayne.log, ev)

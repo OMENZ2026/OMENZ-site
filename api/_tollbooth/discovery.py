@@ -33,7 +33,10 @@ def _info(spec):
 
 def tool_name(path, method):
     n = path.split("/v1/", 1)[1].replace("/", "_").replace("-", "_")
-    return n
+    return n + "_get" if (n, method) in GET_TWINS else n
+
+
+GET_TWINS = {("authorize", "GET")}  # same path offered as POST and GET: keep MCP tool names unique
 
 
 def openapi(routes, base):
@@ -110,6 +113,14 @@ def agent_card(routes, base):
             "x-tell-us": ORIGIN + base + "/v1/needs"}
 
 
+ARG_HINTS = {"url": "full https URL to check", "method": "HTTP method of the target endpoint (GET or POST)",
+             "max_price_usd": "most you are willing to pay per call, in USD", "expected_pay_to": "payout wallet you expect (0x...), to catch swapped payees",
+             "id": "id returned by the create/put call", "q": "search text", "days": "how many days to keep it (1-30)",
+             "policy": "your spend policy, e.g. {\"daily_cap_usd\": 5}", "spend": "what you have spent so far, e.g. {\"spent_today_usd\": 1.2}",
+             "network": "chain name, e.g. base", "address": "0x... contract or wallet address", "box_id": "PO box id from pobox/create"}
+WRITE_FREE = ("/authorize", "/tx-preflight", "/spend-gate", "/secret-scan", "/cost-estimate", "/claim-evidence", "/split-check", "/passport/check")
+
+
 def mcp_tools(routes):
     tools = []
     for k, v in routes.items():
@@ -125,8 +136,20 @@ def mcp_tools(routes):
             js["properties"]["x_locker_key"] = {"type": "string"}
         if "/pobox/inbox" in p:
             js["properties"]["x_owner_key"] = {"type": "string"}
-        tools.append({"name": tool_name(p, m), "description": v["description"] + f" (MCP calls run in AYNE, the free playzone; production: {m} {ORIGIN}{p}, {v['accepts']['price']} via x402.)",
-                      "inputSchema": js, "_method": m, "_path": p})
+        ex = ((b.get("input") or {}).get("queryParams") if m == "GET" else (b.get("input") or {}).get("body")) or {}
+        for pk, pv in js["properties"].items():  # mcptry 2026-11-16: describe every argument (+5)
+            if isinstance(pv, dict) and not pv.get("description"):
+                hint = ARG_HINTS.get(pk) or pk.replace("_", " ")
+                eg = ex.get(pk) if isinstance(ex, dict) else None
+                pv["description"] = hint + (f" (example: {json.dumps(eg)[:80]})" if eg not in (None, "", {}, []) else "")
+        writes = m != "GET" and not any(w in p for w in WRITE_FREE)
+        title = v["description"].split(":")[0].replace("By OMENZ.", "").strip()[:60]
+        tools.append({"name": tool_name(p, m), "title": title,
+                      "description": v["description"] + f" (MCP calls run in AYNE, the free playzone; production: {m} {ORIGIN}{p}, {v['accepts']['price']} via x402.)",
+                      "inputSchema": js,
+                      "annotations": {"title": title, "readOnlyHint": not writes, "destructiveHint": False,
+                                      "idempotentHint": not writes, "openWorldHint": True},
+                      "_method": m, "_path": p})
     return tools
 
 

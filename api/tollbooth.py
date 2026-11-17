@@ -405,7 +405,7 @@ _paid("GET", "queue/status", "$0.001",
 _paid("GET", "market/find", "$0.002",
       "Agent Market: find the paid tool for a capability across ~35,000 x402 endpoints (Bazaar index, refreshed weekly). Ranked by match, then real 30-day usage (calls, unique payers); filter by max_price_usd and network; exclude= a vendor to get substitutes (tool down or rate-limited); the top picks are probed live (never paid) for status, price and drift. Capability Finder, Procurement Desk, Quote Comparator, Tool Substitute Finder and Rate-Limit Router in one call. By OMENZ.",
       {"q": "weather forecast by city", "max_price_usd": 0.01, "network": "base", "exclude": "", "limit": 10, "live_check": 3},
-      {"properties": {"q": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "exclude": {"type": "string"},
+      {"properties": {"q": {"type": "string"}, "need": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "exclude": {"type": "string"},
                       "limit": {"type": "integer"}, "live_check": {"type": "integer"}, "min_payers": {"type": "integer"}}, "required": ["q"]})
 _paid("GET", "market/reliability", "$0.002",
       "Micropayment Reliability Score: should your agent trust this paid endpoint? 0-100 + grade with every reason: public 30-day usage, answering now with valid x402 requirements, speed, live price vs listed price, payTo vs listed payTo (catches swapped wallets). Never pays. By OMENZ.",
@@ -1026,8 +1026,11 @@ def queue_status(request: Request, queue_id: str = Query(...), item_id: str | No
 
 
 @app.get(BASE + "/v1/market/find")
-def market_find(request: Request, q: str = Query(...), max_price_usd: float | None = None, network: str | None = None,
-                exclude: str | None = None, limit: int = 10, live_check: int = 3, min_payers: int = 0):
+def market_find(request: Request, q: str = Query(""), need: str = Query(""), task: str = Query(""), max_price_usd: float | None = None,
+                network: str | None = None, exclude: str | None = None, limit: int = 10, live_check: int = 3, min_payers: int = 0):
+    q = (q or need or task).strip()  # 2026-11-16: accept need=/task= (the convention other x402 discovery APIs use)
+    if not q:
+        return JSONResponse({"error": "describe what you need: q= (or need= / task=)", "example": "/v1/market/find?need=weather forecast by city"}, status_code=422)
     try:
         r = market.find(q, max_price_usd, network, [e for e in (exclude or "").split(",") if e], limit, live_check, min_payers)
     except Exception:

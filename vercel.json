@@ -108,6 +108,11 @@
       "source": "/s/wifey-protocol",
       "destination": "https://omenz-shop.fourthwall.com/products/wifey-protocol",
       "permanent": false
+    },
+    {
+      "source": "/s/shegpt",
+      "destination": "https://omenz-shop.fourthwall.com/products/shegpt",
+      "permanent": false
     }
   ],
   "crons": [

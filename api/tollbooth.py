@@ -483,14 +483,14 @@ _paid("GET", "market/price-index", "$0.002",
                                                   "min_payers": {"type": "integer"}}, "required": ["q"]})
 
 _paid("POST", "authorize", "$0.001",
-      "OMENZ Authorize: the authorization step for agent payments. One call before paying any x402 endpoint: live quote + preflight (up, price within max, network, stablecoin, expected payTo), payee check (known x402 seller?), fair-price check vs comparable endpoints, the owner's spend policy and Permission Passport if sent -> APPROVE / REVIEW / DECLINE with reasons and a signed 5-minute authorization code anyone can verify. Never pays the target. By OMENZ.",
+      "OMENZ Authorize: the authorization step for agent payments. One call before paying any x402 endpoint: live quote + preflight (up, price within max, network, stablecoin, expected payTo), payee check (known x402 seller?), fair-price check vs comparable endpoints, the owner's spend policy and Permission Passport if sent -> APPROVE / REVIEW / DECLINE with reasons and a signed 5-minute authorization code anyone can verify. Never pays the target. Doing many? Prepay once (POST /v1/credits/buy-1, $1) and check via /v1/authorize/credit at 2% of the payment (min $0.0003), with no per-check settlement. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "POST", "max_price_usd": 0.05, "expected_pay_to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
        "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
 
 _paid("GET", "authorize", "$0.001",
-      "OMENZ Authorize (GET form): same APPROVE / REVIEW / DECLINE check before paying an x402 endpoint, with query params: url, method, max_price_usd, expected_pay_to, daily_cap_usd, spent_today_usd. Returns reasons + a signed 5-minute authorization code. Never pays the target. By OMENZ.",
+      "OMENZ Authorize (GET form): same APPROVE / REVIEW / DECLINE check before paying an x402 endpoint, with query params: url, method, max_price_usd, expected_pay_to, daily_cap_usd, spent_today_usd. Returns reasons + a signed 5-minute authorization code. Never pays the target. Doing many? Prepay once (POST /v1/credits/buy-1, $1) and check via /v1/authorize/credit at 2% of the payment (min $0.0003), with no per-check settlement. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "max_price_usd": 0.05},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "daily_cap_usd": {"type": "number"}, "spent_today_usd": {"type": "number"}}, "required": ["url"]})

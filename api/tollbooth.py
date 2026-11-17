@@ -1321,6 +1321,20 @@ def authorize_get(request: Request, url: str = Query(""), method: str = Query("G
     return authorize_route(request, body)
 
 
+@app.get(BASE + "/v1/authorize/verify")
+def authorize_verify(token: str = Query("")):
+    """FREE: sellers/auditors verify an OMENZ authorization token (Ed25519, key at /v1/passport/key) before serving a paid call."""
+    import contracts
+    body = contracts._open(token) if token else None
+    if not body:
+        return JSONResponse({"valid": False, "reason": "bad or missing token (pass ?token=<authorization_token>)"}, status_code=400)
+    exp = body.get("expires") or body.get("expires_at") or 0
+    live = (not exp) or float(exp) > time.time()
+    return {"valid": True, "live": live, "authorization": body,
+            "meaning": "OMENZ checked this payment before it was made: decision, url, payTo, amount and expiry are signed by OMENZ.",
+            "public_key": "https://www.omenz.org" + BASE + "/v1/passport/key"}
+
+
 @app.post(BASE + "/v1/split-check")
 def split_check_route(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "split_check"

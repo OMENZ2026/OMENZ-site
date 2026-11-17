@@ -12,6 +12,8 @@ import hmac
 import secrets
 import time
 
+import re
+
 import x402_probe
 from locker import LockerError, _kv
 
@@ -29,6 +31,10 @@ def _check(rec):
     c = {"at": int(time.time()), "status": q.get("http_status"), "state": q.get("status"), "latency_ms": q.get("latency_ms"),
          "price_usd": q.get("cheapest_usd"), "pay_to": (opt.get("pay_to") or "").lower() or None}
     c["up"] = c["status"] is not None and (c["status"] == 402 or 200 <= int(c["status"]) < 400)
+    res = q.get("resource")
+    desc = (res.get("description") if isinstance(res, dict) else None) or ""
+    if desc and not rec.get("desc"):
+        rec["desc"] = desc[:300]
     rec["checks"] = (rec["checks"] + [c])[-200:]
     rec["last"] = c["at"]
     return c
@@ -72,7 +78,20 @@ def _load(wid, key):
     return rec
 
 
-def report(wid, key):
+def substitutes(rec, n=3):
+    """Maintenance shop (2026-11-16): best live alternatives for a watched endpoint, from the ~35K x402 market index."""
+    import market
+    host = (re.match(r"https?://([^/]+)", rec["url"]) or [None, ""])[1]
+    q = rec.get("desc") or rec["url"].rsplit("/", 1)[-1].replace("-", " ")
+    try:
+        r = market.find(q[:120], exclude=[host], limit=n, live_check=n)
+    except Exception as e:
+        return {"error": "market index unavailable", "detail": str(e)[:80]}
+    return [{"url": x.get("url"), "what": (x.get("description") or "")[:100], "price_usd": x.get("price_usd"), "payers_30d": x.get("payers_30d") or x.get("unique_payers"),
+             "live": x.get("live")} for x in (r.get("results") or [])[:n]]
+
+
+def report(wid, key, subs=False):
     rec = _load(wid, key)
     if rec["expires"] > time.time() and time.time() - rec.get("last", 0) > 3600:
         _check(rec)
@@ -92,7 +111,8 @@ def report(wid, key):
             "uptime_pct": round(100 * len(up) / len(cs), 2) if cs else None,
             "median_latency_ms": lat[len(lat) // 2] if lat else None, "incidents": incidents[-20:], "price_changes": prices[-20:],
             "payto_changes": payees[-20:], "current": cs[-1] if cs else None, "recent": cs[-10:][::-1],
-            "active": rec["expires"] > time.time(), "expires_at": rec["expires"]}
+            "active": rec["expires"] > time.time(), "expires_at": rec["expires"],
+            **({"substitutes": substitutes(rec)} if (subs or (cs and not cs[-1]["up"])) else {})}
 
 
 def run_due(limit=60):

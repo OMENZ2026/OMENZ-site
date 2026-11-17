@@ -536,7 +536,7 @@ _paid("POST", "uptime/watch", "$0.01",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "days": 30},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "days": {"type": "integer"}}, "required": ["url"]}, body=True)
 _paid("GET", "uptime/report", "$0.001",
-      "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. Header X-Watch-Key. By OMENZ.",
+      "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. When the endpoint is down (or substitutes=true) it also returns the 3 best live substitutes from ~35,000 x402 APIs. Header X-Watch-Key. By OMENZ.",
       {"id": "uw_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 
 # Facilitator: Coinbase CDP when the founder has set CDP_API_KEY_ID/SECRET in Vercel (settlements then index our routes in
@@ -1462,9 +1462,9 @@ def uptime_watch(request: Request, body: dict = Body(...)):
 
 
 @app.get(BASE + "/v1/uptime/report")
-def uptime_report(request: Request, id: str = Query(""), x_watch_key: str | None = Header(None)):
+def uptime_report(request: Request, id: str = Query(""), substitutes: bool = Query(False), x_watch_key: str | None = Header(None)):
     request.state.extra["action"] = "uptime_report"
-    return _locker_call(uptime.report, id, x_watch_key)
+    return _locker_call(uptime.report, id, x_watch_key, substitutes)
 
 
 @app.get(BASE + "/v1/uptime/run")

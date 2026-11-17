@@ -149,7 +149,7 @@ def _route(name):
         "description": DESCRIPTIONS[name],
         "mimeType": "application/json",
         "extensions": declare_discovery_extension(
-            input={"url": "https://example.com"},
+            input={"url": "https://www.omenz.org"},
             input_schema={"properties": {"url": {"type": "string", "description": "Public website URL"}}, "required": ["url"]},
         ),
     }
@@ -196,7 +196,7 @@ ROUTES[f"POST {BASE}/v1/receipt/put"] = {
                    "With a Base tx_hash, OMENZ checks the chain for the matching USDC transfer. Content-addressed id; anyone verifies free. By OMENZ.",
     "mimeType": "application/json",
     "extensions": declare_discovery_extension(
-        input={"payer": "0x...", "payee": "0x...", "amount": "0.001", "currency": "USDC", "network": "base", "tx_hash": "0x...", "service": "summarize", "job_id": "42"},
+        input={"payer": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payee": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "amount": "0.001", "currency": "USDC", "network": "base", "tx_hash": "0x...", "service": "summarize", "job_id": "42"},
         input_schema={"properties": {k: {"type": "string"} for k in receipts.FIELDS}, "required": ["payer", "payee", "amount"]}, body_type="json"),
 }
 ROUTES[f"POST {BASE}/v1/handoff/pack"] = {
@@ -260,7 +260,7 @@ ROUTES[f"POST {BASE}/v1/spend-gate"] = {
     "extensions": declare_discovery_extension(
         input={"policy": {"max_per_tx_usd": 1, "daily_cap_usd": 5, "escalate_above_usd": 0.5, "allowed_networks": ["base"],
                           "hurdle": {"min_return_multiple": 1.5}},
-               "spend": {"amount_usd": 0.1, "recipient": "0x...", "network": "base", "category": "data", "expected_value_usd": 0.5,
+               "spend": {"amount_usd": 0.1, "recipient": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "network": "base", "category": "data", "expected_value_usd": 0.5,
                          "spent_today_usd": 1.2}},
         input_schema={"properties": {"policy": {"type": "object"}, "spend": {"type": "object", "description": "amount_usd required"}},
                       "required": ["spend"]}, body_type="json"),
@@ -292,7 +292,7 @@ ROUTES[f"GET {BASE}/v1/terms-changed"] = {
     "description": "Terms Changed?: did an API or tool's pricing, limits or terms page change in a way that MATTERS? Keeps only material lines (prices, numbers with units, rate limits/quotas, commercial-use, prohibitions, refunds, data retention) and diffs them against your last fingerprint: exact lines added/removed, money_changed flag. Footer/date churn ignored. Stateless: keep the fingerprint, pass it as previous=. By OMENZ.",
     "mimeType": "application/json",
     "extensions": declare_discovery_extension(
-        input={"url": "https://example.com/pricing", "previous": "tc1.…"},
+        input={"url": "https://www.omenz.org/logo/", "previous": "tc1.…"},
         input_schema={"properties": {"url": {"type": "string"}, "previous": {"type": "string", "description": "fingerprint from your last call"}},
                       "required": ["url"]}),
 }
@@ -304,7 +304,7 @@ ROUTES[f"POST {BASE}/v1/cost-estimate"] = {
     "extensions": declare_discovery_extension(
         input={"job": {"models": {"big": {"input_per_mtok_usd": 8, "output_per_mtok_usd": 40}, "small": {"input_per_mtok_usd": 0.5, "output_per_mtok_usd": 3}},
                        "steps": [{"name": "extract", "model": "big", "input_tokens": 1000000, "output_tokens": 50000, "runs": 2, "retry_rate": 0.1}],
-                       "tools": [{"name": "facts", "x402_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com", "calls": 10}],
+                       "tools": [{"name": "facts", "x402_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://www.omenz.org", "calls": 10}],
                        "budget_usd": 30, "value_usd": 100, "alternatives": {"extract": "small"}}},
         input_schema={"properties": {"job": {"type": "object"}}, "required": ["job"]}, body_type="json"),
 }
@@ -355,8 +355,8 @@ def _paid(method, path, price, desc, inp, schema, body=False):
 
 _paid("POST", "preflight", "$0.005",
       "Agent Preflight: can this agent finish the job with what it has, BEFORE it spends? Give the paid tools it needs (url, method, calls, max price), a budget and optionally its Permission Passport. We check each tool is answering and its live x402 price (never paying), the total against the budget, and the passport against each host and the total. READY, or BLOCKED with exactly what's missing. By OMENZ.",
-      {"job": {"tools": [{"name": "facts", "url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com", "calls": 10, "max_price_usd": 0.02}],
-               "budget_usd": 1, "passport_token": "<optional>"}},
+      {"job": {"tools": [{"name": "facts", "url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://www.omenz.org", "calls": 10, "max_price_usd": 0.02}],
+               "budget_usd": 1, }},
       {"properties": {"job": {"type": "object"}}, "required": ["job"]}, body=True)
 _paid("POST", "ledger/create", "$0.002",
       "Agent Job Ledger: open an append-only, hash-chained record for one job (tool calls, spend, receipts, handoffs, failures, outputs, status). Returns ledger_id + ledger_key (shown once). Kept 90 days. By OMENZ.",
@@ -404,7 +404,7 @@ _paid("GET", "queue/status", "$0.001",
 
 _paid("GET", "market/find", "$0.002",
       "Agent Market: find the paid tool for a capability across ~35,000 x402 endpoints (Bazaar index, refreshed weekly). Ranked by match, then real 30-day usage (calls, unique payers); filter by max_price_usd and network; exclude= a vendor to get substitutes (tool down or rate-limited); the top picks are probed live (never paid) for status, price and drift. Capability Finder, Procurement Desk, Quote Comparator, Tool Substitute Finder and Rate-Limit Router in one call. By OMENZ.",
-      {"q": "weather forecast by city", "max_price_usd": 0.01, "network": "base", "exclude": "", "limit": 10, "live_check": 3},
+      {"q": "weather forecast by city", "max_price_usd": 0.01, "network": "base", "limit": 10, "live_check": 3},
       {"properties": {"q": {"type": "string"}, "need": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "exclude": {"type": "string"},
                       "limit": {"type": "integer"}, "live_check": {"type": "integer"}, "min_payers": {"type": "integer"}}, "required": ["q"]})
 _paid("GET", "market/reliability", "$0.002",
@@ -422,7 +422,7 @@ _paid("POST", "contract/build", "$0.002",
       {"properties": {"terms": {"type": "object"}}, "required": ["terms"]}, body=True)
 _paid("POST", "contract/accept", "$0.005",
       "Acceptance Test as a Service + escrow verdict: a neutral party runs the contract's tests on what was delivered. PASS/FAIL per test, escrow_verdict RELEASE/REFUND (OMENZ never holds funds: the payer acts on it), and a signed attestation that feeds the seller's Reputation Receipts. By OMENZ.",
-      {"token": "<contract token>", "delivered": {"results": [1, 2, 3], "source": "https://example.com"}},
+      {"token": "<contract token>", "delivered": {"results": [1, 2, 3], "source": "https://www.omenz.org"}},
       {"properties": {"token": {"type": "string"}, "delivered": {}}, "required": ["token", "delivered"]}, body=True)
 _paid("GET", "reputation", "$0.001",
       "Reputation Receipts: an agent's job history as checked by OMENZ Acceptance Test: jobs, passed, failed, late, pass rate, distinct buyers (low = weak evidence), recent attestations. Not self-reported. By OMENZ.",
@@ -434,7 +434,7 @@ _paid("POST", "evidence/bundle", "$0.002",
 
 FIN = {
     "reconcile": ("$0.005", "Invoice/Payment Reconciler: invoice lines vs USDC-on-Base payments, each transaction checked on-chain (payer, payee, amount): MATCH / UNDERPAID / OVERPAID / MISSING / UNVERIFIED, duplicates and line-total errors flagged.",
-                  {"invoice": {"payee": "0x...", "lines": [{"desc": "lookups", "amount_usd": 0.5}], "total_usd": 0.5}, "payments": [{"tx_hash": "0x...", "payer": "0x...", "amount_usd": 0.5}]}),
+                  {"invoice": {"payee": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "lines": [{"desc": "lookups", "amount_usd": 0.5}], "total_usd": 0.5}, "payments": [{"tx_hash": "0x...", "payer": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "amount_usd": 0.5}]}),
     "forecast": ("$0.002", "Agent Budget Forecaster: spend history -> daily rate, next 7/30-day projection, trend, biggest dependencies.",
                  {"spend": [{"at": 1763000000, "amount_usd": 0.01, "tool": "search"}]}),
     "watchdog": ("$0.005", "Subscription Watchdog: the paid endpoints your agent business relies on (up to 8): live price vs expected, down/up, terms/pricing page changed (pass back fingerprints).",
@@ -449,10 +449,10 @@ for _a, (_p, _d, _i) in FIN.items():
 
 _paid("GET", "terms-extract", "$0.005",
       "API Terms Extractor / Data-License Checker: before your agent uses a dataset or API commercially: a terms/license page -> clauses by category (commercial use, attribution, rate limits, retention, training on your data, prohibited uses, resale, refunds, liability, termination, license type) with quotes, plus plain flags (no_commercial_use, attribution_required, may_train_on_your_data, no_resale, no_scraping, non_refundable). Pattern-based, not legal advice. By OMENZ.",
-      {"url": "https://example.com/terms"}, {"properties": {"url": {"type": "string"}}, "required": ["url"]})
+      {"url": "https://www.anthropic.com/legal/consumer-terms"}, {"properties": {"url": {"type": "string"}}, "required": ["url"]})
 _paid("GET", "freshness", "$0.001",
       "Source Freshness / Result TTL: how long can your agent reuse a result before paying to fetch it again? The source's own Last-Modified, ETag and Cache-Control + a reuse window by data kind (price, quote, hours, weather, news, stock, crypto, business_facts, terms, docs, filing, profile, search) + how to revalidate cheaply (304). By OMENZ.",
-      {"url": "https://example.com/pricing", "kind": "price"}, {"properties": {"url": {"type": "string"}, "kind": {"type": "string"}}, "required": ["url"]})
+      {"url": "https://www.omenz.org/logo/", "kind": "price"}, {"properties": {"url": {"type": "string"}, "kind": {"type": "string"}}, "required": ["url"]})
 _paid("POST", "dedupe", "$0.001",
       "Duplicate-Work Detector: before your agent pays to run a task, check whether someone in your team (same private namespace_key) already did it: normalized fingerprint -> HIT with the earlier result pointer, or MISS (pass result_pointer to register this run). By OMENZ.",
       {"namespace_key": "your-private-team-key-16+", "task": {"q": "hours for Flemings Pasadena", "day": "2026-11-14"}, "result_pointer": "lk_...", "ttl_hours": 24},
@@ -460,23 +460,23 @@ _paid("POST", "dedupe", "$0.001",
        "required": ["namespace_key", "task"]}, body=True)
 _paid("POST", "context-diet", "$0.001",
       "Context Diet: shrink a packet before it fills your context: drops empty fields, dedupes lists, cuts long strings to a head + sha256 pointer, caps list length, always keeps required fields; reports bytes and approximate tokens saved. By OMENZ.",
-      {"packet": {"objective": "ship v2", "notes": "...long..."}, "required": ["objective"], "max_string_chars": 400},
+      {"packet": {"objective": "ship v2", "notes": "Long meeting notes: we agreed to ship v2 Friday, Ana owns the tests, budget is $40, skip the redesign for now."}, "required": ["objective"], "max_string_chars": 400},
       {"properties": {"packet": {}, "required": {"type": "array"}, "max_string_chars": {"type": "integer"}, "max_list_items": {"type": "integer"}},
        "required": ["packet"]}, body=True)
 
 _paid("GET", "wallet/balance", "$0.001",
       "Agent Wallet Balance: USDC and ETH balance of any wallet on Base (public chain data). Never moves funds, no key needed. By OMENZ.",
-      {"address": "0x..."}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
+      {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840"}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
 _paid("GET", "wallet/spend", "$0.005",
       "Agent Wallet Spend Report: what has this wallet been paying for? Outgoing USDC payments on Base over the last N days (max 14), grouped by payee, each payee named with the x402 services that pay out to it (from the ~35k-endpoint x402 index), totals, daily rate, micropayment count, share going to known x402 sellers. Public chain data. By OMENZ.",
-      {"address": "0x...", "days": 7}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"}}, "required": ["address"]})
+      {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "days": 7}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"}}, "required": ["address"]})
 _paid("GET", "wallet/runway", "$0.005",
       "Agent Wallet Runway: how many days before this agent wallet runs dry? USDC balance / recent daily spend -> days left, OK / LOW / CRITICAL, and the top cost drivers by payee. Public chain data on Base. By OMENZ.",
-      {"address": "0x...", "days": 7, "low_days": 3}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"},
+      {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "days": 7, "low_days": 3}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"},
                                                          "low_days": {"type": "number"}, "critical_days": {"type": "number"}}, "required": ["address"]})
 _paid("GET", "market/payee", "$0.001",
       "Payee Check: before paying an address, is it a known x402 seller? Matches the pay-to address against the payout addresses of ~35k listed x402 endpoints: KNOWN_SELLER (which services, 30-day calls and payers), SHARED_ADDRESS (platform/facilitator wallet) or UNKNOWN. By OMENZ.",
-      {"address": "0x..."}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
+      {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840"}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
 _paid("GET", "market/price-index", "$0.002",
       "x402 Price Index / Fair Price Check: the going rate for a capability across listed x402 endpoints: comparables, sellers, min / p25 / median / p75 / max and usage-weighted median; pass price_usd (or a listed url) to get its percentile and FAIR / LOW / ABOVE_MARKET / HIGH. By OMENZ.",
       {"q": "web search", "price_usd": 0.005}, {"properties": {"q": {"type": "string"}, "price_usd": {"type": "number"}, "url": {"type": "string"},
@@ -497,7 +497,7 @@ _paid("GET", "authorize", "$0.001",
 
 _paid("POST", "split-check", "$0.002",
       "Split Check: before paying into (or trusting) an on-chain revenue split, verify what it actually pays. Detects 0xSplits v2 splits on Base / Base Sepolia, proves a claimed recipients+allocations config against the on-chain splitHash (or discovers it from recent events), shows each recipient's share, whether a given beneficiary is included, whether the split is immutable (no owner), and USDC waiting to be distributed. Read-only. By OMENZ.",
-      {"address": "0x...", "network": "base", "claimed": {"recipients": ["0xseller...", "0xomenz..."], "allocations": [970000, 30000]}, "beneficiary": "0x..."},
+      {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "network": "base", "claimed": {"recipients": ["0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"], "allocations": [970000, 30000]}, "beneficiary": "0x..."},
       {"properties": {"address": {"type": "string"}, "network": {"type": "string"}, "claimed": {"type": "object"}, "beneficiary": {"type": "string"}},
        "required": ["address"]}, body=True)
 
@@ -1128,7 +1128,7 @@ def context_diet(request: Request, body: dict = Body(...)):
 @app.get(BASE + "/v1/status")
 def status_page():
     from concurrent.futures import ThreadPoolExecutor
-    sample = [("GET", "local-facts?url=https://example.com"), ("GET", "alive?url=https://www.omenz.org"), ("POST", "secret-scan"),
+    sample = [("GET", "local-facts?url=https://www.omenz.org"), ("GET", "alive?url=https://www.omenz.org"), ("POST", "secret-scan"),
               ("GET", "market/find?q=weather"), ("POST", "queue/create"), ("POST", "finance/forecast")]
 
     def probe(mp):
@@ -1186,11 +1186,13 @@ _MCP_TOOLS = None
 
 
 @app.get("/mcp")
+@app.get(BASE + "/mcp")  # alias: payapi listing points here
 def mcp_get():
     return JSONResponse({"error": "use POST (MCP streamable HTTP, JSON responses)", "server": "OMENZ", "tools": len(ROUTES)}, status_code=405)
 
 
 @app.post("/mcp")
+@app.post(BASE + "/mcp")  # alias: payapi listing points here
 async def mcp_post(request: Request):
     import httpx
     from starlette.concurrency import run_in_threadpool

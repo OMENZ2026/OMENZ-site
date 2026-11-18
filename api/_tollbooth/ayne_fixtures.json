@@ -2374,5 +2374,31 @@
 ],
 "note": "Live probe of each facilitator's public GET /supported (claims, not settlement proof). Pair with pay/verify to prove a settlement."
 }
+},
+"POST /api/tollbooth/v1/sale/record": {
+"status": 200,
+"example_input": {
+"url": "https://prices.genexxis.com/token-price",
+"tx_hash": "0x..."
+},
+"sample_response": {
+"verdict": "COUNTED",
+"schema": "omenz.sale-receipt.v0",
+"issued_at": "2026-11-18T02:30:00Z",
+"seller_host": "prices.genexxis.com",
+"url": "https://prices.genexxis.com/token-price",
+"tx_hash": "0x9c1e...(sample)",
+"amount_usd": 0.003,
+"pay_to": "0x9287...(seller payTo)",
+"settled_at": "2026-11-18T02:28:10Z",
+"signed": "(Ed25519 token)",
+"seller_record": {
+"host": "prices.genexxis.com",
+"purchases_closed": 37,
+"delivery_rate": 0.946,
+"seller_reported_sales_verified": 412,
+"distinct_payers": 58
+}
+}
 }
 }

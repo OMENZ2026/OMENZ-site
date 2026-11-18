@@ -44,7 +44,9 @@ def seller_record(host_or_url):
     bad = sum(o.get(k, 0) for k in BAD)
     return {"host": host, "checkouts_opened": rec["checkouts"], "purchases_closed": sum(o.values()), "outcomes": o,
             "delivery_rate": round(good / (good + bad), 3) if good + bad else None,
-            "usd_settled_verified": round(rec["usd_settled"], 6), "first_seen": rec["first"], "last_seen": rec["last"],
+            "usd_settled_verified": round(rec["usd_settled"], 6),
+            "seller_reported_sales_verified": rec.get("sales_verified", 0), "seller_reported_sales_usd": round(rec.get("sales_usd", 0.0), 6),
+            "distinct_payers": len(rec.get("payer_hashes", [])), "first_seen": rec["first"], "last_seen": rec["last"],
             "basis": "OMENZ Checkout closes: settlement verified on Base and delivery checked against the seller's advertised output. Aggregate only."}
 
 
@@ -167,3 +169,53 @@ def close(body, budget_key=None):
 def fee(amount_usd):
     """Credits pricing for the buyer layer: 1% of the purchase, minimum $0.0002, per side (open / close)."""
     return round(max(0.01 * float(amount_usd or 0), 0.0002), 6)
+
+
+# ---------------------------------------------------------------- Seller side: sale/record
+def sale_record(body):
+    """A seller (or its x402 middleware) reports one sale. OMENZ checks the payment really reached the payTo that the
+    sold URL advertises right now, on Base, then counts it once (idempotent per tx) in the seller's public track record.
+    Wash trading is possible (a seller paying itself), so the record shows distinct payers next to the totals."""
+    import x402_probe
+    body = body if isinstance(body, dict) else {}
+    url = str(body.get("url") or "").strip()
+    if not url:
+        return {"verdict": "BAD_INPUT", "reasons": ["send url: the paid route that was sold"]}
+    q = x402_probe.quote(url, str(body.get("method") or "GET").upper())
+    pay_tos = sorted({(o.get("pay_to") or "").lower() for o in q.get("options") or [] if o.get("network") == "base" and o.get("pay_to")})
+    if not pay_tos:
+        return {"verdict": "NO_LIVE_PAYTO", "reasons": [f"the url's live 402 shows no Base payTo ({q.get('status')}); we only count sales we can tie to it"]}
+    pv = buyer.pay_verify({"tx_hash": body.get("tx_hash"), "payment_response": body.get("payment_response"), "expected_pay_to": pay_tos[0],
+                           "min_confirmations": 1})
+    if pv["verdict"] == "BAD_INPUT":
+        return pv
+    pay = pv.get("payment") or {}
+    if pv["verdict"] != "SETTLED" and (pay.get("to") or "").lower() in pay_tos:
+        pv["verdict"] = "SETTLED"
+    if pv["verdict"] != "SETTLED" or (pay.get("to") or "").lower() not in pay_tos:
+        return {"verdict": "NOT_COUNTED", "reasons": pv.get("reasons") or ["payment did not settle to this url's payTo"], "payment": pay}
+    host = _host(url)
+    tx = pv["tx_hash"].lower()
+    dk = "sx_" + hashlib.sha256(("omenz-sale|" + tx).encode()).hexdigest()[:24]
+    if _kv("GET", dk):
+        return {"verdict": "ALREADY_COUNTED", "tx_hash": tx, "seller_record": seller_record(host)}
+    _kv("PUT", dk, {"host": host, "at": int(time.time())})
+    k = _seller_key(host)
+    rec = _kv("GET", k) or _blank(host)
+    now = int(time.time())
+    rec["first"] = rec["first"] or now
+    rec["last"] = now
+    rec["sales_verified"] = rec.get("sales_verified", 0) + 1
+    rec["sales_usd"] = round(rec.get("sales_usd", 0.0) + float(pay.get("amount_usd") or 0), 6)
+    payers = set(rec.get("payer_hashes", []))
+    payers.add(hashlib.sha256(("omenz-payer|" + (pay.get("from") or "")).encode()).hexdigest()[:16])
+    rec["payer_hashes"] = sorted(payers)[-5000:]
+    _kv("PUT", k, rec)
+    receipt = {"schema": "omenz.sale-receipt.v0", "issued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "seller_host": host,
+               "url": url[:500], "tx_hash": tx, "amount_usd": pay.get("amount_usd"), "pay_to": pay.get("to"), "settled_at": pv.get("settled_at")}
+    try:
+        import contracts
+        token = contracts._sign(receipt)
+    except Exception:
+        token = None
+    return {"verdict": "COUNTED", **receipt, "signed": token, "seller_record": seller_record(host)}

@@ -77,6 +77,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/checkout/open|close $0.002 each (or /credit: 1% of the purchase, min $0.0002)  OMENZ Checkout: the buyer layer around every payment
   GET  /api/tollbooth/v1/seller-record?host= $0.001  Seller Track Record from verified checkouts
   GET  /api/tollbooth/v1/facilitators       $0.001  Facilitator Status + Router: live x402 facilitators, fastest for your network/scheme
+  POST /api/tollbooth/v1/sale/record        $0.001  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -616,6 +617,12 @@ _paid("GET", "facilitators", "$0.001",
       "Facilitator Status + Router: which x402 facilitators are answering RIGHT NOW and which to use. Live probe of 10 known facilitators (PayAI, Coinbase CDP, x402.rs, Daydreams, Dexter, Mogami, OpenX402, the x402.org reference and more, plus one URL of yours): up / auth_required / down, latency, networks, schemes (exact/upto), x402 versions. Say network + scheme and get the fastest live facilitator plus fallbacks. For sellers choosing or failing over a facilitator, and SDKs routing settlement. Never pays or settles anything. By OMENZ.",
       {"network": "base", "scheme": "exact"},
       {"properties": {"network": {"type": "string"}, "scheme": {"type": "string"}, "x402_version": {"type": "integer"}, "url": {"type": "string"}}})
+
+_paid("POST", "sale/record", "$0.001",
+      "Sale Record (for SELLERS): after each x402 sale, your middleware sends the tx hash (or PAYMENT-RESPONSE) + the route sold. OMENZ checks the payment really settled on Base to the payTo your route advertises right now, counts it once, and returns a signed sale receipt. Verified sales and distinct payers show in your public Seller Track Record, which buyers see in OMENZ Checkout before paying. Proof of real sales, not claims. By OMENZ.",
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "tx_hash": "0x..."},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"}},
+       "required": ["url"]}, body=True)
 
 
 def _attach_output_examples():
@@ -1666,6 +1673,12 @@ def facilitators_route(request: Request, network: str | None = None, scheme: str
                        url: str | None = None):
     request.state.extra["action"] = "facilitators"
     return facilitators.status(network, scheme, x402_version, url)
+
+
+@app.post(BASE + "/v1/sale/record")
+def sale_record_route(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "sale_record"
+    return _locker_call(checkout.sale_record, body)
 
 
 @app.get(BASE + "/v1/market/cheapest")

@@ -66,8 +66,8 @@
   <h2>House booth</h2>
   <div class="grid"><div class="booth house">
     <div class="name">OMENZ: www.omenz.org</div>
-    <div class="what">38 agent tools: check before you pay (preflight, spend gate, authorize), receipts, lockers, PO boxes, job queues, market data. Try every one free in AYNE.</div>
-    <div class="row"><a href="/api/tollbooth">Catalog</a><a href="/api/tollbooth/v1/track-record">Track record</a><a href="/myop/">MYOP games</a></div>
+    <div class="what">Buy safely: tell OMENZ the job and we find the working booth, guard the purchase (budget, seller, duplicate payment, price), verify the payment and the delivery, sign the receipt, and rescue it if the payment goes weird. 90+ agent tools, every one free to try in AYNE.</div>
+    <div class="row"><a href="/api/tollbooth">Catalog</a><a href="/api/tollbooth/v1/track-record">Track record</a><a href="https://github.com/OMENZ2026/omenz-authorize">guardFetch SDK</a><a href="/myop/">MYOP games</a></div>
   </div></div>
 
   <div id="aisles"></div>
@@ -98,6 +98,7 @@ const price = (p) => p == null ? '?' : (p < 0.01 ? '$' + Number(p).toFixed(4).re
 function booth(b) {
   return `<div class="booth"><div class="name">${esc(b.booth)}</div><div class="what">${esc(b.what || 'No description')}</div>
     <div class="row"><span class="price">${price(b.price_usd)}/call</span>${b.foot_traffic ? `<span class="traffic ${esc(b.foot_traffic)}">${esc(b.foot_traffic)}</span>` : ''}</div>
+    ${b.omenz_verified ? `<div class="row"><span class="tag">OMENZ VERIFIED</span><span class="stats">${b.omenz_verified.purchases_checked ? esc(b.omenz_verified.purchases_checked) + ' checked buys' + (b.omenz_verified.delivery_rate != null ? ', ' + Math.round(b.omenz_verified.delivery_rate * 100) + '% delivered' : '') : ''}${b.omenz_verified.sales_verified ? ' · ' + esc(b.omenz_verified.sales_verified) + ' verified sales' : ''}</span></div>` : ''}
     <div class="row"><span class="stats">${esc(b.method || '')} ${esc((b.networks || []).join(', '))}</span><a href="${esc(b.url)}" rel="nofollow noopener" target="_blank">Visit</a></div></div>`;
 }
 async function load() {
@@ -115,7 +116,9 @@ async function find() {
   const q = document.getElementById('q').value.trim(); if (!q) return;
   const el = document.getElementById('results'); el.innerHTML = '<p class="stats">Walking the aisles…</p>';
   const r = await fetch(API + '/search?q=' + encodeURIComponent(q)); const d = await r.json();
-  el.innerHTML = d.error ? `<p class="no">${esc(d.error)}</p>` : `<h2>Booths for "${esc(q)}"</h2><div class="grid">${d.booths.map(booth).join('') || '<p class="stats">Nothing yet. That might be a gap worth filling.</p>'}</div>`;
+  el.innerHTML = d.error ? `<p class="no">${esc(d.error)}</p>` : `<h2>Booths for "${esc(q)}"</h2><div class="grid">${d.booths.map(booth).join('') || '<p class="stats">Nothing yet. That might be a gap worth filling.</p>'}</div>
+    <div class="card"><p><b>Buy it safely through OMENZ.</b> Your agent says the job; OMENZ finds the booth that answers right now, checks the seller, your budget and duplicate payments, then verifies the payment and the delivery and signs the receipt.</p>
+    <p class="stats"><code>POST /api/tollbooth/v1/market/job {"need": "${esc(q)}"}</code> ($0.01) · guarded in one call: <code>/market/job/guarded</code> ($0.05) · SDK: <a href="https://github.com/OMENZ2026/omenz-authorize">guardFetch</a> · try free: <a href="/api/tollbooth/ayne/v1/market/job">AYNE</a></p></div>`;
 }
 async function bring() {
   const m = document.getElementById('bmsg'); m.className = 'msg'; m.innerText = 'Knocking on your booth…';

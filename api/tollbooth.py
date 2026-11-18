@@ -83,6 +83,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
   POST /api/tollbooth/v1/guard              $0.05   Transaction Guard: GO/CAUTION/STOP before money moves (budget, counterparty, duplicate, price, economics, delivery)
   POST /api/tollbooth/v1/guard/credit       credits max($0.01, 10 bps of protected value), cap $5
+  POST /api/tollbooth/v1/budget/delegate    $0.01   Delegation Budget: child agent allowances that inherit and narrow the parent (4 levels)
+  POST /api/tollbooth/v1/settlement/rescue  $0.05   Settlement Rescue: SETTLED / NOT_SETTLED / STILL_UNCERTAIN + safe next action (EIP-3009 state)
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -134,6 +136,7 @@ import facilitators  # noqa: E402
 import chain_tools  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
+import rescue  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -566,7 +569,8 @@ _paid("POST", "budget/create", "$0.002",
       {"name": "research crew", "cap_usd": 2, "period": "day", "per_tx_max_usd": 0.05, "escalate_above_usd": 0.02},
       {"properties": {"name": {"type": "string"}, "cap_usd": {"type": "number"}, "period": {"type": "string", "enum": ["total", "day", "month"]},
                       "per_tx_max_usd": {"type": "number"}, "escalate_above_usd": {"type": "number"},
-                      "allowed_recipients": {"type": "array"}, "blocked_recipients": {"type": "array"}, "ttl_days": {"type": "integer"}},
+                      "allowed_recipients": {"type": "array"}, "blocked_recipients": {"type": "array"}, "ttl_days": {"type": "integer"},
+                      "velocity_max_per_hour": {"type": "integer"}},
        "required": ["cap_usd"]}, body=True)
 _paid("POST", "budget/spend", "$0.002",
       "Shared Budget: ask before each purchase. ALLOW records it against the team cap (returns spend_id + what's left); DENY or ESCALATE records nothing, with the reason. Idempotent by idempotency_key, so retries never double-count. Header X-Budget-Key. Honest limit: two spends in the same instant can both pass; per_tx_max_usd bounds that. By OMENZ.",
@@ -653,6 +657,19 @@ _paid("POST", "guard", "$0.05",
                       "quoted_price_usd": {"type": "number"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "purpose": {"type": "string"}, "budget_id": {"type": "string"}, "policy": {"type": "object"}, "agent": {"type": "string"},
                       "dup_window_hours": {"type": "integer"}}}, body=True)
+
+_paid("POST", "budget/delegate", "$0.01",
+      "Delegation Budget (agent allowances): a parent budget's OWNER gives a child agent its own bounded allowance: human/company -> supervisor agent -> workers -> sub-agents (4 levels). The child can only NARROW the parent: cap <= parent, per-purchase max, allowed payees (subset), blocked payees (inherited), velocity limit (purchases/hour), expiry <= parent. Every child spend is checked against and counted in every ancestor, so the company cap holds across the whole tree; freezing a parent stops all descendants; budget/status shows spend by child. Header X-Budget-Key = the parent's owner_key. Bookkeeping only. By OMENZ.",
+      {"budget_id": "bg_...(parent)", "name": "worker-3", "cap_usd": 0.5, "per_tx_max_usd": 0.05, "allowed_recipients": ["0x..."], "velocity_max_per_hour": 60},
+      {"properties": {"budget_id": {"type": "string"}, "name": {"type": "string"}, "cap_usd": {"type": "number"}, "period": {"type": "string"},
+                      "per_tx_max_usd": {"type": "number"}, "escalate_above_usd": {"type": "number"}, "allowed_recipients": {"type": "array"},
+                      "blocked_recipients": {"type": "array"}, "velocity_max_per_hour": {"type": "integer"}, "ttl_days": {"type": "integer"}},
+       "required": ["budget_id", "cap_usd"]}, body=True)
+_paid("POST", "settlement/rescue", "$0.05",
+      "Settlement Rescue: 'payment weird? give it to us.' Timeout, 5xx or no PAYMENT-RESPONSE after paying, and you must decide whether to pay again. Send the X-PAYMENT header you sent (or the tx hash, or payer + payee + amount). We read the EIP-3009 authorization's on-chain state on Base: SETTLED (nonce used: here is the tx, do NOT pay again) / NOT_SETTLED (expired unused: safe to pay again ONCE) / STILL_UNCERTAIN (unused but still valid: a facilitator can still settle it, do NOT sign a new one yet, with seconds left) / NOT_FOUND_ON_CHAIN, plus a duplicate-payment scan, a safe next action and a signed record for refunds and disputes. Read-only. By OMENZ.",
+      {"payment_header": "(the base64 X-PAYMENT you sent)", "window_hours": 24},
+      {"properties": {"payment_header": {"type": "string"}, "authorization": {"type": "object"}, "tx_hash": {"type": "string"}, "payer": {"type": "string"},
+                      "pay_to": {"type": "string"}, "amount_usd": {"type": "number"}, "window_hours": {"type": "integer"}}}, body=True)
 
 
 def _attach_output_examples():
@@ -1752,6 +1769,18 @@ def guard_credit(request: Request, body: dict = Body(...), x_budget_key: str | N
         return JSONResponse({"error": e.msg}, status_code=e.status)
     request.state.extra.update({"credit_fee": f, "decision": r.get("decision")})
     return {**r, "billing": {"method": "credits", "fee_usd": f, "balance_usd": left, "rule": "max($0.01, 10 bps of the protected value), cap $5"}}
+
+
+@app.post(BASE + "/v1/budget/delegate")
+def budget_delegate(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "budget_delegate"
+    return _locker_call(buyer.budget_delegate, body.get("budget_id"), x_budget_key, body)
+
+
+@app.post(BASE + "/v1/settlement/rescue")
+def settlement_rescue(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "settlement_rescue"
+    return rescue.rescue(body)
 
 
 @app.get(BASE + "/v1/market/cheapest")

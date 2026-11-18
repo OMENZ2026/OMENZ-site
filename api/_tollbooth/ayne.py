@@ -26,7 +26,7 @@ LIVE = {
     "POST /queue/create", "POST /queue/enqueue", "POST /queue/claim", "POST /queue/heartbeat", "POST /queue/complete",
     "POST /queue/fail", "POST /queue/escalate", "POST /queue/resolve", "POST /queue/bid", "POST /queue/award", "GET /queue/status",
     "POST /uptime/watch", "GET /uptime/report", "POST /jacket/create", "POST /jacket/checkout", "POST /jacket/checkin", "GET /jacket/history",
-    "POST /budget/create", "POST /budget/spend", "POST /budget/release", "GET /budget/status",
+    "POST /budget/create", "POST /budget/delegate", "POST /budget/spend", "POST /budget/release", "GET /budget/status",
 }
 _fx = None
 _count = {"day": None, "total": 0, "v": {}}

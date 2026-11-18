@@ -88,7 +88,8 @@ def budget_create(body, ttl_days=None):
            "allowed_recipients": _addrs(body.get("allowed_recipients"), "allowed_recipients"),
            "blocked_recipients": _addrs(body.get("blocked_recipients"), "blocked_recipients"),
            "owner_hash": _kh("owner", owner), "spender_hash": _kh("spender", spender),
-           "created": now, "expires": now + days * 86400, "frozen": False, "spends": []}
+           "created": now, "expires": now + days * 86400, "frozen": False, "spends": [],
+           "velocity_max_per_hour": int(body["velocity_max_per_hour"]) if body.get("velocity_max_per_hour") not in (None, "") else None}
     _kv("PUT", bid, rec)
     return {"budget_id": bid, "owner_key": owner, "spender_key": spender, "cap_usd": cap, "period": period,
             "expires_at": rec["expires"],
@@ -137,6 +138,31 @@ def budget_spend(bid, key, body):
             if s.get("idempotency_key") == idem:
                 return {"decision": "ALLOW" if s["status"] in ("spent", "released") else s["status"].upper(),
                         "spend_id": s["id"], "replayed": True, **_summary(rec, now)}
+    reasons = _rules(rec, amt, rcpt, now)
+    s = _summary(rec, now)
+    if reasons:
+        return {"decision": "DENY", "reasons": reasons, **s}
+    ancestors = _ancestors(rec, now)
+    for label, anc in ancestors:
+        r2 = _rules(anc, amt, rcpt, now)
+        if r2:
+            return {"decision": "DENY", "reasons": [f"{label}: {r}" for r in r2], **s}
+    for label, b in [("this budget", rec)] + ancestors:
+        if b["escalate_above_usd"] is not None and amt > b["escalate_above_usd"]:
+            return {"decision": "ESCALATE", "reasons": [f"amount ${amt} is above the escalate line ${b['escalate_above_usd']} of {label}: ask its owner"], **s}
+    sid = "sp_" + secrets.token_hex(6)
+    entry = {"id": sid, "at": now, "amount_usd": amt, "recipient": rcpt or None, "status": "spent",
+             "agent": str(body.get("agent") or "")[:60] or None, "memo": str(body.get("memo") or "")[:200] or None,
+             "url": str(body.get("url") or "")[:300] or None, "idempotency_key": idem or None, "by": role}
+    _append(bid, rec, entry)
+    for _, anc in ancestors:
+        _append(anc["_id"], anc, {**entry, "idempotency_key": None, "by": "child:" + bid})
+    return {"decision": "ALLOW", "spend_id": sid, **_summary(rec, now),
+            **({"counted_against": [a["_id"] for _, a in ancestors]} if ancestors else {}),
+            "next": "Pay now. If the purchase fails or you don't pay, POST budget/release with this spend_id to give the money back to the cap."}
+
+
+def _rules(rec, amt, rcpt, now):
     reasons = []
     if rec["frozen"]:
         reasons.append("budget is frozen by its owner")
@@ -146,22 +172,78 @@ def budget_spend(bid, key, body):
         reasons.append("recipient is on the blocked list")
     if rec["allowed_recipients"] and rcpt not in rec["allowed_recipients"]:
         reasons.append("recipient is not on the allowed list" if rcpt else "recipient required (budget has an allowed list)")
-    s = _summary(rec, now)
-    if amt > s["remaining_usd"] + 1e-9:
-        reasons.append(f"amount ${amt} is above what's left (${s['remaining_usd']} of ${rec['cap_usd']} this {rec['period']})")
-    if reasons:
-        return {"decision": "DENY", "reasons": reasons, **s}
-    if rec["escalate_above_usd"] is not None and amt > rec["escalate_above_usd"]:
-        return {"decision": "ESCALATE", "reasons": [f"amount ${amt} is above the escalate line ${rec['escalate_above_usd']}: ask the owner"], **s}
+    if rec.get("velocity_max_per_hour"):
+        n = sum(1 for x in rec["spends"] if x["status"] == "spent" and now - x["at"] < 3600)
+        if n >= rec["velocity_max_per_hour"]:
+            reasons.append(f"velocity limit: {n} purchases in the last hour (max {rec['velocity_max_per_hour']})")
+    sm = _summary(rec, now)
+    if amt > sm["remaining_usd"] + 1e-9:
+        reasons.append(f"amount ${amt} is above what's left (${sm['remaining_usd']} of ${rec['cap_usd']} this {rec['period']})")
+    return reasons
+
+
+def _append(bid, rec, entry):
     if len(rec["spends"]) >= MAX_SPENDS:
         rec["spends"] = rec["spends"][-(MAX_SPENDS - 1):]
-    sid = "sp_" + secrets.token_hex(6)
-    rec["spends"].append({"id": sid, "at": now, "amount_usd": amt, "recipient": rcpt or None, "status": "spent",
-                          "agent": str(body.get("agent") or "")[:60] or None, "memo": str(body.get("memo") or "")[:200] or None,
-                          "url": str(body.get("url") or "")[:300] or None, "idempotency_key": idem or None, "by": role})
-    _kv("PUT", bid, rec)
-    return {"decision": "ALLOW", "spend_id": sid, **_summary(rec, now),
-            "next": "Pay now. If the purchase fails or you don't pay, POST budget/release with this spend_id to give the money back to the cap."}
+    rec["spends"].append(entry)
+    _kv("PUT", bid, {k: v for k, v in rec.items() if k != "_id"})
+
+
+def _ancestors(rec, now, max_depth=4):
+    out, cur, seen = [], rec, set()
+    while cur.get("parent") and len(out) < max_depth:
+        pid = cur["parent"]
+        if pid in seen:
+            break
+        seen.add(pid)
+        p = _kv("GET", pid)
+        if p is None or p["expires"] < now:
+            raise LockerError(409, f"parent budget {pid} is gone or expired: this delegated budget can no longer spend")
+        p["_id"] = pid
+        out.append((f"parent budget {pid}" + (f" ({p['name']})" if p.get("name") else ""), p))
+        cur = p
+    return out
+
+
+def budget_delegate(parent_id, key, body):
+    """The parent's OWNER gives a child agent its own bounded allowance. The child can only narrow the parent's rules,
+    and every child spend is also checked against and counted in every ancestor."""
+    body = body if isinstance(body, dict) else {}
+    parent, role = _load(parent_id, key)
+    if role != "owner":
+        raise LockerError(403, "only the parent's owner_key can delegate")
+    depth = len(_ancestors(parent, int(time.time()))) + 1
+    if depth > 4:
+        raise LockerError(400, "delegation tree is limited to 4 levels")
+    cap = _money(body.get("cap_usd"), "cap_usd", required=True)
+    if cap > parent["cap_usd"] + 1e-9:
+        raise LockerError(400, f"child cap ${cap} can't exceed the parent's ${parent['cap_usd']}")
+    ptx = _money(body.get("per_tx_max_usd"), "per_tx_max_usd")
+    if parent["per_tx_max_usd"] is not None:
+        ptx = min(ptx, parent["per_tx_max_usd"]) if ptx is not None else parent["per_tx_max_usd"]
+    allowed = _addrs(body.get("allowed_recipients"), "allowed_recipients")
+    if parent["allowed_recipients"]:
+        bad = [a for a in allowed if a not in parent["allowed_recipients"]]
+        if bad:
+            raise LockerError(400, "child allowed_recipients must be a subset of the parent's")
+        allowed = allowed or list(parent["allowed_recipients"])
+    blocked = sorted(set(_addrs(body.get("blocked_recipients"), "blocked_recipients")) | set(parent["blocked_recipients"]))
+    left_days = max(1, int((parent["expires"] - time.time()) // 86400))
+    days = min(int(body.get("ttl_days") or left_days), left_days)
+    period = str(body.get("period") or parent["period"]).lower()
+    c = budget_create({"name": body.get("name"), "cap_usd": cap, "period": period, "per_tx_max_usd": ptx,
+                       "escalate_above_usd": body.get("escalate_above_usd") if body.get("escalate_above_usd") is not None else parent["escalate_above_usd"],
+                       "allowed_recipients": allowed, "blocked_recipients": blocked}, ttl_days=days)
+    child = _kv("GET", c["budget_id"])
+    child["parent"] = parent_id
+    child["expires"] = min(child["expires"], parent["expires"])
+    v = body.get("velocity_max_per_hour")
+    child["velocity_max_per_hour"] = int(v) if v not in (None, "") else parent.get("velocity_max_per_hour")
+    _kv("PUT", c["budget_id"], child)
+    return {**c, "parent": parent_id, "depth": depth, "expires_at": child["expires"],
+            "inherited": {"per_tx_max_usd": ptx, "allowed_recipients": allowed, "blocked_recipients": blocked,
+                          "velocity_max_per_hour": child["velocity_max_per_hour"]},
+            "note": "Every spend from this child is also checked against and counted in its parent(s). The parent's owner sees it as by_child in budget/status."}
 
 
 def budget_release(bid, key, spend_id, reason=None):
@@ -174,6 +256,14 @@ def budget_release(bid, key, spend_id, reason=None):
             s.update({"status": "released", "released_at": int(time.time()), "release_reason": str(reason or "")[:200] or None,
                       "released_by": role})
             _kv("PUT", bid, rec)
+            try:
+                for _, anc in _ancestors(rec, int(time.time())):
+                    for x in anc["spends"]:
+                        if x["id"] == spend_id and x["status"] == "spent":
+                            x.update({"status": "released", "released_at": int(time.time()), "released_by": "child:" + bid})
+                    _kv("PUT", anc["_id"], {k: v for k, v in anc.items() if k != "_id"})
+            except LockerError:
+                pass
             return {"released": True, "spend_id": spend_id, "amount_usd": s["amount_usd"], **_summary(rec, int(time.time()))}
     raise LockerError(404, "no such spend_id in this budget")
 
@@ -193,13 +283,18 @@ def budget_status(bid, key, limit=50):
     w = _window(rec["period"], now)
     cur = [s for s in rec["spends"] if _window(rec["period"], s["at"]) == w and s["status"] == "spent"]
     by_agent, by_rcpt = {}, {}
+    by_child = {}
     for s in cur:
+        if str(s.get("by") or "").startswith("child:"):
+            c = s["by"][6:]
+            by_child[c] = round(by_child.get(c, 0) + s["amount_usd"], 6)
         by_agent[s.get("agent") or "?"] = round(by_agent.get(s.get("agent") or "?", 0) + s["amount_usd"], 6)
         by_rcpt[s.get("recipient") or "?"] = round(by_rcpt.get(s.get("recipient") or "?", 0) + s["amount_usd"], 6)
     lim = max(1, min(200, int(limit or 50)))
     return {"budget_id": bid, "name": rec["name"], "role": role, **_summary(rec, now),
             "per_tx_max_usd": rec["per_tx_max_usd"], "escalate_above_usd": rec["escalate_above_usd"],
-            "purchases_this_window": len(cur), "by_agent": by_agent, "by_recipient": by_rcpt,
+            "purchases_this_window": len(cur), "by_agent": by_agent, "by_recipient": by_rcpt, "by_child": by_child,
+            "parent": rec.get("parent"), "velocity_max_per_hour": rec.get("velocity_max_per_hour"),
             "recent": [{k: v for k, v in s.items() if k != "idempotency_key"} for s in rec["spends"][-lim:]][::-1],
             "expires_at": rec["expires"]}
 

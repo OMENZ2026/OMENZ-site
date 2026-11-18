@@ -2590,5 +2590,72 @@
 "credits": "max($0.01, 10 bps of protected value), cap $5"
 }
 }
+},
+"POST /api/tollbooth/v1/settlement/rescue": {
+"status": 200,
+"example_input": {
+"payment_header": "(base64 X-PAYMENT)"
+},
+"sample_response": {
+"version": "0.1.0",
+"verdict": "STILL_UNCERTAIN",
+"safe_next_action": "Do NOT sign a new payment yet: a facilitator can still settle this one for about 240s (until validBefore). Ask the seller to retry the same request with the SAME X-PAYMENT, or wait for expiry, then call rescue again.",
+"reasons": [
+"authorization unused and still valid"
+],
+"evidence": {
+"authorization": {
+"from": "0x35fe...(payer)",
+"to": "0x9287...(seller)",
+"value_usd": 0.003,
+"nonce": "0xab12...(sample)",
+"valid_before": 1763445600,
+"expired": false,
+"used_on_chain": false
+},
+"matching_payments_on_chain": []
+},
+"record": {
+"schema": "omenz.settlement-rescue.v0",
+"checked_at": "2026-11-18T05:00:00Z",
+"verdict": "STILL_UNCERTAIN",
+"payer": "0x35fe...",
+"pay_to": "0x9287...",
+"amount_usd": 0.003,
+"tx_hash": null,
+"nonce": "0xab12...",
+"duplicate": false
+},
+"signed": "(Ed25519 token)",
+"verify": "Ed25519; public key at GET /api/tollbooth/v1/passport/key"
+}
+},
+"POST /api/tollbooth/v1/budget/delegate": {
+"status": 200,
+"example_input": {
+"budget_id": "bg_...(parent)",
+"name": "worker-3",
+"cap_usd": 0.5,
+"velocity_max_per_hour": 60
+},
+"sample_response": {
+"budget_id": "bg_09474aee5eb82f412d4a75ff",
+"owner_key": "(shown once)",
+"spender_key": "(shown once)",
+"cap_usd": 0.5,
+"period": "day",
+"parent": "bg_38873587231e6df1019486e5",
+"depth": 2,
+"expires_at": 1766000000,
+"inherited": {
+"per_tx_max_usd": 0.05,
+"allowed_recipients": [
+"0x9287...(seller)"
+],
+"blocked_recipients": [],
+"velocity_max_per_hour": 60
+},
+"note": "Every spend from this child is also checked against and counted in its parent(s). The parent's owner sees it as by_child in budget/status."
+}
 }
 }

@@ -108,6 +108,7 @@ def open_(body, budget_key=None):
     now = int(time.time())
     try:
         _kv("PUT", cid, {"v": 0, "url": url, "method": a.get("method"), "pay_to": a.get("pay_to"), "amount_usd": a.get("amount_usd"),
+                         "scheme": a.get("scheme") or "exact",
                          "decision": decision, "budget_id": body.get("budget_id") if spend and spend["decision"] == "ALLOW" else None,
                          "spend_id": (spend or {}).get("spend_id"), "agent": str(body.get("agent") or "")[:80] or None,
                          "purpose": str(body.get("purpose") or "")[:300] or None, "job_id": str(body.get("job_id") or "")[:120] or None,
@@ -116,7 +117,8 @@ def open_(body, budget_key=None):
     except LockerError:
         cid = None
     return {"checkout_id": cid, "decision": decision, "reasons": reasons or ["all checks passed"],
-            "pay": {"url": url, "method": a.get("method"), "amount_usd": a.get("amount_usd"), "pay_to": a.get("pay_to"), "network": a.get("network")},
+            "pay": {"url": url, "method": a.get("method"), "amount_usd": a.get("amount_usd"), "pay_to": a.get("pay_to"), "network": a.get("network"),
+                    "scheme": a.get("scheme") or "exact"},
             "picked_by_omenz": bool(picked), "authorization_token": az.get("authorization_token"), "expires_in_s": az.get("expires_in_s"),
             "budget": {k: spend.get(k) for k in ("decision", "spend_id", "remaining_usd")} if spend else None,
             "seller_record": sr,
@@ -139,7 +141,9 @@ def close(body, budget_key=None):
     else:
         out = buyer.spend_receipt({"url": ck["url"], "method": ck["method"], "tx_hash": body.get("tx_hash"),
                                    "payment_response": body.get("payment_response"), "expected_pay_to": ck["pay_to"],
-                                   "expected_amount_usd": ck["amount_usd"], "delivered": body.get("delivered"), "schema": body.get("schema"),
+                                   "expected_amount_usd": None if ck.get("scheme") == "upto" else ck["amount_usd"],
+                                   "max_amount_usd": ck["amount_usd"] if ck.get("scheme") == "upto" else None,
+                                   "delivered": body.get("delivered"), "schema": body.get("schema"),
                                    "must_have": body.get("must_have"), "purpose": ck.get("purpose"), "agent": ck.get("agent"),
                                    "job_id": ck.get("job_id")})
         if out.get("verdict") == "BAD_INPUT":

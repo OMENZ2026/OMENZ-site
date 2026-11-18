@@ -98,6 +98,7 @@ def authorize(req):
     now = int(time.time())
     auth = {"schema": "omenz.authorization.v0", "auth_id": "az_" + secrets.token_hex(10), "decision": decision, "url": url,
             "method": method, "pay_to": pay_to or None, "amount_usd": amount, "network": chosen.get("network"),
+            "scheme": chosen.get("scheme") or "exact",
             "issued": now, "expires": now + TTL, "issuer": "omenz.org"}
     return {**out, "decision": decision, "decline_reasons": decline, "review_reasons": review, "passed": passed, "checks": checks,
             "authorization": auth, "authorization_token": contracts._sign(auth), "expires_in_s": TTL,

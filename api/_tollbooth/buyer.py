@@ -237,6 +237,7 @@ def pay_verify(body):
             return {"verdict": "BAD_INPUT", "reasons": [f"{n} must be a 0x address"]}
     try:
         exp_amt = None if body.get("expected_amount_usd") in (None, "") else round(float(body["expected_amount_usd"]), 6)
+        max_amt = None if body.get("max_amount_usd") in (None, "") else round(float(body["max_amount_usd"]), 6)
         min_conf = max(0, min(1000, int(body.get("min_confirmations") or 1)))
     except (TypeError, ValueError):
         return {"verdict": "BAD_INPUT", "reasons": ["expected_amount_usd / min_confirmations must be numbers"]}
@@ -282,6 +283,8 @@ def pay_verify(body):
             pick = better[0]
         else:
             reasons.append(f"amount {pick['amount_usd']} USDC, expected {exp_amt}")
+    if max_amt is not None and pick["amount_usd"] > max_amt + 1e-6:
+        reasons.append(f"amount {pick['amount_usd']} USDC is above the authorized maximum {max_amt} (upto scheme)")
     if out["confirmations"] < min_conf:
         return {**out, "payment": pick, "verdict": "PENDING", "reasons": [f"{out['confirmations']} confirmations, want {min_conf}"] + reasons}
     try:
@@ -503,7 +506,7 @@ def spend_receipt(body):
     if not url:
         return {"verdict": "BAD_INPUT", "reasons": ["send url (+ method) of what you bought"]}
     pv = pay_verify({k: body.get(k) for k in ("tx_hash", "payment_response", "expected_pay_to", "expected_payer",
-                                                 "expected_amount_usd", "min_confirmations")})
+                                                 "expected_amount_usd", "max_amount_usd", "min_confirmations")})
     if pv["verdict"] == "BAD_INPUT":
         return pv
     dc = delivery_check({k: body.get(k) for k in ("url", "method", "delivered", "schema", "example", "must_have")}) \

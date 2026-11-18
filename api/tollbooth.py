@@ -74,6 +74,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/delivery-check     $0.002  Delivery Check: did the paid response match the seller's advertised output
   GET  /api/tollbooth/v1/market/cheapest?q= $0.002  Cheapest Working Tool: cheapest provider that answers right now (live-probed)
   POST /api/tollbooth/v1/spend-receipt      $0.003  Spend Receipt: signed what/why/cost(verified)/delivered receipt for one purchase
+  POST /api/tollbooth/v1/checkout/open|close $0.002 each (or /credit: 1% of the purchase, min $0.0002)  OMENZ Checkout: the buyer layer around every payment
+  GET  /api/tollbooth/v1/seller-record?host= $0.001  Seller Track Record from verified checkouts
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -120,6 +122,7 @@ import pobox  # noqa: E402
 import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
 import buyer  # noqa: E402
+import checkout  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -590,6 +593,22 @@ _paid("POST", "spend-receipt", "$0.003",
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"},
                       "expected_pay_to": {"type": "string"}, "expected_amount_usd": {"type": "number"}, "delivered": {}, "schema": {"type": "object"},
                       "purpose": {"type": "string"}, "agent": {"type": "string"}, "job_id": {"type": "string"}}, "required": ["url"]}, body=True)
+
+_paid("POST", "checkout/open", "$0.002",
+      "OMENZ Checkout (open): ONE call before your agent pays any x402 seller. Send the url (or just q = what you need and OMENZ picks the cheapest seller that answers right now), your max price, optional Shared Budget (budget_id + X-Budget-Key) and policy. Runs Authorize (live quote, payTo, fair price, policy), the seller's OMENZ track record, and draws from the team budget: GO / REVIEW / STOP + checkout_id + signed 5-minute authorization. Provider-neutral, any wallet; never touches your money. High volume: checkout/open/credit at 1% of the purchase (min $0.0002). By OMENZ.",
+      {"q": "token price", "max_price_usd": 0.01, "budget_id": "bg_...", "agent": "worker-3", "purpose": "BTC price for the report"},
+      {"properties": {"url": {"type": "string"}, "q": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"},
+                      "expected_pay_to": {"type": "string"}, "budget_id": {"type": "string"}, "policy": {"type": "object"}, "agent": {"type": "string"},
+                      "purpose": {"type": "string"}, "job_id": {"type": "string"}, "idempotency_key": {"type": "string"}}}, body=True)
+_paid("POST", "checkout/close", "$0.002",
+      "OMENZ Checkout (close): ONE call after paying. Send checkout_id + the tx hash (or PAYMENT-RESPONSE header) + the response you got. Verifies settlement on Base against the authorized payee and amount, checks delivery against the seller's advertised output, returns a signed Spend Receipt (GOOD_BUY / PAID_NOT_DELIVERED / PAYMENT_NOT_CONFIRMED), gives the money back to the Shared Budget if you never paid, and updates the seller's track record. High volume: checkout/close/credit at 1% (min $0.0002). By OMENZ.",
+      {"checkout_id": "ck_...", "tx_hash": "0x...", "delivered": {"price": 80915.2}},
+      {"properties": {"checkout_id": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"}, "delivered": {},
+                      "schema": {"type": "object"}, "not_paid": {"type": "boolean"}, "release_if_unconfirmed": {"type": "boolean"}},
+       "required": ["checkout_id"]}, body=True)
+_paid("GET", "seller-record", "$0.001",
+      "Seller Track Record: how an x402 seller actually performed for buyers who checked out through OMENZ: purchases closed, delivery rate, outcomes (good buy / paid not delivered), USDC settled (verified on Base), first/last seen. Aggregate per seller host, no buyer data. By OMENZ.",
+      {"host": "prices.genexxis.com"}, {"properties": {"host": {"type": "string"}}, "required": ["host"]})
 
 
 def _attach_output_examples():
@@ -1582,6 +1601,57 @@ def budget_status(request: Request, id: str = Query(...), limit: int = 50, x_bud
 def pay_verify(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "pay_verify"
     return buyer.pay_verify(body)
+
+
+@app.post(BASE + "/v1/checkout/open")
+def checkout_open(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "checkout_open"
+    return _locker_call(checkout.open_, body, x_budget_key)
+
+
+@app.post(BASE + "/v1/checkout/close")
+def checkout_close(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "checkout_close"
+    return _locker_call(checkout.close, body, x_budget_key)
+
+
+def _credit_checkout(request, fn, body, budget_key, cid, ckey, side):
+    try:
+        credits._load(cid, ckey)
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    try:
+        r = fn(body, budget_key)
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    amt = ((r.get("pay") or {}).get("amount_usd")) if side == "open" else ((r.get("payment") or {}).get("amount_usd"))
+    fee = checkout.fee(amt)
+    try:
+        left = credits.charge(cid, ckey, fee, f"checkout {side}")
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    request.state.extra.update({"credit_fee": fee})
+    return {**r, "billing": {"method": "credits", "fee_usd": fee, "balance_usd": left, "rule": "1% of the purchase, minimum $0.0002, per side"}}
+
+
+@app.post(BASE + "/v1/checkout/open/credit")
+def checkout_open_credit(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None),
+                         x_credit_id: str | None = Header(None), x_credit_key: str | None = Header(None)):
+    request.state.extra["action"] = "checkout_open_credit"
+    return _credit_checkout(request, checkout.open_, body, x_budget_key, x_credit_id, x_credit_key, "open")
+
+
+@app.post(BASE + "/v1/checkout/close/credit")
+def checkout_close_credit(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None),
+                          x_credit_id: str | None = Header(None), x_credit_key: str | None = Header(None)):
+    request.state.extra["action"] = "checkout_close_credit"
+    return _credit_checkout(request, checkout.close, body, x_budget_key, x_credit_id, x_credit_key, "close")
+
+
+@app.get(BASE + "/v1/seller-record")
+def seller_record(request: Request, host: str = Query(...)):
+    request.state.extra["action"] = "seller_record"
+    return _locker_call(checkout.seller_record, host)
 
 
 @app.get(BASE + "/v1/market/cheapest")

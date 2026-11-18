@@ -2214,5 +2214,96 @@
 "verify": "Ed25519 over the token body; public key at GET /api/tollbooth/v1/passport/key",
 "next": "This receipt is your evidence: finance/refund-request."
 }
+},
+"POST /api/tollbooth/v1/checkout/open": {
+"status": 200,
+"example_input": {
+"q": "token price",
+"max_price_usd": 0.01,
+"budget_id": "bg_...",
+"agent": "worker-3"
+},
+"sample_response": {
+"checkout_id": "ck_3f9a0c1b2d4e5f60718a",
+"decision": "GO",
+"reasons": [
+"all checks passed"
+],
+"pay": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"amount_usd": 0.001,
+"pay_to": "0xab12...(seller)",
+"network": "base"
+},
+"picked_by_omenz": true,
+"authorization_token": "(Ed25519 token)",
+"expires_in_s": 300,
+"budget": {
+"decision": "ALLOW",
+"spend_id": "sp_a1b2c3d4e5f6",
+"remaining_usd": 1.59
+},
+"seller_record": {
+"host": "x402.ottoai.services",
+"purchases_closed": 12,
+"delivery_rate": 1.0
+},
+"next": "Pay the url now, then POST checkout/close with checkout_id + tx_hash + the response you got."
+}
+},
+"POST /api/tollbooth/v1/checkout/close": {
+"status": 200,
+"example_input": {
+"checkout_id": "ck_...",
+"tx_hash": "0x...",
+"delivered": {
+"symbol": "BTC",
+"price": 80915.2
+}
+},
+"sample_response": {
+"checkout_id": "ck_3f9a0c1b2d4e5f60718a",
+"verdict": "GOOD_BUY",
+"reasons": [
+"0.001 USDC moved from the payer to the seller",
+"the response has every advertised field, with the advertised kinds of values"
+],
+"payment": {
+"from": "0x35fe...(payer)",
+"to": "0xab12...(seller)",
+"amount_usd": 0.001
+},
+"delivery": {
+"verdict": "MATCH",
+"missing": [],
+"type_mismatch": 0,
+"delivered_sha256": "5e3c...(sample)"
+},
+"signed_receipt": "(Ed25519 token)",
+"next": "File it: receipt/put or ledger/append.",
+"budget_release": null,
+"seller_record_updated": true
+}
+},
+"GET /api/tollbooth/v1/seller-record": {
+"status": 200,
+"example_input": {
+"host": "prices.genexxis.com"
+},
+"sample_response": {
+"host": "prices.genexxis.com",
+"checkouts_opened": 40,
+"purchases_closed": 37,
+"outcomes": {
+"GOOD_BUY": 35,
+"PAID_NOT_DELIVERED": 2
+},
+"delivery_rate": 0.946,
+"usd_settled_verified": 0.111,
+"first_seen": 1763400000,
+"last_seen": 1763480000,
+"basis": "OMENZ Checkout closes: settlement verified on Base and delivery checked against the seller's advertised output. Aggregate only."
+}
 }
 }

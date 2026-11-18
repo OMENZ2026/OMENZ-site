@@ -1236,6 +1236,13 @@ def mcp_registry_auth():
     return PlainTextResponse(discovery.MCP_REGISTRY_AUTH)
 
 
+@app.get("/.well-known/402index-verify.txt")
+def index402_verify():
+    """402index.io domain verification (public hash only; the edit token lives in omenz-stack/data/secrets)."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("2fada1cb216de389e3560d4579a52f9f99ad17ac06f2f83d3a0e58ea20911d10")
+
+
 @app.get("/openapi.json")
 @app.get(BASE + "/openapi.json")
 def openapi_doc():

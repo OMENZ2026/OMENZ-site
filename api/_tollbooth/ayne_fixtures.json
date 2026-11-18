@@ -2519,5 +2519,76 @@
 ],
 "status": "OK"
 }
+},
+"POST /api/tollbooth/v1/guard": {
+"status": 200,
+"example_input": {
+"url": "https://prices.genexxis.com/token-price",
+"payer": "0x...",
+"quoted_price_usd": 0.003,
+"purpose": "BTC price"
+},
+"sample_response": {
+"version": "0.1.0",
+"decision": "CAUTION",
+"pay": {
+"url": "https://prices.genexxis.com/token-price",
+"method": "GET",
+"amount_usd": 0.003,
+"pay_to": "0x9287...(seller)",
+"network": "base",
+"scheme": "exact"
+},
+"protected_value_usd": 0.003,
+"reasons": [
+"possible duplicate: you already paid 0.003 USDC to this payee (1 matching on-chain payment(s) in 24h)"
+],
+"checks": {
+"counterparty": {
+"result": "pass"
+},
+"budget": {
+"result": "pass"
+},
+"duplicate_payment": {
+"result": "caution",
+"same_payment_on_chain_24h": [
+{
+"tx_hash": "0xe3da...(sample)",
+"amount_usd": 0.003
+}
+]
+},
+"quoted_price": {
+"result": "pass",
+"quoted_usd": 0.003,
+"live_usd": 0.003,
+"drift_usd": 0.0
+},
+"settlement_economics": {
+"result": "info",
+"verdict": "BATCH_OR_CREDITS",
+"overhead_pct": 31.1,
+"settlement_cost_usd": 0.000934
+},
+"expected_delivery": {
+"result": "recorded",
+"basis": "example",
+"fields": [
+"prices",
+"vs"
+],
+"contract_sha256": "7a1c...(sample)"
+}
+},
+"checkout_id": "ck_3f9a0c1b2d4e5f60718a",
+"authorization_token": "(Ed25519 token)",
+"expires_in_s": 300,
+"next": "Look at the reasons (duplicate? review?) before paying; if you pay, still close with checkout/close.",
+"pricing": {
+"x402": "$0.05 flat",
+"credits": "max($0.01, 10 bps of protected value), cap $5"
+}
+}
 }
 }

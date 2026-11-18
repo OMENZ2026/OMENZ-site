@@ -81,6 +81,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
+  POST /api/tollbooth/v1/guard              $0.05   Transaction Guard: GO/CAUTION/STOP before money moves (budget, counterparty, duplicate, price, economics, delivery)
+  POST /api/tollbooth/v1/guard/credit       credits max($0.01, 10 bps of protected value), cap $5
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -131,6 +133,7 @@ import checkout  # noqa: E402
 import facilitators  # noqa: E402
 import chain_tools  # noqa: E402
 import gas  # noqa: E402
+import guard  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -641,6 +644,15 @@ _paid("GET", "settlement-cost", "$0.002",
       "Settlement Cost Check (Base): what moving money costs RIGHT NOW (live gas price, L1 data fee, ETH/USD from Chainlink on Base) for an x402 settlement (~86,550 gas, measured), a USDC transfer, an ETH transfer and an approval, in ETH and USD. Send amount_usd (+ payments_per_day) to learn whether a payment that small is worth settling on its own: SETTLE / BATCH_OR_CREDITS / DONT_SETTLE_SINGLY, the overhead %, break-even payment size, and cheaper options (CDP free tier, Circle Gateway batching, prepaid credits). By OMENZ.",
       {"amount_usd": 0.001, "payments_per_day": 5000},
       {"properties": {"amount_usd": {"type": "number"}, "payments_per_day": {"type": "integer"}}})
+
+_paid("POST", "guard", "$0.05",
+      "OMENZ Transaction Guard: ONE call before money moves. 'PAY $X TO Y FOR Z' -> GO / CAUTION / STOP with every check: budget authorized (Shared Budget), counterparty checked (Authorize: live 402, payTo, known seller, fair price + Seller Track Record), DUPLICATE PAYMENT checked (OMENZ records and your on-chain USDC history to that payee, Base), quoted price unchanged, settlement economics, expected delivery recorded (seller's advertised output fingerprint). Then checkout/close: settled -> delivery verified -> signed receipt -> reconciled. Send url (or q), payer (your wallet), quoted_price_usd, purpose, budget_id. Larger purchases: guard/credit at 10 bps of the protected value (min $0.01, max $5). Never touches your money. By OMENZ.",
+      {"url": "https://prices.genexxis.com/token-price", "method": "GET", "payer": "0x...", "quoted_price_usd": 0.003, "max_price_usd": 0.01,
+       "purpose": "BTC price for the daily report", "budget_id": "bg_..."},
+      {"properties": {"url": {"type": "string"}, "q": {"type": "string"}, "method": {"type": "string"}, "payer": {"type": "string"},
+                      "quoted_price_usd": {"type": "number"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
+                      "purpose": {"type": "string"}, "budget_id": {"type": "string"}, "policy": {"type": "object"}, "agent": {"type": "string"},
+                      "dup_window_hours": {"type": "integer"}}}, body=True)
 
 
 def _attach_output_examples():
@@ -1715,6 +1727,31 @@ def name_resolve_route(request: Request, q: str = Query(...)):
 def settlement_cost_route(request: Request, amount_usd: float | None = None, payments_per_day: int | None = None):
     request.state.extra["action"] = "settlement_cost"
     return gas.settlement_cost(amount_usd, payments_per_day)
+
+
+@app.post(BASE + "/v1/guard")
+def guard_route(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "guard"
+    return _locker_call(guard.guard, body, x_budget_key)
+
+
+@app.post(BASE + "/v1/guard/credit")
+def guard_credit(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None),
+                 x_credit_id: str | None = Header(None), x_credit_key: str | None = Header(None)):
+    """Value-priced Guard from prepaid credits: max($0.01, 10 bps of the protected value), capped at $5."""
+    request.state.extra["action"] = "guard_credit"
+    try:
+        credits._load(x_credit_id, x_credit_key)
+        r = guard.guard(body, x_budget_key)
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    f = guard.fee(r.get("protected_value_usd"))
+    try:
+        left = credits.charge(x_credit_id, x_credit_key, f, "guard " + str((r.get("pay") or {}).get("url"))[:50])
+    except locker.LockerError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.status)
+    request.state.extra.update({"credit_fee": f, "decision": r.get("decision")})
+    return {**r, "billing": {"method": "credits", "fee_usd": f, "balance_usd": left, "rule": "max($0.01, 10 bps of the protected value), cap $5"}}
 
 
 @app.get(BASE + "/v1/market/cheapest")

@@ -2779,5 +2779,69 @@
 "checkout_id": "ck_3f9a0c1b2d4e5f60718a"
 }
 }
+},
+"POST /api/tollbooth/v1/dispute/packet": {
+"status": 200,
+"example_input": {
+"url": "https://prices.genexxis.com/token-price",
+"tx_hash": "0x...",
+"delivered": {
+"error": "upstream timeout"
+},
+"issue": "wrong_output"
+},
+"sample_response": {
+"version": "0.1.0",
+"status": "OK",
+"issue": "wrong_output",
+"case_strength": "strong",
+"findings": [
+"payment settled on Base: 0.005 USDC to 0x9287...(seller)",
+"delivery MISMATCH: the response looks like an error body, not the advertised result; missing 4 advertised field(s): vs, prices, tokens, errors"
+],
+"refund_request_token": "(Ed25519 token)",
+"gaps": [],
+"evidence": {
+"settlement": {
+"schema": "omenz.settlement-rescue.v0",
+"verdict": "SETTLED",
+"amount_usd": 0.005
+},
+"promise": {
+"url": "https://prices.genexxis.com/token-price",
+"basis": "example"
+},
+"delivery": {
+"verdict": "MISMATCH"
+},
+"timeline": [
+{
+"event": "payment settled"
+},
+{
+"event": "delivery MISMATCH"
+},
+{
+"event": "dispute packet built"
+}
+],
+"refund_request": {
+"schema": "omenz.refund-request.v0",
+"remedy": "refund",
+"amount_requested_usd": 0.005
+}
+},
+"manifest": {
+"schema": "omenz.dispute-packet.v0",
+"evidence_strength": 3,
+"manifest_sha256": {
+"settlement": "9f2c...",
+"promise": "11ab...",
+"delivery": "c0de..."
+}
+},
+"signed_manifest": "(Ed25519 token)",
+"next": "Send refund_request_token (and this packet) to the seller, their PO Box or the marketplace you bought through."
+}
 }
 }

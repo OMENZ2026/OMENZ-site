@@ -86,6 +86,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/budget/delegate    $0.01   Delegation Budget: child agent allowances that inherit and narrow the parent (4 levels)
   POST /api/tollbooth/v1/settlement/rescue  $0.05   Settlement Rescue: SETTLED / NOT_SETTLED / STILL_UNCERTAIN + safe next action (EIP-3009 state)
   POST /api/tollbooth/v1/market/job         $0.01   OMENZ Market job desk: working providers for a job + verified history + Guard request (/guarded $0.05)
+  POST /api/tollbooth/v1/dispute/packet     $0.10   Dispute Packet: settlement proof + promise + delivery check + timeline + signed refund request
   GET  /.well-known/mcp.json                 free    MCP discovery card
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged; search routes keep only common capability words, see pricing-policy). Spec: omenz-stack/products/agent_pobox/SPEC.md
@@ -139,6 +140,7 @@ import chain_tools  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
+import dispute  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -683,6 +685,14 @@ _paid("POST", "market/job/guarded", "$0.05",
       {"need": "token price", "max_price_usd": 0.01, "payer": "0x...", "budget_id": "bg_..."},
       {"properties": {"need": {"type": "string"}, "max_price_usd": {"type": "number"}, "payer": {"type": "string"}, "budget_id": {"type": "string"},
                       "purpose": {"type": "string"}}, "required": ["need"]}, body=True)
+
+_paid("POST", "dispute/packet", "$0.10",
+      "Dispute Packet: a purchase went bad (not delivered, wrong output, partial, overcharged, duplicate). One call builds the machine-readable case: settlement proof on Base (Settlement Rescue: did money move, how much, to whom, duplicates), the seller's own advertised output captured live (what was promised), a Delivery Check of what came back, a timeline, and a signed refund request (remedy + amount + evidence strength), all hash-listed in an Ed25519-signed manifest anyone can verify offline. Send checkout_id or url + tx_hash / payment_header / payer+pay_to, the delivered response and the issue. OMENZ packages evidence; it never rules on disputes or moves money. By OMENZ.",
+      {"url": "https://prices.genexxis.com/token-price", "tx_hash": "0x...", "payer": "0x...", "delivered": {"error": "upstream timeout"}, "issue": "wrong_output"},
+      {"properties": {"checkout_id": {"type": "string"}, "url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"},
+                      "payment_header": {"type": "string"}, "payer": {"type": "string"}, "pay_to": {"type": "string"}, "amount_usd": {"type": "number"},
+                      "delivered": {}, "schema": {"type": "object"}, "issue": {"type": "string", "enum": ["not_delivered", "wrong_output", "partial", "overcharged", "duplicate", "other"]},
+                      "what": {"type": "string"}, "seller": {"type": "string"}, "amount_requested_usd": {"type": "number"}}}, body=True)
 
 
 def _attach_output_examples():
@@ -1824,6 +1834,12 @@ def well_known_mcp():
             "x402": "https://www.omenz.org/.well-known/x402", "openapi": "https://www.omenz.org/openapi.json",
             "documentation": "https://www.omenz.org/llms.txt", "registry": "https://registry.modelcontextprotocol.io (org.omenz.www/agent-tools)",
             "contact": "hello@omenz.org"}
+
+
+@app.post(BASE + "/v1/dispute/packet")
+def dispute_packet(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "dispute_packet"
+    return _locker_call(dispute.packet, body)
 
 
 @app.get(BASE + "/v1/market/cheapest")

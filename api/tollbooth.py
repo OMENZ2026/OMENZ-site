@@ -76,6 +76,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/spend-receipt      $0.003  Spend Receipt: signed what/why/cost(verified)/delivered receipt for one purchase
   POST /api/tollbooth/v1/checkout/open|close $0.002 each (or /credit: 1% of the purchase, min $0.0002)  OMENZ Checkout: the buyer layer around every payment
   GET  /api/tollbooth/v1/seller-record?host= $0.001  Seller Track Record from verified checkouts
+  GET  /api/tollbooth/v1/facilitators       $0.001  Facilitator Status + Router: live x402 facilitators, fastest for your network/scheme
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -123,6 +124,7 @@ import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
 import buyer  # noqa: E402
 import checkout  # noqa: E402
+import facilitators  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -609,6 +611,11 @@ _paid("POST", "checkout/close", "$0.002",
 _paid("GET", "seller-record", "$0.001",
       "Seller Track Record: how an x402 seller actually performed for buyers who checked out through OMENZ: purchases closed, delivery rate, outcomes (good buy / paid not delivered), USDC settled (verified on Base), first/last seen. Aggregate per seller host, no buyer data. By OMENZ.",
       {"host": "prices.genexxis.com"}, {"properties": {"host": {"type": "string"}}, "required": ["host"]})
+
+_paid("GET", "facilitators", "$0.001",
+      "Facilitator Status + Router: which x402 facilitators are answering RIGHT NOW and which to use. Live probe of 10 known facilitators (PayAI, Coinbase CDP, x402.rs, Daydreams, Dexter, Mogami, OpenX402, the x402.org reference and more, plus one URL of yours): up / auth_required / down, latency, networks, schemes (exact/upto), x402 versions. Say network + scheme and get the fastest live facilitator plus fallbacks. For sellers choosing or failing over a facilitator, and SDKs routing settlement. Never pays or settles anything. By OMENZ.",
+      {"network": "base", "scheme": "exact"},
+      {"properties": {"network": {"type": "string"}, "scheme": {"type": "string"}, "x402_version": {"type": "integer"}, "url": {"type": "string"}}})
 
 
 def _attach_output_examples():
@@ -1652,6 +1659,13 @@ def checkout_close_credit(request: Request, body: dict = Body(...), x_budget_key
 def seller_record(request: Request, host: str = Query(...)):
     request.state.extra["action"] = "seller_record"
     return _locker_call(checkout.seller_record, host)
+
+
+@app.get(BASE + "/v1/facilitators")
+def facilitators_route(request: Request, network: str | None = None, scheme: str | None = None, x402_version: int | None = None,
+                       url: str | None = None):
+    request.state.extra["action"] = "facilitators"
+    return facilitators.status(network, scheme, x402_version, url)
 
 
 @app.get(BASE + "/v1/market/cheapest")

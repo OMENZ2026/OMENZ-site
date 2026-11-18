@@ -2305,5 +2305,74 @@
 "last_seen": 1763480000,
 "basis": "OMENZ Checkout closes: settlement verified on Base and delivery checked against the seller's advertised output. Aggregate only."
 }
+},
+"GET /api/tollbooth/v1/facilitators": {
+"status": 200,
+"example_input": {
+"network": "base",
+"scheme": "exact"
+},
+"sample_response": {
+"version": "0.1.0",
+"checked_at": "2026-11-18T02:10:00Z",
+"paid_targets": false,
+"request": {
+"network": "eip155:8453",
+"scheme": "exact",
+"x402_version": null
+},
+"recommended": {
+"name": "Daydreams",
+"url": "https://facilitator.daydreams.systems",
+"latency_ms": 510
+},
+"fallbacks": [
+{
+"name": "Mogami",
+"url": "https://facilitator.mogami.tech",
+"latency_ms": 619
+},
+{
+"name": "OpenX402",
+"url": "https://facilitator.openx402.ai",
+"latency_ms": 660
+}
+],
+"up": 7,
+"checked": 10,
+"facilitators": [
+{
+"name": "Daydreams",
+"url": "https://facilitator.daydreams.systems",
+"status": "up",
+"latency_ms": 510,
+"networks": [
+"eip155:1",
+"eip155:8453"
+],
+"schemes": [
+"exact",
+"upto"
+],
+"x402_versions": [
+2
+],
+"fits_request": true
+},
+{
+"name": "Coinbase CDP",
+"url": "https://api.cdp.coinbase.com/platform/v2/x402",
+"status": "auth_required",
+"reason": "answers, but /supported needs an API key"
+},
+{
+"name": "Corbits",
+"url": "https://facilitator.corbits.dev",
+"status": "refused",
+"reason": "dns_failed"
+}
+],
+"note": "Live probe of each facilitator's public GET /supported (claims, not settlement proof). Pair with pay/verify to prove a settlement."
+}
 }
 }

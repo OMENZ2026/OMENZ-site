@@ -2400,5 +2400,57 @@
 "distinct_payers": 58
 }
 }
+},
+"GET /api/tollbooth/v1/tx/decode": {
+"status": 200,
+"example_input": {
+"tx_hash": "0x..."
+},
+"sample_response": {
+"version": "0.1.0",
+"network": "base",
+"tx_hash": "0x9c1e...(sample)",
+"from": "0x...(facilitator)",
+"to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+"eth_value": 0.0,
+"function": "transferWithAuthorization (EIP-3009: the x402 'exact' payment)",
+"block": 38912345,
+"confirmations": 40,
+"status": "SUCCESS",
+"gas_used": 61234,
+"fee_eth": 1.2e-06,
+"time": "2026-11-18T02:28:10Z",
+"token_transfers": [
+{
+"token": "USDC",
+"token_address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+"from": "0x4C29...(payer)",
+"to": "0x9287...(seller)",
+"amount": 0.003
+}
+],
+"approvals": [],
+"kind": "x402_payment (EIP-3009 authorization)",
+"summary": "x402-style payment: 0.003 USDC from 0x4C29Ec... to 0x9287e3...",
+"flags": []
+}
+},
+"GET /api/tollbooth/v1/name/resolve": {
+"status": 200,
+"example_input": {
+"q": "vitalik.eth"
+},
+"sample_response": {
+"version": "0.1.0",
+"query": "vitalik.eth",
+"checked_at": "2026-11-18T03:00:00Z",
+"kind": "name",
+"system": "ens",
+"address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+"resolver": "0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63",
+"status": "RESOLVED",
+"chain": "ethereum",
+"note": "Pay this address only if it matches what the seller's own 402 says (authorize checks payTo)."
+}
 }
 }

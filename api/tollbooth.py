@@ -78,6 +78,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/seller-record?host= $0.001  Seller Track Record from verified checkouts
   GET  /api/tollbooth/v1/facilitators       $0.001  Facilitator Status + Router: live x402 facilitators, fastest for your network/scheme
   POST /api/tollbooth/v1/sale/record        $0.001  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
+  GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
+  GET  /api/tollbooth/v1/name/resolve?q=     $0.001  Name Resolve: ENS + Basenames <-> address (forward-verified)
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -126,6 +128,7 @@ import branch_resolver  # noqa: E402
 import buyer  # noqa: E402
 import checkout  # noqa: E402
 import facilitators  # noqa: E402
+import chain_tools  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -624,6 +627,13 @@ _paid("POST", "sale/record", "$0.001",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "tx_hash": "0x..."},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"}},
        "required": ["url"]}, body=True)
+
+_paid("GET", "tx/decode", "$0.002",
+      "Transaction Decode (Base): what did this transaction actually do, in plain English. Status, confirmations, function called, every token transfer (symbol + amount), approvals (UNLIMITED approvals flagged), NFT moves, fee, time, and whether it was an x402 payment (EIP-3009 transferWithAuthorization). For agents checking a payment, a refund, or what a contract just did with their money. Public chain data, never needs a key. By OMENZ.",
+      {"tx_hash": "0x..."}, {"properties": {"tx_hash": {"type": "string"}}, "required": ["tx_hash"]})
+_paid("GET", "name/resolve", "$0.001",
+      "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
+      {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
 
 
 def _attach_output_examples():
@@ -1680,6 +1690,18 @@ def facilitators_route(request: Request, network: str | None = None, scheme: str
 def sale_record_route(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "sale_record"
     return _locker_call(checkout.sale_record, body)
+
+
+@app.get(BASE + "/v1/tx/decode")
+def tx_decode_route(request: Request, tx_hash: str = Query(...)):
+    request.state.extra["action"] = "tx_decode"
+    return chain_tools.tx_decode(tx_hash)
+
+
+@app.get(BASE + "/v1/name/resolve")
+def name_resolve_route(request: Request, q: str = Query(...)):
+    request.state.extra["action"] = "name_resolve"
+    return chain_tools.name_resolve(q)
 
 
 @app.get(BASE + "/v1/market/cheapest")

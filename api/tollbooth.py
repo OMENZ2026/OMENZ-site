@@ -788,7 +788,7 @@ async def x402_mw(request, call_next):
         return await _ayne(request, call_next, t0)
     resp = await _mw(request, call_next)
     path = request.url.path
-    if path.startswith(BASE + "/v1/"):
+    if path.startswith(BASE + "/v1/") or path == BASE + "/swapmeet/v1/search":
         payer = _payer(request)
         ev = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "tollbooth", "route": path[len(BASE):],
               "method": request.method, "status": resp.status_code, "latency_ms": int((time.time() - t0) * 1000),

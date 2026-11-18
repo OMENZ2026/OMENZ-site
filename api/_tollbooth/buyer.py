@@ -457,3 +457,86 @@ def delivery_check(body):
             "missing": out["missing"][:50], "type_mismatch": out["type_mismatch"][:50], "empty": out["empty"][:50],
             "extra_fields": out["extra"][:30], "reasons": reasons or ["the response has every advertised field, with the advertised kinds of values"],
             "next": None if verdict == "MATCH" else "Keep this as evidence: finance/refund-request turns it into a structured refund ask; receipt/put stores it."}
+
+
+# ---------------------------------------------------------------- Cheapest Working Tool
+def cheapest_working(q, max_price_usd=None, network=None, want=3, exclude=None, min_match=0.75):
+    """Cheapest providers that ANSWER right now: matches sorted by price, live-probed (unpaid) in that order."""
+    import market
+    import x402_probe
+    try:
+        want = max(1, min(int(want or 3), 5))
+        min_match = max(0.5, min(float(min_match or 0.75), 1.0))
+    except (TypeError, ValueError):
+        return {"error": "want must be an integer, min_match a number 0.5-1"}
+    f = market.find(q, max_price_usd=max_price_usd, network=network, exclude=exclude, limit=25, live_check=0)
+    if f.get("error"):
+        return f
+    cands = sorted([r for r in f["results"] if r.get("price_usd") is not None and r.get("match", 0) >= min_match],
+                   key=lambda r: (r["price_usd"], -(r.get("payers_30d") or 0)))
+    working, dead, probes = [], [], 0
+    for r in cands:
+        if len(working) >= want or probes >= 8:
+            break
+        probes += 1
+        qt = x402_probe.quote(r["url"], r["method"])
+        live = qt.get("cheapest_usd")
+        if qt["status"] == "quoted" and live is not None and (max_price_usd in (None, "") or live <= float(max_price_usd) + 1e-12):
+            working.append({**r, "live_price_usd": live, "price_drift": abs(live - r["price_usd"]) > 1e-9,
+                            "latency_ms": qt.get("latency_ms"), "pay_to": (qt.get("options") or [{}])[0].get("pay_to")})
+        else:
+            dead.append({"url": r["url"], "listed_price_usd": r["price_usd"], "why": qt.get("status") if live is None else f"live price {live} over your max"})
+    working.sort(key=lambda r: (r["live_price_usd"], r.get("latency_ms") or 9e9))
+    return {"version": VERSION, "query": q, "checked_at": f["checked_at"], "paid_targets": False,
+            "pick": working[0] if working else None, "runners_up": working[1:], "skipped_not_working": dead,
+            "candidates_matched": len(cands), "probed": probes,
+            "note": "sorted by LIVE price (unpaid probe just now), then latency; listed-but-dead providers are skipped and shown. "
+                    "Next: authorize (GO/STOP + signed authorization) before paying the pick."}
+
+
+# ---------------------------------------------------------------- Spend Receipt
+def spend_receipt(body):
+    """One signed receipt for one purchase: what was bought, why, what it cost (verified on-chain), what came back."""
+    import contracts
+    body = body if isinstance(body, dict) else {}
+    url = str(body.get("url") or "").strip()
+    if not url:
+        return {"verdict": "BAD_INPUT", "reasons": ["send url (+ method) of what you bought"]}
+    pv = pay_verify({k: body.get(k) for k in ("tx_hash", "payment_response", "expected_pay_to", "expected_payer",
+                                                 "expected_amount_usd", "min_confirmations")})
+    if pv["verdict"] == "BAD_INPUT":
+        return pv
+    dc = delivery_check({k: body.get(k) for k in ("url", "method", "delivered", "schema", "example", "must_have")}) \
+        if body.get("delivered") is not None else {"verdict": "NOT_SUBMITTED", "reasons": ["no delivered response sent"]}
+    paid_ok = pv["verdict"] == "SETTLED"
+    got_ok = dc["verdict"] in ("MATCH", "NO_CONTRACT")
+    if not paid_ok:
+        verdict = "PAYMENT_NOT_CONFIRMED"
+    elif dc["verdict"] in ("MISMATCH", "PARTIAL"):
+        verdict = "PAID_NOT_DELIVERED" if dc["verdict"] == "MISMATCH" else "PAID_PARTLY_DELIVERED"
+    elif got_ok:
+        verdict = "GOOD_BUY" if dc["verdict"] == "MATCH" else "PAID_DELIVERY_UNCHECKED"
+    else:
+        verdict = "PAID_DELIVERY_UNCHECKED"
+    delivered = body.get("delivered")
+    receipt = {"schema": "omenz.spend-receipt.v0", "issued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               "issuer": "OMENZ (www.omenz.org)", "agent": str(body.get("agent") or "")[:80] or None,
+               "bought": {"url": url[:500], "method": str(body.get("method") or "GET").upper()},
+               "why": str(body.get("purpose") or "")[:300] or None, "job_id": str(body.get("job_id") or "")[:120] or None,
+               "payment": {"verdict": pv["verdict"], "tx_hash": pv.get("tx_hash"), "network": "base", "asset": "USDC",
+                           **({k: pv["payment"][k] for k in ("from", "to", "amount_usd")} if pv.get("payment") else {}),
+                           "confirmations": pv.get("confirmations"), "settled_at": pv.get("settled_at")},
+               "delivery": {"verdict": dc["verdict"], "missing": dc.get("missing", [])[:20], "type_mismatch": len(dc.get("type_mismatch") or []),
+                            "delivered_sha256": hashlib.sha256(json.dumps(delivered, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                            if delivered is not None else None},
+               "verdict": verdict}
+    try:
+        token = contracts._sign(receipt)
+    except Exception:
+        token = None
+    return {**receipt, "reasons": (pv.get("reasons") or [])[:3] + (dc.get("reasons") or [])[:3], "signed": token,
+            "verify": "Ed25519 over the token body; public key at GET /api/tollbooth/v1/passport/key",
+            "next": {"GOOD_BUY": "File it: receipt/put or ledger/append.",
+                     "PAID_NOT_DELIVERED": "This receipt is your evidence: finance/refund-request.",
+                     "PAID_PARTLY_DELIVERED": "Evidence for a partial refund: finance/refund-request.",
+                     "PAYMENT_NOT_CONFIRMED": "Don't count this as spent yet; re-check later or budget/release it."}.get(verdict)}

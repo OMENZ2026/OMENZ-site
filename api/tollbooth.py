@@ -72,6 +72,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
                                              Shared Budget: one spending cap a team of agents draws from (bookkeeping only)
   POST /api/tollbooth/v1/pay/verify         $0.002  Payment Verify: did this x402 payment settle on Base (payer, payee, USDC, confirmations)
   POST /api/tollbooth/v1/delivery-check     $0.002  Delivery Check: did the paid response match the seller's advertised output
+  GET  /api/tollbooth/v1/market/cheapest?q= $0.002  Cheapest Working Tool: cheapest provider that answers right now (live-probed)
+  POST /api/tollbooth/v1/spend-receipt      $0.003  Spend Receipt: signed what/why/cost(verified)/delivered receipt for one purchase
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -575,6 +577,19 @@ _paid("POST", "delivery-check", "$0.002",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "delivered": {"status": "up"}},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "delivered": {}, "schema": {"type": "object"},
                       "example": {}, "must_have": {"type": "array"}}, "required": ["delivered"]}, body=True)
+
+_paid("GET", "market/cheapest", "$0.002",
+      "Cheapest Working Tool: 'I need X' -> the cheapest x402 provider that ANSWERS right now. Matches from ~35,000 indexed endpoints, sorted by price, each live-probed (unpaid) in that order; returns the pick + runners-up by live price and latency, and the cheap-but-dead ones it skipped. Never pays a target. By OMENZ.",
+      {"q": "token price", "max_price_usd": 0.01, "want": 3},
+      {"properties": {"q": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "want": {"type": "integer"},
+                      "min_match": {"type": "number"}}, "required": ["q"]})
+_paid("POST", "spend-receipt", "$0.003",
+      "Spend Receipt: one signed receipt per purchase: what your agent bought, why, what it cost (verified on Base from the tx hash or PAYMENT-RESPONSE) and what came back (checked against the seller's advertised output). GOOD_BUY / PAID_NOT_DELIVERED / PAID_PARTLY_DELIVERED / PAYMENT_NOT_CONFIRMED. Ed25519-signed, verifiable offline. Payment Verify + Delivery Check in one call. By OMENZ.",
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "tx_hash": "0x...", "expected_amount_usd": 0.001,
+       "delivered": {"status": "up"}, "purpose": "check vendor before job", "agent": "worker-3", "job_id": "job-42"},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"},
+                      "expected_pay_to": {"type": "string"}, "expected_amount_usd": {"type": "number"}, "delivered": {}, "schema": {"type": "object"},
+                      "purpose": {"type": "string"}, "agent": {"type": "string"}, "job_id": {"type": "string"}}, "required": ["url"]}, body=True)
 
 
 def _attach_output_examples():
@@ -1560,6 +1575,19 @@ def budget_status(request: Request, id: str = Query(...), limit: int = 50, x_bud
 def pay_verify(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "pay_verify"
     return buyer.pay_verify(body)
+
+
+@app.get(BASE + "/v1/market/cheapest")
+def market_cheapest(request: Request, q: str = Query(...), max_price_usd: float | None = None, network: str | None = None,
+                    want: int = 3, min_match: float = 0.75):
+    request.state.extra["action"] = "market_cheapest"
+    return buyer.cheapest_working(q, max_price_usd, network, want, None, min_match)
+
+
+@app.post(BASE + "/v1/spend-receipt")
+def spend_receipt(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "spend_receipt"
+    return buyer.spend_receipt(body)
 
 
 @app.post(BASE + "/v1/delivery-check")

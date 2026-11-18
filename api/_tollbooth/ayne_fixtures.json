@@ -2119,5 +2119,100 @@
 ],
 "next": "Keep this as evidence: finance/refund-request turns it into a structured refund ask; receipt/put stores it."
 }
+},
+"GET /api/tollbooth/v1/market/cheapest": {
+"status": 200,
+"example_input": {
+"q": "token price",
+"max_price_usd": 0.01
+},
+"sample_response": {
+"version": "0.1.0",
+"query": "token price",
+"checked_at": "2026-11-18T01:00:00Z",
+"paid_targets": false,
+"pick": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"price_usd": 0.001,
+"live_price_usd": 0.001,
+"price_drift": false,
+"latency_ms": 310,
+"payers_30d": 12,
+"match": 1.0
+},
+"runners_up": [
+{
+"url": "https://prices.genexxis.com/token-price",
+"method": "GET",
+"price_usd": 0.002,
+"live_price_usd": 0.002,
+"latency_ms": 220
+}
+],
+"skipped_not_working": [
+{
+"url": "https://dead.example/price",
+"listed_price_usd": 0.0005,
+"why": "unreachable"
+}
+],
+"candidates_matched": 14,
+"probed": 4,
+"note": "sorted by LIVE price (unpaid probe just now), then latency; listed-but-dead providers are skipped and shown."
+}
+},
+"POST /api/tollbooth/v1/spend-receipt": {
+"status": 200,
+"example_input": {
+"url": "https://example-seller.com/v1/price",
+"tx_hash": "0x...",
+"expected_amount_usd": 0.002,
+"delivered": {
+"error": "timeout"
+},
+"purpose": "BTC price for report"
+},
+"sample_response": {
+"schema": "omenz.spend-receipt.v0",
+"issued_at": "2026-11-18T01:00:00Z",
+"issuer": "OMENZ (www.omenz.org)",
+"agent": "worker-3",
+"bought": {
+"url": "https://example-seller.com/v1/price",
+"method": "GET"
+},
+"why": "BTC price for report",
+"job_id": "job-42",
+"payment": {
+"verdict": "SETTLED",
+"tx_hash": "0x9c1e...(sample)",
+"network": "base",
+"asset": "USDC",
+"from": "0x35fe...(payer)",
+"to": "0xab12...(seller)",
+"amount_usd": 0.002,
+"confirmations": 40,
+"settled_at": "2026-11-18T00:58:10Z"
+},
+"delivery": {
+"verdict": "MISMATCH",
+"missing": [
+"symbol",
+"price",
+"as_of"
+],
+"type_mismatch": 0,
+"delivered_sha256": "5e3c...(sample)"
+},
+"verdict": "PAID_NOT_DELIVERED",
+"reasons": [
+"0.002 USDC moved from the payer to the seller",
+"the response looks like an error body, not the advertised result"
+],
+"signed": "(Ed25519 token)",
+"verify": "Ed25519 over the token body; public key at GET /api/tollbooth/v1/passport/key",
+"next": "This receipt is your evidence: finance/refund-request."
+}
 }
 }

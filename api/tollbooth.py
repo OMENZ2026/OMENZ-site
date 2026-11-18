@@ -88,7 +88,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/market/job         $0.01   OMENZ Market job desk: working providers for a job + verified history + Guard request (/guarded $0.05)
   GET  /.well-known/mcp.json                 free    MCP discovery card
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
-Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
+Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged; search routes keep only common capability words, see pricing-policy). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
 import base64
 import hashlib
@@ -808,6 +808,8 @@ async def _ayne(request, call_next, t0):
     vis = ayne.visitor(request.headers.get("x-forwarded-for", "").split(",")[0].strip(), ua)
     ev = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "ayne", "route": sub or "/", "method": method,
           "visitor": vis, "ua_class": _ua_class(ua), "country": request.headers.get("x-vercel-ip-country", "")}
+    if sub in ("/market/find", "/market/cheapest") and request.query_params.get("q"):
+        ev["need_words"] = market.need_words(request.query_params.get("q"))
     if not sub or sub == "/":
         ev["mode"] = "index"
         await run_in_threadpool(ayne.log, ev)
@@ -1018,6 +1020,7 @@ def swapmeet_aisles(request: Request):
 @app.get(BASE + "/swapmeet/v1/search")
 def swapmeet_search(request: Request, q: str = Query("")):
     request.state.extra["action"] = "swapmeet_search"
+    request.state.extra["need_words"] = market.need_words(q)
     r = swapmeet.search(q)
     return JSONResponse(r, status_code=422 if "error" in r else 200)
 
@@ -1799,12 +1802,14 @@ def settlement_rescue(request: Request, body: dict = Body(...)):
 @app.post(BASE + "/v1/market/job")
 def market_job(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "market_job"
+    request.state.extra["need_words"] = market.need_words(body.get("need") or body.get("q"))
     return checkout.market_job({**body, "guard": False})
 
 
 @app.post(BASE + "/v1/market/job/guarded")
 def market_job_guarded(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
     request.state.extra["action"] = "market_job_guarded"
+    request.state.extra["need_words"] = market.need_words(body.get("need") or body.get("q"))
     return _locker_call(checkout.market_job, {**body, "guard": True}, x_budget_key)
 
 
@@ -1825,6 +1830,7 @@ def well_known_mcp():
 def market_cheapest(request: Request, q: str = Query(...), max_price_usd: float | None = None, network: str | None = None,
                     want: int = 3, min_match: float = 0.75):
     request.state.extra["action"] = "market_cheapest"
+    request.state.extra["need_words"] = market.need_words(q)
     return buyer.cheapest_working(q, max_price_usd, network, want, None, min_match)
 
 

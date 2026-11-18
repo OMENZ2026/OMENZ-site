@@ -30,6 +30,7 @@ POLICY = {
         "Precision first: fields we can't back are returned as null/unknown with a reason, never guessed.",
         "Every tool ships with a test result before going live; failures are fixed and re-tested, not hidden.",
         "Nothing is stored unless the route says so (Locker/PO Box/Receipt/Failure store by design; scans and checks don't).",
+        "Search routes (market/job, market/cheapest, Swap Meet search) keep only the COMMON capability words of what you searched (words that appear in 20+ public x402 listings, e.g. 'token', 'price', 'weather') to learn what agents look for. Never addresses, numbers, keys, names or rare words, and never who searched.",
         "Price changes are announced in this policy and in /api/tollbooth before they take effect.",
     ],
     "credits": "Prepaid credits (POST /v1/credits/buy-1 or buy-5): one payment, then checks draw from the balance with no per-check settlement. OMENZ Authorize via credits: 2% of the payment checked, minimum $0.0003.",

@@ -334,3 +334,21 @@ def sellers_list(q=None, min_payers=1, limit=100):
     return {"version": VERSION, "query": q, "index_generated_at": ix["generated_at"], "sellers": len(out),
             "results": out[:max(1, min(int(limit or 100), 500))],
             "note": "Public listing data (hosts and endpoints sellers published to the x402 Bazaar). No personal data."}
+
+
+def need_words(q, min_df=20, max_words=6):
+    """What an agent was looking for, reduced to COMMON capability words (each appears in >= min_df public x402 listings).
+    Addresses, numbers, keys, names and rare words are dropped by construction. Used for the 'what agents look for' report."""
+    try:
+        ix = _index()
+    except Exception:
+        return []
+    out = []
+    for t in dict.fromkeys(_toks(q or "")):
+        if t.isdigit() or len(t) < 3 or len(t) > 24:
+            continue
+        if ix["df"].get(t, 0) >= min_df:
+            out.append(t)
+        if len(out) >= max_words:
+            break
+    return out

@@ -33,8 +33,9 @@ POLICY = {
         "Price changes are announced in this policy and in /api/tollbooth before they take effect.",
     ],
     "credits": "Prepaid credits (POST /v1/credits/buy-1 or buy-5): one payment, then checks draw from the balance with no per-check settlement. OMENZ Authorize via credits: 2% of the payment checked, minimum $0.0003.",
-    "announced_changes": [{"announced": "2026-11-15", "effective": "2026-11-22",
-                           "change": "Routes priced $0.001 per call move to $0.002 per call. Reason: each x402 settlement costs OMENZ about $0.00166 on Base, so $0.001 calls lose money. Prepaid credits stay the cheapest way to make many small checks."}],
+    "announced_changes": [],
+    "past_changes": [{"announced": "2026-11-15", "planned_effective": "2026-11-22", "effective": "2026-11-18",
+                      "change": "Routes priced $0.001 per call moved to $0.002 per call, 4 days earlier than announced. Reason: measured on 2026-11-18, one x402 settlement on Base costs about $0.0009-0.0017 in gas, so a $0.001 call does not cover its own settlement. Prepaid credits did not change and stay the cheapest way to make many small checks (no per-call settlement)."}],
     "tell_us": "POST /api/tollbooth/v1/needs (free): what you need, what it's worth to you, how often. We read every one.",
     "contact": "hello@omenz.org",
 }

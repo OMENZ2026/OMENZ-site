@@ -9,22 +9,22 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET /api/tollbooth/v1/changed?url=         $0.005
   GET /api/tollbooth/v1/local-facts?url=     $0.01   Local Facts: phone/address/hours/holiday notices from the business's own site
   POST /api/tollbooth/v1/locker/put           $0.002  Agent Locker: check a job's resume packet in (encrypted, <=30 days)
-  GET  /api/tollbooth/v1/locker/get?id=       $0.001  check it out (header X-Locker-Key; optional fields=a,b)
+  GET  /api/tollbooth/v1/locker/get?id=       $0.002  check it out (header X-Locker-Key; optional fields=a,b)
   DELETE /api/tollbooth/v1/locker/delete?id=  free    remove it (header X-Locker-Key)
-  POST /api/tollbooth/v1/pobox/create         $0.001  Agent PO Box: get a box_id (share it) + owner_key (private)
-  POST /api/tollbooth/v1/pobox/drop           $0.001  leave a sealed message for a box (any agent with the box_id)
-  GET  /api/tollbooth/v1/pobox/inbox?box_id=  $0.001  owner opens waiting messages (header X-Owner-Key; ack=true clears)
-  GET  /api/tollbooth/v1/alive?url=&method=  $0.001  Proof-of-Life: is this endpoint answering right now (up/paywalled/down...)
-  GET  /api/tollbooth/v1/quote?url=&method=  $0.001  Price Quote: an x402 endpoint's live payment options, normalized to USD
+  POST /api/tollbooth/v1/pobox/create         $0.002  Agent PO Box: get a box_id (share it) + owner_key (private)
+  POST /api/tollbooth/v1/pobox/drop           $0.002  leave a sealed message for a box (any agent with the box_id)
+  GET  /api/tollbooth/v1/pobox/inbox?box_id=  $0.002  owner opens waiting messages (header X-Owner-Key; ack=true clears)
+  GET  /api/tollbooth/v1/alive?url=&method=  $0.002  Proof-of-Life: is this endpoint answering right now (up/paywalled/down...)
+  GET  /api/tollbooth/v1/quote?url=&method=  $0.002  Price Quote: an x402 endpoint's live payment options, normalized to USD
   POST /api/tollbooth/v1/tx-preflight        $0.002  Transaction Preflight: GO/STOP before paying (budget, recipient, network, drift)
   POST /api/tollbooth/v1/secret-scan         $0.002  Secret-Leak Preflight: CLEAN/REVIEW/BLOCK before a payload leaves (nothing stored)
-  POST /api/tollbooth/v1/spend-gate          $0.001  Spend Gate: ALLOW/DENY/ESCALATE a proposed spend against the owner's policy (caps, recipients, hurdle)
+  POST /api/tollbooth/v1/spend-gate          $0.002  Spend Gate: ALLOW/DENY/ESCALATE a proposed spend against the owner's policy (caps, recipients, hurdle)
   GET  /api/tollbooth/v1/branch?url=&city=&zip=&street=  $0.01  Branch Resolver: the matching location page of a multi-location business + its facts
   POST /api/tollbooth/v1/failure/put         $0.002  Failure Receipt: standard why-it-failed record in a Locker for the next agent; optional PO Box dead-letter drop
   GET  /api/tollbooth/v1/terms-changed?url=&previous=  $0.005  Terms Changed?: only material pricing/limit/terms lines, diffed (stateless fingerprint)
   POST /api/tollbooth/v1/cost-estimate       $0.002  Cost-to-Complete: job cost before it starts (model + paid tools, live x402 quotes), budget/value check, cheaper routing
   POST /api/tollbooth/v1/passport/issue      $0.002  Permission Passport: signed, expiring, job-scoped permissions (tools, hosts, spend)
-  POST /api/tollbooth/v1/passport/check      $0.001  ALLOW/DENY an action against a passport
+  POST /api/tollbooth/v1/passport/check      $0.002  ALLOW/DENY an action against a passport
   GET  /api/tollbooth/v1/passport/key        free    public key to verify passports offline
   POST /api/tollbooth/v1/needs               free    Agent Needs desk: tell OMENZ what you need, what it's worth, how often
   GET  /api/tollbooth/v1/pricing-policy      free    machine-readable fair-pricing promise
@@ -32,8 +32,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/claim-evidence      $0.005  Claim -> Evidence: does this source say what you claim? quote, or what's missing
   POST /api/tollbooth/v1/preflight           $0.005  Agent Preflight: READY/BLOCKED before a job (tools live + priced, budget, passport)
   POST /api/tollbooth/v1/ledger/create       $0.002  Job Ledger: hash-chained, append-only record of a job (key shown once)
-  POST /api/tollbooth/v1/ledger/append       $0.001  add an entry (tool_call/spend/receipt/handoff/failure/output/status/note/decision)
-  GET  /api/tollbooth/v1/ledger/get?id=      $0.001  entries + totals + chain_intact
+  POST /api/tollbooth/v1/ledger/append       $0.002  add an entry (tool_call/spend/receipt/handoff/failure/output/status/note/decision)
+  GET  /api/tollbooth/v1/ledger/get?id=      $0.002  entries + totals + chain_intact
   GET  /api/tollbooth/v1/capability-card?url= $0.002 Capability Card for any x402 service (index or endpoint)
   GET  /api/tollbooth/v1/card                free    OMENZ's own capability card
   POST /api/tollbooth/v1/queue/{create,enqueue,claim,heartbeat,complete,fail,escalate,resolve,bid,award}, GET queue/status
@@ -43,18 +43,18 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/vendor-check?url=   $0.01   Vendor Due-Diligence Pack
   POST /api/tollbooth/v1/contract/build      $0.002  A2A Contract Builder (signed terms + deterministic acceptance tests)
   POST /api/tollbooth/v1/contract/accept     $0.005  Acceptance Test as a Service -> PASS/FAIL, escrow verdict, signed attestation (reputation)
-  GET  /api/tollbooth/v1/reputation?agent=   $0.001  Reputation Receipts: an agent's OMENZ-checked job history
+  GET  /api/tollbooth/v1/reputation?agent=   $0.002  Reputation Receipts: an agent's OMENZ-checked job history
   POST /api/tollbooth/v1/evidence/bundle     $0.002  Machine Evidence Bundle (signed, hash-listed)
   POST /api/tollbooth/v1/finance/{reconcile,forecast,watchdog,snapshot,refund-request}  Agent finance back office
   GET  /api/tollbooth/v1/terms-extract?url=  $0.005  API Terms / Data-License Checker
-  GET  /api/tollbooth/v1/freshness?url=&kind= $0.001 Source Freshness / Result TTL
-  POST /api/tollbooth/v1/dedupe              $0.001  Duplicate-Work Detector (private namespace)
-  POST /api/tollbooth/v1/context-diet        $0.001  Context Diet
+  GET  /api/tollbooth/v1/freshness?url=&kind= $0.002 Source Freshness / Result TTL
+  POST /api/tollbooth/v1/dedupe              $0.002  Duplicate-Work Detector (private namespace)
+  POST /api/tollbooth/v1/context-diet        $0.002  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
-  POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.001  Job Jacket: check a job's minimum working state out/in
-  POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.001   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
+  POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.002  Job Jacket: check a job's minimum working state out/in
+  POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.002   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
   ANY  /api/tollbooth/ayne/v1/<route>       free    AYNE: the agent Playzone (2000 req/day, 300/visitor): live sandbox or labeled samples of every route
@@ -62,24 +62,25 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /mcp                                  free    remote MCP server (tools/list = all tools; tools/call runs in AYNE)
   GET  /api/tollbooth/v1/wallet/{balance,spend,runway}?address=   agent-wallet tools (USDC on Base, public chain data)
   GET  /api/tollbooth/v1/market/payee?address=  /market/price-index?q=&price_usd=   payee check + x402 price index
-  GET|POST /api/tollbooth/v1/authorize       $0.001  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
+  GET|POST /api/tollbooth/v1/authorize       $0.002  OMENZ Authorize: APPROVE/REVIEW/DECLINE + signed authorization before any x402 payment
   POST /api/tollbooth/v1/split-check         $0.002  Split Check: verify an on-chain revenue split (0xSplits v2) and who gets what
   POST /api/tollbooth/v1/credits/buy-1 | buy-5   $1 / $5  prepaid credits (one settlement; checks draw from the balance)
   GET  /api/tollbooth/v1/credits/balance     free    balance + recent charges (X-Credit-Id / X-Credit-Key)
   POST /api/tollbooth/v1/authorize/credit    credits OMENZ Authorize paid from credits: 2% of the payment, min $0.0003
   GET  /api/tollbooth/v1/market/report      $1.00   weekly x402 Market Report (supply side: endpoints, sellers, prices, concentration, top sellers)
-  POST /api/tollbooth/v1/budget/{create,spend,release} $0.002/$0.001, GET budget/status $0.001, POST budget/freeze free
+  POST /api/tollbooth/v1/budget/{create,spend,release} $0.002/$0.002, GET budget/status $0.002, POST budget/freeze free
                                              Shared Budget: one spending cap a team of agents draws from (bookkeeping only)
   POST /api/tollbooth/v1/pay/verify         $0.002  Payment Verify: did this x402 payment settle on Base (payer, payee, USDC, confirmations)
   POST /api/tollbooth/v1/delivery-check     $0.002  Delivery Check: did the paid response match the seller's advertised output
   GET  /api/tollbooth/v1/market/cheapest?q= $0.002  Cheapest Working Tool: cheapest provider that answers right now (live-probed)
   POST /api/tollbooth/v1/spend-receipt      $0.003  Spend Receipt: signed what/why/cost(verified)/delivered receipt for one purchase
   POST /api/tollbooth/v1/checkout/open|close $0.002 each (or /credit: 1% of the purchase, min $0.0002)  OMENZ Checkout: the buyer layer around every payment
-  GET  /api/tollbooth/v1/seller-record?host= $0.001  Seller Track Record from verified checkouts
-  GET  /api/tollbooth/v1/facilitators       $0.001  Facilitator Status + Router: live x402 facilitators, fastest for your network/scheme
-  POST /api/tollbooth/v1/sale/record        $0.001  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
+  GET  /api/tollbooth/v1/seller-record?host= $0.002  Seller Track Record from verified checkouts
+  GET  /api/tollbooth/v1/facilitators       $0.002  Facilitator Status + Router: live x402 facilitators, fastest for your network/scheme
+  POST /api/tollbooth/v1/sale/record        $0.002  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
-  GET  /api/tollbooth/v1/name/resolve?q=     $0.001  Name Resolve: ENS + Basenames <-> address (forward-verified)
+  GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
+  GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -129,6 +130,7 @@ import buyer  # noqa: E402
 import checkout  # noqa: E402
 import facilitators  # noqa: E402
 import chain_tools  # noqa: E402
+import gas  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -195,7 +197,7 @@ POBOX_DESC = {
 }
 for _a, _m in (("create", "POST"), ("drop", "POST"), ("inbox", "GET")):
     ROUTES[f"{_m} {BASE}/v1/pobox/{_a}"] = {
-        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
         "description": POBOX_DESC[_a], "mimeType": "application/json",
         "extensions": declare_discovery_extension(**{
             "create": dict(input={"label": "research-agent inbox"}, input_schema={"properties": {"label": {"type": "string"}}}, body_type="json"),
@@ -226,7 +228,7 @@ ROUTES[f"POST {BASE}/v1/handoff/pack"] = {
                                      "to": {"type": "string"}, "from": {"type": "string"}, "ttl_days": {"type": "integer"}}, "required": ["packet"]}, body_type="json"),
 }
 ROUTES[f"GET {BASE}/v1/locker/get"] = {
-    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
     "description": LOCKER_DESC["get"], "mimeType": "application/json",
     "extensions": declare_discovery_extension(
         input={"id": "lk_0123456789abcdef01234567", "fields": "objective,next_action"},
@@ -239,7 +241,7 @@ PROBE_DESC = {
 }
 for _n in ("alive", "quote"):
     ROUTES[f"GET {BASE}/v1/{_n}"] = {
-        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+        "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
         "description": PROBE_DESC[_n], "mimeType": "application/json",
         "extensions": declare_discovery_extension(
             input={"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"},
@@ -270,7 +272,7 @@ ROUTES[f"POST {BASE}/v1/secret-scan"] = {
 }
 
 ROUTES[f"POST {BASE}/v1/spend-gate"] = {
-    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
     "description": "Spend Gate: ALLOW, DENY or ESCALATE before your agent spends money. Send the owner's policy (per-transaction, daily and monthly caps, approval threshold, recipient/category/network allow and block lists, hurdle: minimum expected return multiple) and the proposed spend; get the decision with every reason and the budget left. Stateless: nothing stored. By OMENZ.",
     "mimeType": "application/json",
     "extensions": declare_discovery_extension(
@@ -334,7 +336,7 @@ ROUTES[f"POST {BASE}/v1/passport/issue"] = {
         input_schema={"properties": {"scope": {"type": "object"}}, "required": ["scope"]}, body_type="json"),
 }
 ROUTES[f"POST {BASE}/v1/passport/check"] = {
-    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.001", "network": NETWORK},
+    "accepts": {"scheme": "exact", "payTo": PAY_TO, "price": "$0.002", "network": NETWORK},
     "description": "Permission Passport check: ALLOW or DENY an agent's next action (tool, URL/host, amount, spent so far) against its passport, with reasons, spend left and time left. Rejects forged or expired passports. By OMENZ.",
     "mimeType": "application/json",
     "extensions": declare_discovery_extension(
@@ -378,11 +380,11 @@ _paid("POST", "ledger/create", "$0.002",
       "Agent Job Ledger: open an append-only, hash-chained record for one job (tool calls, spend, receipts, handoffs, failures, outputs, status). Returns ledger_id + ledger_key (shown once). Kept 90 days. By OMENZ.",
       {"job_id": "job-42", "objective": "get today's hours for 20 restaurants"},
       {"properties": {"job_id": {"type": "string"}, "objective": {"type": "string"}}}, body=True)
-_paid("POST", "ledger/append", "$0.001",
+_paid("POST", "ledger/append", "$0.002",
       "Agent Job Ledger: append one entry (type tool_call|spend|receipt|handoff|failure|output|status|note|decision, any fields, amount_usd optional). Each entry is chained to the previous by sha256; secrets are refused. Header X-Ledger-Key. By OMENZ.",
       {"ledger_id": "lg_...", "entry": {"type": "tool_call", "tool": "local-facts", "amount_usd": 0.01, "result": "ok"}},
       {"properties": {"ledger_id": {"type": "string"}, "entry": {"type": "object"}}, "required": ["ledger_id", "entry"]}, body=True)
-_paid("GET", "ledger/get", "$0.001",
+_paid("GET", "ledger/get", "$0.002",
       "Agent Job Ledger: read entries (since_seq for only new ones), totals (spent, counts by type, last status) and chain_intact: proof nothing was edited or removed. Header X-Ledger-Key. By OMENZ.",
       {"id": "lg_...", "since_seq": 0}, {"properties": {"id": {"type": "string"}, "since_seq": {"type": "integer"}}, "required": ["id"]})
 _paid("GET", "capability-card", "$0.002",
@@ -393,28 +395,28 @@ _paid("GET", "capability-card", "$0.002",
 WQ = {
     "create": ("$0.002", "Agent Workforce: create a work queue for a team of agents. Returns queue_id + owner_key + worker_key (shown once). Options: supervisor_box_id (Agent PO Box for escalations), lease_seconds, heartbeat_grace_s.",
                {"name": "restaurant-hours crew", "supervisor_box_id": "pb_...", "lease_seconds": 900}),
-    "enqueue": ("$0.001", "Agent Workforce: add a job (title, payload, priority, not_before, repeat_every_minutes, max_attempts, bidding). Owner key. Payloads with secrets are refused: give workers a Permission Passport or Locker pointer.",
+    "enqueue": ("$0.002", "Agent Workforce: add a job (title, payload, priority, not_before, repeat_every_minutes, max_attempts, bidding). Owner key. Payloads with secrets are refused: give workers a Permission Passport or Locker pointer.",
                 {"queue_id": "wq_...", "title": "get hours for 20 restaurants", "payload": {"city": "Pasadena"}, "priority": 5}),
-    "claim": ("$0.001", "Agent Workforce: a worker claims the highest-priority ready job and gets a LEASE (it is now responsible). Expired leases come back with the last checkpoint so a replacement can resume.",
+    "claim": ("$0.002", "Agent Workforce: a worker claims the highest-priority ready job and gets a LEASE (it is now responsible). Expired leases come back with the last checkpoint so a replacement can resume.",
               {"queue_id": "wq_...", "worker_id": "agent-7"}),
-    "heartbeat": ("$0.001", "Agent Workforce: worker is alive; extends its lease and stores a checkpoint (e.g. a Locker id + step) for dead-agent recovery.",
+    "heartbeat": ("$0.002", "Agent Workforce: worker is alive; extends its lease and stores a checkpoint (e.g. a Locker id + step) for dead-agent recovery.",
                   {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "checkpoint": {"locker_id": "lk_...", "step": 3}}),
-    "complete": ("$0.001", "Agent Workforce: worker finishes its leased job with a result; repeating jobs are rescheduled automatically.",
+    "complete": ("$0.002", "Agent Workforce: worker finishes its leased job with a result; repeating jobs are rescheduled automatically.",
                  {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "result": {"ok": True}}),
-    "fail": ("$0.001", "Agent Workforce: worker reports failure; the job retries until max_attempts, then goes dead.",
+    "fail": ("$0.002", "Agent Workforce: worker reports failure; the job retries until max_attempts, then goes dead.",
              {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "reason": "site blocked", "retry": True}),
-    "escalate": ("$0.001", "Agent Workforce: hand a job up to the supervisor (sealed drop into the supervisor's Agent PO Box).",
+    "escalate": ("$0.002", "Agent Workforce: hand a job up to the supervisor (sealed drop into the supervisor's Agent PO Box).",
                  {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "reason": "customer asked for a refund"}),
-    "resolve": ("$0.001", "Agent Workforce: owner resolves an escalated/dead job: requeue, close or kill.",
+    "resolve": ("$0.002", "Agent Workforce: owner resolves an escalated/dead job: requeue, close or kill.",
                 {"queue_id": "wq_...", "item_id": "wi_...", "action": "requeue"}),
-    "bid": ("$0.001", "Agent Workforce: worker bids on a job open for bidding (price_usd, eta_minutes).",
+    "bid": ("$0.002", "Agent Workforce: worker bids on a job open for bidding (price_usd, eta_minutes).",
             {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "price_usd": 0.02, "eta_minutes": 10}),
-    "award": ("$0.001", "Agent Workforce: owner awards a bidding job to one bidder; the award becomes that worker's lease.",
+    "award": ("$0.002", "Agent Workforce: owner awards a bidding job to one bidder; the award becomes that worker's lease.",
               {"queue_id": "wq_...", "item_id": "wi_...", "worker_id": "agent-7"}),
 }
 for _a, (_p, _d, _i) in WQ.items():
     _paid("POST", "queue/" + _a, _p, _d + " Header X-Queue-Key. By OMENZ.", _i, {"properties": {k: {} for k in _i}}, body=True)
-_paid("GET", "queue/status", "$0.001",
+_paid("GET", "queue/status", "$0.002",
       "Agent Workforce: who is responsible for what right now (holders + lease time left), counts by state, escalations, roster (available/last seen/current job), scheduled jobs; or one item's full history with item_id. Header X-Queue-Key. By OMENZ.",
       {"queue_id": "wq_...", "item_id": "(optional)"}, {"properties": {"queue_id": {"type": "string"}, "item_id": {"type": "string"}}, "required": ["queue_id"]})
 
@@ -440,7 +442,7 @@ _paid("POST", "contract/accept", "$0.005",
       "Acceptance Test as a Service + escrow verdict: a neutral party runs the contract's tests on what was delivered. PASS/FAIL per test, escrow_verdict RELEASE/REFUND (OMENZ never holds funds: the payer acts on it), and a signed attestation that feeds the seller's Reputation Receipts. By OMENZ.",
       {"token": "<contract token>", "delivered": {"results": [1, 2, 3], "source": "https://www.omenz.org"}},
       {"properties": {"token": {"type": "string"}, "delivered": {}}, "required": ["token", "delivered"]}, body=True)
-_paid("GET", "reputation", "$0.001",
+_paid("GET", "reputation", "$0.002",
       "Reputation Receipts: an agent's job history as checked by OMENZ Acceptance Test: jobs, passed, failed, late, pass rate, distinct buyers (low = weak evidence), recent attestations. Not self-reported. By OMENZ.",
       {"agent": "agent-b"}, {"properties": {"agent": {"type": "string"}}, "required": ["agent"]})
 _paid("POST", "evidence/bundle", "$0.002",
@@ -466,21 +468,21 @@ for _a, (_p, _d, _i) in FIN.items():
 _paid("GET", "terms-extract", "$0.005",
       "API Terms Extractor / Data-License Checker: before your agent uses a dataset or API commercially: a terms/license page -> clauses by category (commercial use, attribution, rate limits, retention, training on your data, prohibited uses, resale, refunds, liability, termination, license type) with quotes, plus plain flags (no_commercial_use, attribution_required, may_train_on_your_data, no_resale, no_scraping, non_refundable). Pattern-based, not legal advice. By OMENZ.",
       {"url": "https://www.anthropic.com/legal/consumer-terms"}, {"properties": {"url": {"type": "string"}}, "required": ["url"]})
-_paid("GET", "freshness", "$0.001",
+_paid("GET", "freshness", "$0.002",
       "Source Freshness / Result TTL: how long can your agent reuse a result before paying to fetch it again? The source's own Last-Modified, ETag and Cache-Control + a reuse window by data kind (price, quote, hours, weather, news, stock, crypto, business_facts, terms, docs, filing, profile, search) + how to revalidate cheaply (304). By OMENZ.",
       {"url": "https://www.omenz.org/logo/", "kind": "price"}, {"properties": {"url": {"type": "string"}, "kind": {"type": "string"}}, "required": ["url"]})
-_paid("POST", "dedupe", "$0.001",
+_paid("POST", "dedupe", "$0.002",
       "Duplicate-Work Detector: before your agent pays to run a task, check whether someone in your team (same private namespace_key) already did it: normalized fingerprint -> HIT with the earlier result pointer, or MISS (pass result_pointer to register this run). By OMENZ.",
       {"namespace_key": "your-private-team-key-16+", "task": {"q": "hours for Flemings Pasadena", "day": "2026-11-14"}, "result_pointer": "lk_...", "ttl_hours": 24},
       {"properties": {"namespace_key": {"type": "string"}, "task": {}, "result_pointer": {"type": "string"}, "ttl_hours": {"type": "integer"}},
        "required": ["namespace_key", "task"]}, body=True)
-_paid("POST", "context-diet", "$0.001",
+_paid("POST", "context-diet", "$0.002",
       "Context Diet: shrink a packet before it fills your context: drops empty fields, dedupes lists, cuts long strings to a head + sha256 pointer, caps list length, always keeps required fields; reports bytes and approximate tokens saved. By OMENZ.",
       {"packet": {"objective": "ship v2", "notes": "Long meeting notes: we agreed to ship v2 Friday, Ana owns the tests, budget is $40, skip the redesign for now."}, "required": ["objective"], "max_string_chars": 400},
       {"properties": {"packet": {}, "required": {"type": "array"}, "max_string_chars": {"type": "integer"}, "max_list_items": {"type": "integer"}},
        "required": ["packet"]}, body=True)
 
-_paid("GET", "wallet/balance", "$0.001",
+_paid("GET", "wallet/balance", "$0.002",
       "Agent Wallet Balance: USDC and ETH balance of any wallet on Base (public chain data). Never moves funds, no key needed. By OMENZ.",
       {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840"}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
 _paid("GET", "wallet/spend", "$0.005",
@@ -490,7 +492,7 @@ _paid("GET", "wallet/runway", "$0.005",
       "Agent Wallet Runway: how many days before this agent wallet runs dry? USDC balance / recent daily spend -> days left, OK / LOW / CRITICAL, and the top cost drivers by payee. Public chain data on Base. By OMENZ.",
       {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840", "days": 7, "low_days": 3}, {"properties": {"address": {"type": "string"}, "days": {"type": "number"},
                                                          "low_days": {"type": "number"}, "critical_days": {"type": "number"}}, "required": ["address"]})
-_paid("GET", "market/payee", "$0.001",
+_paid("GET", "market/payee", "$0.002",
       "Payee Check: before paying an address, is it a known x402 seller? Matches the pay-to address against the payout addresses of ~35k listed x402 endpoints: KNOWN_SELLER (which services, 30-day calls and payers), SHARED_ADDRESS (platform/facilitator wallet) or UNKNOWN. By OMENZ.",
       {"address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840"}, {"properties": {"address": {"type": "string"}}, "required": ["address"]})
 _paid("GET", "market/price-index", "$0.002",
@@ -498,14 +500,14 @@ _paid("GET", "market/price-index", "$0.002",
       {"q": "web search", "price_usd": 0.005}, {"properties": {"q": {"type": "string"}, "price_usd": {"type": "number"}, "url": {"type": "string"},
                                                   "min_payers": {"type": "integer"}}, "required": ["q"]})
 
-_paid("POST", "authorize", "$0.001",
+_paid("POST", "authorize", "$0.002",
       "OMENZ Authorize: the authorization step for agent payments. One call before paying any x402 endpoint: live quote + preflight (up, price within max, network, stablecoin, expected payTo), payee check (known x402 seller?), fair-price check vs comparable endpoints, the owner's spend policy and Permission Passport if sent -> APPROVE / REVIEW / DECLINE with reasons and a signed 5-minute authorization code anyone can verify. Never pays the target. Doing many? Prepay once (POST /v1/credits/buy-1, $1) and check via /v1/authorize/credit at 2% of the payment (min $0.0003), with no per-check settlement. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "POST", "max_price_usd": 0.05, "expected_pay_to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
        "policy": {"daily_cap_usd": 5}, "spend": {"spent_today_usd": 1.2}, "passport_token": "(optional)"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
                       "policy": {"type": "object"}, "spend": {"type": "object"}, "passport_token": {"type": "string"}}, "required": ["url"]}, body=True)
 
-_paid("GET", "authorize", "$0.001",
+_paid("GET", "authorize", "$0.002",
       "OMENZ Authorize (GET form): same APPROVE / REVIEW / DECLINE check before paying an x402 endpoint, with query params: url, method, max_price_usd, expected_pay_to, daily_cap_usd, spent_today_usd. Returns reasons + a signed 5-minute authorization code. Never pays the target. Doing many? Prepay once (POST /v1/credits/buy-1, $1) and check via /v1/authorize/credit at 2% of the payment (min $0.0003), with no per-check settlement. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "max_price_usd": 0.05},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "max_price_usd": {"type": "number"}, "expected_pay_to": {"type": "string"},
@@ -543,7 +545,7 @@ _paid("POST", "jacket/checkin", "$0.002",
       "Job Jacket checkin: end a shift. state_patch merges (null deletes a key) or state replaces; new checkpoint and note; the jacket becomes a new version and the lease is released. Optional Job Ledger entry (header X-Ledger-Key). Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
       {"worker": "agent-b", "state_patch": {"done": ["a.com"], "todo": ["b.com"]}, "checkpoint": "1 of 2 done", "note": "a.com closed Sundays"},
       {"properties": {"worker": {"type": "string"}, "state_patch": {"type": "object"}, "state": {"type": "object"}, "checkpoint": {"type": "string"}, "note": {"type": "string"}, "keep_lease": {"type": "boolean"}}, "required": ["worker"]}, body=True)
-_paid("GET", "jacket/history", "$0.001",
+_paid("GET", "jacket/history", "$0.002",
       "Job Jacket history: every version (who, when, checkpoint, note, state hash; never the contents) and the current lease. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
       {}, {"properties": {}})
 
@@ -551,7 +553,7 @@ _paid("POST", "uptime/watch", "$0.01",
       "Uptime Watch: register a paid endpoint your agent depends on; OMENZ checks it daily (and on each report) for 30 days: up/down, latency, live x402 price and payTo, so you catch outages, price drift and swapped payout wallets before paying. Never pays the endpoint. Returns watch_id + watch_key (shown once). By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "days": 30},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "days": {"type": "integer"}}, "required": ["url"]}, body=True)
-_paid("GET", "uptime/report", "$0.001",
+_paid("GET", "uptime/report", "$0.002",
       "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. When the endpoint is down (or substitutes=true) it also returns the 3 best live substitutes from ~35,000 x402 APIs. Header X-Watch-Key. By OMENZ.",
       {"id": "uw_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 
@@ -563,17 +565,17 @@ _paid("POST", "budget/create", "$0.002",
                       "per_tx_max_usd": {"type": "number"}, "escalate_above_usd": {"type": "number"},
                       "allowed_recipients": {"type": "array"}, "blocked_recipients": {"type": "array"}, "ttl_days": {"type": "integer"}},
        "required": ["cap_usd"]}, body=True)
-_paid("POST", "budget/spend", "$0.001",
+_paid("POST", "budget/spend", "$0.002",
       "Shared Budget: ask before each purchase. ALLOW records it against the team cap (returns spend_id + what's left); DENY or ESCALATE records nothing, with the reason. Idempotent by idempotency_key, so retries never double-count. Header X-Budget-Key. Honest limit: two spends in the same instant can both pass; per_tx_max_usd bounds that. By OMENZ.",
       {"budget_id": "bg_...", "amount_usd": 0.01, "recipient": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "agent": "worker-3",
        "url": "https://www.omenz.org/api/tollbooth/v1/local-facts", "idempotency_key": "job42-call7"},
       {"properties": {"budget_id": {"type": "string"}, "amount_usd": {"type": "number"}, "recipient": {"type": "string"}, "agent": {"type": "string"},
                       "url": {"type": "string"}, "memo": {"type": "string"}, "idempotency_key": {"type": "string"}}, "required": ["budget_id", "amount_usd"]}, body=True)
-_paid("POST", "budget/release", "$0.001",
+_paid("POST", "budget/release", "$0.002",
       "Shared Budget: give a recorded spend back to the cap when the purchase failed, was refunded or never happened. Header X-Budget-Key. By OMENZ.",
       {"budget_id": "bg_...", "spend_id": "sp_...", "reason": "seller timed out"},
       {"properties": {"budget_id": {"type": "string"}, "spend_id": {"type": "string"}, "reason": {"type": "string"}}, "required": ["budget_id", "spend_id"]}, body=True)
-_paid("GET", "budget/status", "$0.001",
+_paid("GET", "budget/status", "$0.002",
       "Shared Budget: cap, spent, remaining this window, spend by agent and by payee, recent purchases. Header X-Budget-Key (owner or spender). By OMENZ.",
       {"id": "bg_..."}, {"properties": {"id": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["id"]})
 _paid("POST", "pay/verify", "$0.002",
@@ -613,16 +615,16 @@ _paid("POST", "checkout/close", "$0.002",
       {"properties": {"checkout_id": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"}, "delivered": {},
                       "schema": {"type": "object"}, "not_paid": {"type": "boolean"}, "release_if_unconfirmed": {"type": "boolean"}},
        "required": ["checkout_id"]}, body=True)
-_paid("GET", "seller-record", "$0.001",
+_paid("GET", "seller-record", "$0.002",
       "Seller Track Record: how an x402 seller actually performed for buyers who checked out through OMENZ: purchases closed, delivery rate, outcomes (good buy / paid not delivered), USDC settled (verified on Base), first/last seen. Aggregate per seller host, no buyer data. By OMENZ.",
       {"host": "prices.genexxis.com"}, {"properties": {"host": {"type": "string"}}, "required": ["host"]})
 
-_paid("GET", "facilitators", "$0.001",
+_paid("GET", "facilitators", "$0.002",
       "Facilitator Status + Router: which x402 facilitators are answering RIGHT NOW and which to use. Live probe of 10 known facilitators (PayAI, Coinbase CDP, x402.rs, Daydreams, Dexter, Mogami, OpenX402, the x402.org reference and more, plus one URL of yours): up / auth_required / down, latency, networks, schemes (exact/upto), x402 versions. Say network + scheme and get the fastest live facilitator plus fallbacks. For sellers choosing or failing over a facilitator, and SDKs routing settlement. Never pays or settles anything. By OMENZ.",
       {"network": "base", "scheme": "exact"},
       {"properties": {"network": {"type": "string"}, "scheme": {"type": "string"}, "x402_version": {"type": "integer"}, "url": {"type": "string"}}})
 
-_paid("POST", "sale/record", "$0.001",
+_paid("POST", "sale/record", "$0.002",
       "Sale Record (for SELLERS): after each x402 sale, your middleware sends the tx hash (or PAYMENT-RESPONSE) + the route sold. OMENZ checks the payment really settled on Base to the payTo your route advertises right now, counts it once, and returns a signed sale receipt. Verified sales and distinct payers show in your public Seller Track Record, which buyers see in OMENZ Checkout before paying. Proof of real sales, not claims. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "tx_hash": "0x..."},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "tx_hash": {"type": "string"}, "payment_response": {"type": "string"}},
@@ -631,9 +633,14 @@ _paid("POST", "sale/record", "$0.001",
 _paid("GET", "tx/decode", "$0.002",
       "Transaction Decode (Base): what did this transaction actually do, in plain English. Status, confirmations, function called, every token transfer (symbol + amount), approvals (UNLIMITED approvals flagged), NFT moves, fee, time, and whether it was an x402 payment (EIP-3009 transferWithAuthorization). For agents checking a payment, a refund, or what a contract just did with their money. Public chain data, never needs a key. By OMENZ.",
       {"tx_hash": "0x..."}, {"properties": {"tx_hash": {"type": "string"}}, "required": ["tx_hash"]})
-_paid("GET", "name/resolve", "$0.001",
+_paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
+
+_paid("GET", "settlement-cost", "$0.002",
+      "Settlement Cost Check (Base): what moving money costs RIGHT NOW (live gas price, L1 data fee, ETH/USD from Chainlink on Base) for an x402 settlement (~86,550 gas, measured), a USDC transfer, an ETH transfer and an approval, in ETH and USD. Send amount_usd (+ payments_per_day) to learn whether a payment that small is worth settling on its own: SETTLE / BATCH_OR_CREDITS / DONT_SETTLE_SINGLY, the overhead %, break-even payment size, and cheaper options (CDP free tier, Circle Gateway batching, prepaid credits). By OMENZ.",
+      {"amount_usd": 0.001, "payments_per_day": 5000},
+      {"properties": {"amount_usd": {"type": "number"}, "payments_per_day": {"type": "integer"}}})
 
 
 def _attach_output_examples():
@@ -1702,6 +1709,12 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/settlement-cost")
+def settlement_cost_route(request: Request, amount_usd: float | None = None, payments_per_day: int | None = None):
+    request.state.extra["action"] = "settlement_cost"
+    return gas.settlement_cost(amount_usd, payments_per_day)
 
 
 @app.get(BASE + "/v1/market/cheapest")

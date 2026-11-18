@@ -2452,5 +2452,72 @@
 "chain": "ethereum",
 "note": "Pay this address only if it matches what the seller's own 402 says (authorize checks payTo)."
 }
+},
+"GET /api/tollbooth/v1/settlement-cost": {
+"status": 200,
+"example_input": {
+"amount_usd": 0.001,
+"payments_per_day": 5000
+},
+"sample_response": {
+"version": "0.1.0",
+"network": "base",
+"checked_at": "2026-11-18T04:00:00Z",
+"gas_price_gwei": 0.006,
+"l1_data_fee_eth": 2.5e-09,
+"eth_usd": 1795.0,
+"eth_usd_source": "Chainlink ETH/USD on Base",
+"eth_usd_stale": false,
+"costs": {
+"x402_exact_settlement": {
+"gas": 86550,
+"eth": 5.2e-07,
+"usd": 0.000934
+},
+"usdc_transfer": {
+"gas": 62000,
+"eth": 3.7e-07,
+"usd": 0.00067
+},
+"eth_transfer": {
+"gas": 21000,
+"eth": 1.3e-07,
+"usd": 0.00023
+},
+"erc20_approve": {
+"gas": 46000,
+"eth": 2.8e-07,
+"usd": 0.0005
+}
+},
+"break_even": {
+"payment_usd_for_5pct_overhead": 0.01868,
+"payment_usd_for_1pct_overhead": 0.0934
+},
+"payment": {
+"amount_usd": 0.001,
+"settlement_cost_usd": 0.000934,
+"overhead_pct": 93.4,
+"verdict": "DONT_SETTLE_SINGLY",
+"why": "settling this payment on its own costs about as much as (or more than) the payment",
+"daily": {
+"payments": 5000,
+"volume_usd": 5.0,
+"gas_if_settled_singly_usd": 4.67,
+"cdp_facilitator_fees_usd": 4.966667
+}
+},
+"options": [
+{
+"option": "Circle Gateway nanopayments",
+"cost": "signed authorizations batched into one settlement"
+},
+{
+"option": "OMENZ prepaid credits",
+"cost": "one $1/$5 settlement, then checks draw from the balance"
+}
+],
+"status": "OK"
+}
 }
 }

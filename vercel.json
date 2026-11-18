@@ -49,6 +49,10 @@
       "destination": "/api/tollbooth"
     },
     {
+      "source": "/.well-known/mcp.json",
+      "destination": "/api/tollbooth"
+    },
+    {
       "source": "/.well-known/mcp-registry-auth",
       "destination": "/api/tollbooth"
     },

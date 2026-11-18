@@ -88,7 +88,24 @@ def search(q, limit=12):
         booths.append(_booth(r))
         if len(booths) >= max(1, min(int(limit or 12), 12)):
             break
-    return {"query": q, "booths": booths, "more": "Full ranked results with live checks: GET /api/tollbooth/v1/market/find ($0.002)"}
+    try:
+        import concurrent.futures
+        import checkout
+        def _v(b):
+            try:
+                sr = checkout.seller_record(b["booth"])
+            except Exception:
+                return None
+            n = sr.get("purchases_closed", 0) + sr.get("seller_reported_sales_verified", 0)
+            return {"purchases_checked": sr.get("purchases_closed", 0), "delivery_rate": sr.get("delivery_rate"),
+                    "sales_verified": sr.get("seller_reported_sales_verified", 0)} if n else None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+            for b, v in zip(booths, ex.map(_v, booths)):
+                b["omenz_verified"] = v
+    except Exception:
+        pass
+    return {"query": q, "booths": booths, "more": "Full ranked results with live checks: GET /api/tollbooth/v1/market/find ($0.002)",
+            "buy_safely": "Tell OMENZ the job: POST /api/tollbooth/v1/market/job ($0.01) -> working provider + verified history + a Guard request; then guard -> pay -> checkout/close"}
 
 
 def bring_booth(d):

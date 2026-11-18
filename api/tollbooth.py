@@ -85,6 +85,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/guard/credit       credits max($0.01, 10 bps of protected value), cap $5
   POST /api/tollbooth/v1/budget/delegate    $0.01   Delegation Budget: child agent allowances that inherit and narrow the parent (4 levels)
   POST /api/tollbooth/v1/settlement/rescue  $0.05   Settlement Rescue: SETTLED / NOT_SETTLED / STILL_UNCERTAIN + safe next action (EIP-3009 state)
+  POST /api/tollbooth/v1/market/job         $0.01   OMENZ Market job desk: working providers for a job + verified history + Guard request (/guarded $0.05)
+  GET  /.well-known/mcp.json                 free    MCP discovery card
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -670,6 +672,17 @@ _paid("POST", "settlement/rescue", "$0.05",
       {"payment_header": "(the base64 X-PAYMENT you sent)", "window_hours": 24},
       {"properties": {"payment_header": {"type": "string"}, "authorization": {"type": "object"}, "tx_hash": {"type": "string"}, "payer": {"type": "string"},
                       "pay_to": {"type": "string"}, "amount_usd": {"type": "number"}, "window_hours": {"type": "integer"}}}, body=True)
+
+_paid("POST", "market/job", "$0.01",
+      "OMENZ Market job desk: tell OMENZ the JOB ('token price', 'weather by city', 'company enrichment by domain'). We search ~35,000 x402 endpoints, live-probe the matches (unpaid), and rank WORKING providers by live price and latency, each with its OMENZ-verified history (purchases checked, delivery rate, verified sales), plus settlement economics and a ready-to-send Transaction Guard request for the pick. Then guard -> pay -> checkout/close -> (settlement/rescue if weird). Want it guarded in the same call? POST market/job/guarded ($0.05). Never pays a provider. By OMENZ.",
+      {"need": "token price", "max_price_usd": 0.01, "purpose": "BTC price for the daily report"},
+      {"properties": {"need": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "want": {"type": "integer"},
+                      "purpose": {"type": "string"}, "payer": {"type": "string"}, "budget_id": {"type": "string"}}, "required": ["need"]}, body=True)
+_paid("POST", "market/job/guarded", "$0.05",
+      "OMENZ Market job desk + Transaction Guard in one call: find the working provider for your job, then GO / CAUTION / STOP with budget, counterparty, duplicate payment (send payer), quoted price, settlement economics and expected delivery checked, plus a checkout_id for checkout/close. Same price as Guard alone. By OMENZ.",
+      {"need": "token price", "max_price_usd": 0.01, "payer": "0x...", "budget_id": "bg_..."},
+      {"properties": {"need": {"type": "string"}, "max_price_usd": {"type": "number"}, "payer": {"type": "string"}, "budget_id": {"type": "string"},
+                      "purpose": {"type": "string"}}, "required": ["need"]}, body=True)
 
 
 def _attach_output_examples():
@@ -1781,6 +1794,31 @@ def budget_delegate(request: Request, body: dict = Body(...), x_budget_key: str 
 def settlement_rescue(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "settlement_rescue"
     return rescue.rescue(body)
+
+
+@app.post(BASE + "/v1/market/job")
+def market_job(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "market_job"
+    return checkout.market_job({**body, "guard": False})
+
+
+@app.post(BASE + "/v1/market/job/guarded")
+def market_job_guarded(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "market_job_guarded"
+    return _locker_call(checkout.market_job, {**body, "guard": True}, x_budget_key)
+
+
+@app.get("/.well-known/mcp.json")
+def well_known_mcp():
+    """MCP discovery card for crawlers and marketplaces that look for /.well-known/mcp.json."""
+    return {"name": "org.omenz.www/agent-tools", "title": "OMENZ agent tools",
+            "description": "Pay-per-call tools for AI agents that buy things: Transaction Guard, Checkout, Settlement Rescue, Delegation Budget, payment verification, market job desk, facts and more. x402, USDC on Base.",
+            "version": "1.0.2", "websiteUrl": "https://omenz.org",
+            "remotes": [{"type": "streamable-http", "url": "https://www.omenz.org/mcp"}],
+            "tools": len(ROUTES), "playzone": "https://www.omenz.org/api/tollbooth/ayne/v1",
+            "x402": "https://www.omenz.org/.well-known/x402", "openapi": "https://www.omenz.org/openapi.json",
+            "documentation": "https://www.omenz.org/llms.txt", "registry": "https://registry.modelcontextprotocol.io (org.omenz.www/agent-tools)",
+            "contact": "hello@omenz.org"}
 
 
 @app.get(BASE + "/v1/market/cheapest")

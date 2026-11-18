@@ -223,3 +223,56 @@ def sale_record(body):
     except Exception:
         token = None
     return {"verdict": "COUNTED", **receipt, "signed": token, "seller_record": seller_record(host)}
+
+
+# ---------------------------------------------------------------- OMENZ Market: the job desk
+def market_job(body, budget_key=None):
+    """'Tell OMENZ what job you need done.' -> working providers ranked by live price + latency, each with its
+    OMENZ-verified history, the settlement economics, and a ready Guard request for the pick (or guard=true runs it)."""
+    import gas
+    import guard as guard_mod
+    body = body if isinstance(body, dict) else {}
+    need = str(body.get("need") or body.get("q") or "").strip()
+    if not need:
+        return {"status": "BAD_INPUT", "reasons": ["say the job: need = 'token price', 'weather by city', 'company enrichment by domain'"]}
+    cw = buyer.cheapest_working(need, body.get("max_price_usd"), body.get("network"), want=int(body.get("want") or 3))
+    if cw.get("error"):
+        return {"status": "BAD_INPUT", "reasons": [cw["error"]]}
+    options = ([cw["pick"]] if cw.get("pick") else []) + list(cw.get("runners_up") or [])
+    ranked = []
+    for o in options:
+        try:
+            sr = seller_record(o["url"])
+        except Exception:
+            sr = None
+        verified = (sr or {}).get("purchases_closed", 0) + (sr or {}).get("seller_reported_sales_verified", 0)
+        ranked.append({"url": o["url"], "method": o.get("method"), "price_usd": o.get("live_price_usd"), "price_drift": o.get("price_drift"),
+                       "latency_ms": o.get("latency_ms"), "pay_to": o.get("pay_to"), "payers_30d": o.get("payers_30d"),
+                       "omenz_verified": {"purchases_checked": (sr or {}).get("purchases_closed", 0), "delivery_rate": (sr or {}).get("delivery_rate"),
+                                          "sales_verified": (sr or {}).get("seller_reported_sales_verified", 0),
+                                          "distinct_payers": (sr or {}).get("distinct_payers", 0)} if verified else None,
+                       "what": (o.get("desc") or o.get("what") or "")[:160]})
+    # verified history first when two options cost the same; otherwise live price, then latency
+    ranked.sort(key=lambda r: (r["price_usd"] if r["price_usd"] is not None else 9e9,
+                               -((r["omenz_verified"] or {}).get("delivery_rate") or 0), r["latency_ms"] or 9e9))
+    pick = ranked[0] if ranked else None
+    econ = None
+    if pick and pick["price_usd"]:
+        try:
+            econ = (gas.settlement_cost(pick["price_usd"]) or {}).get("payment")
+        except Exception:
+            econ = None
+    guard_req = {"url": pick["url"], "method": pick["method"], "quoted_price_usd": pick["price_usd"], "max_price_usd": body.get("max_price_usd"),
+                 "purpose": body.get("purpose") or need, "payer": body.get("payer"), "budget_id": body.get("budget_id")} if pick else None
+    out = {"version": VERSION, "need": need, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "paid_targets": False,
+           "pick": pick, "alternatives": ranked[1:], "skipped_not_working": cw.get("skipped_not_working", []),
+           "settlement_economics": econ,
+           "next_steps": ["POST /v1/guard with guard_request (GO / CAUTION / STOP, $0.05)", "pay the pick with your x402 client",
+                          "POST /v1/checkout/close with the checkout_id + tx + response (verified receipt)",
+                          "payment weird? POST /v1/settlement/rescue with the X-PAYMENT you sent"],
+           "guard_request": {k: v for k, v in (guard_req or {}).items() if v is not None} or None}
+    if pick and body.get("guard"):
+        out["guard"] = guard_mod.guard(out["guard_request"], budget_key)
+    if not pick:
+        out["status"] = "NO_WORKING_PROVIDER"
+    return out

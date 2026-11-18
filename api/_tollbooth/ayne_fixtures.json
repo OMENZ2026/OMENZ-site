@@ -2657,5 +2657,127 @@
 },
 "note": "Every spend from this child is also checked against and counted in its parent(s). The parent's owner sees it as by_child in budget/status."
 }
+},
+"POST /api/tollbooth/v1/market/job": {
+"status": 200,
+"example_input": {
+"need": "token price",
+"max_price_usd": 0.01
+},
+"sample_response": {
+"version": "0.1.0",
+"need": "token price",
+"checked_at": "2026-11-18T06:00:00Z",
+"paid_targets": false,
+"pick": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"price_usd": 0.001,
+"price_drift": false,
+"latency_ms": 310,
+"pay_to": "0xab12...(seller)",
+"payers_30d": 12,
+"omenz_verified": {
+"purchases_checked": 12,
+"delivery_rate": 1.0,
+"sales_verified": 40,
+"distinct_payers": 9
+},
+"what": "Token details and price"
+},
+"alternatives": [
+{
+"url": "https://prices.genexxis.com/token-price",
+"method": "GET",
+"price_usd": 0.003,
+"latency_ms": 220,
+"omenz_verified": null
+}
+],
+"skipped_not_working": [],
+"settlement_economics": {
+"verdict": "DONT_SETTLE_SINGLY",
+"overhead_pct": 93.4,
+"settlement_cost_usd": 0.000934
+},
+"next_steps": [
+"POST /v1/guard with guard_request (GO / CAUTION / STOP, $0.05)",
+"pay the pick with your x402 client",
+"POST /v1/checkout/close with the checkout_id + tx + response (verified receipt)",
+"payment weird? POST /v1/settlement/rescue with the X-PAYMENT you sent"
+],
+"guard_request": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"quoted_price_usd": 0.001,
+"max_price_usd": 0.01,
+"purpose": "token price"
+}
+}
+},
+"POST /api/tollbooth/v1/market/job/guarded": {
+"status": 200,
+"example_input": {
+"need": "token price",
+"max_price_usd": 0.01,
+"payer": "0x..."
+},
+"sample_response": {
+"version": "0.1.0",
+"need": "token price",
+"checked_at": "2026-11-18T06:00:00Z",
+"paid_targets": false,
+"pick": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"price_usd": 0.001,
+"price_drift": false,
+"latency_ms": 310,
+"pay_to": "0xab12...(seller)",
+"payers_30d": 12,
+"omenz_verified": {
+"purchases_checked": 12,
+"delivery_rate": 1.0,
+"sales_verified": 40,
+"distinct_payers": 9
+},
+"what": "Token details and price"
+},
+"alternatives": [
+{
+"url": "https://prices.genexxis.com/token-price",
+"method": "GET",
+"price_usd": 0.003,
+"latency_ms": 220,
+"omenz_verified": null
+}
+],
+"skipped_not_working": [],
+"settlement_economics": {
+"verdict": "DONT_SETTLE_SINGLY",
+"overhead_pct": 93.4,
+"settlement_cost_usd": 0.000934
+},
+"next_steps": [
+"POST /v1/guard with guard_request (GO / CAUTION / STOP, $0.05)",
+"pay the pick with your x402 client",
+"POST /v1/checkout/close with the checkout_id + tx + response (verified receipt)",
+"payment weird? POST /v1/settlement/rescue with the X-PAYMENT you sent"
+],
+"guard_request": {
+"url": "https://x402.ottoai.services/token-details",
+"method": "GET",
+"quoted_price_usd": 0.001,
+"max_price_usd": 0.01,
+"purpose": "token price"
+},
+"guard": {
+"decision": "GO",
+"reasons": [
+"all checks passed"
+],
+"checkout_id": "ck_3f9a0c1b2d4e5f60718a"
+}
+}
 }
 }

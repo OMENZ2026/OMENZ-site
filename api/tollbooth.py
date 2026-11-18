@@ -87,6 +87,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/settlement/rescue  $0.05   Settlement Rescue: SETTLED / NOT_SETTLED / STILL_UNCERTAIN + safe next action (EIP-3009 state)
   POST /api/tollbooth/v1/market/job         $0.01   OMENZ Market job desk: working providers for a job + verified history + Guard request (/guarded $0.05)
   POST /api/tollbooth/v1/dispute/packet     $0.10   Dispute Packet: settlement proof + promise + delivery check + timeline + signed refund request
+  POST /api/tollbooth/v1/po/issue|redeem    $0.01 / $0.002  Agent Purchase Order: signed single-use 'may spend $X with Y for Z', budget-backed
   GET  /.well-known/mcp.json                 free    MCP discovery card
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged; search routes keep only common capability words, see pricing-policy). Spec: omenz-stack/products/agent_pobox/SPEC.md
@@ -141,6 +142,7 @@ import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
 import dispute  # noqa: E402
+import po  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -693,6 +695,19 @@ _paid("POST", "dispute/packet", "$0.10",
                       "payment_header": {"type": "string"}, "payer": {"type": "string"}, "pay_to": {"type": "string"}, "amount_usd": {"type": "number"},
                       "delivered": {}, "schema": {"type": "object"}, "issue": {"type": "string", "enum": ["not_delivered", "wrong_output", "partial", "overcharged", "duplicate", "other"]},
                       "what": {"type": "string"}, "seller": {"type": "string"}, "amount_requested_usd": {"type": "number"}}}, body=True)
+
+_paid("POST", "po/issue", "$0.01",
+      "Agent Purchase Order: whoever controls the money pre-approves ONE purchase: 'this agent may spend up to $X with seller Y (payTo and/or host) for Z, until T'. Returns an Ed25519-signed, single-use PO token anyone can verify offline. Budget-backed POs (budget_id + X-Budget-Key) draw from the Shared Budget on redeem, so team caps and the delegation tree still apply. By OMENZ.",
+      {"max_usd": 0.5, "pay_to": "0x9287e3102d411029025c7617d75245bfc7920f17", "seller": "prices.genexxis.com", "for": "BTC price for the daily report",
+       "agent": "worker-3", "budget_id": "bg_...", "expires_in_hours": 24},
+      {"properties": {"max_usd": {"type": "number"}, "pay_to": {"type": "string"}, "seller": {"type": "string"}, "for": {"type": "string"},
+                      "agent": {"type": "string"}, "budget_id": {"type": "string"}, "job_id": {"type": "string"}, "expires_in_hours": {"type": "number"}},
+       "required": ["max_usd"]}, body=True)
+_paid("POST", "po/redeem", "$0.002",
+      "Agent Purchase Order redeem: the buyer agent (or the seller, before serving) checks a PO right before paying: signature, expiry, payee, seller, amount <= max, and that it was never used. ALLOW marks it used (once) and, if budget-backed, draws the amount from the Shared Budget; returns a signed redemption record. By OMENZ.",
+      {"token": "(PO token)", "amount_usd": 0.003, "pay_to": "0x9287e3102d411029025c7617d75245bfc7920f17", "url": "https://prices.genexxis.com/token-price"},
+      {"properties": {"token": {"type": "string"}, "amount_usd": {"type": "number"}, "pay_to": {"type": "string"}, "seller": {"type": "string"},
+                      "url": {"type": "string"}}, "required": ["token", "amount_usd"]}, body=True)
 
 
 def _attach_output_examples():
@@ -1840,6 +1855,18 @@ def well_known_mcp():
 def dispute_packet(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "dispute_packet"
     return _locker_call(dispute.packet, body)
+
+
+@app.post(BASE + "/v1/po/issue")
+def po_issue(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "po_issue"
+    return _locker_call(po.issue, body, x_budget_key)
+
+
+@app.post(BASE + "/v1/po/redeem")
+def po_redeem(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "po_redeem"
+    return _locker_call(po.redeem, body, x_budget_key)
 
 
 @app.get(BASE + "/v1/market/cheapest")

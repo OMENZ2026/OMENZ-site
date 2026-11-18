@@ -68,6 +68,10 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/credits/balance     free    balance + recent charges (X-Credit-Id / X-Credit-Key)
   POST /api/tollbooth/v1/authorize/credit    credits OMENZ Authorize paid from credits: 2% of the payment, min $0.0003
   GET  /api/tollbooth/v1/market/report      $1.00   weekly x402 Market Report (supply side: endpoints, sellers, prices, concentration, top sellers)
+  POST /api/tollbooth/v1/budget/{create,spend,release} $0.002/$0.001, GET budget/status $0.001, POST budget/freeze free
+                                             Shared Budget: one spending cap a team of agents draws from (bookkeeping only)
+  POST /api/tollbooth/v1/pay/verify         $0.002  Payment Verify: did this x402 payment settle on Base (payer, payee, USDC, confirmations)
+  POST /api/tollbooth/v1/delivery-check     $0.002  Delivery Check: did the paid response match the seller's advertised output
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged). Spec: omenz-stack/products/agent_pobox/SPEC.md
 """
@@ -113,6 +117,7 @@ import preflight  # noqa: E402
 import pobox  # noqa: E402
 import receipts  # noqa: E402
 import branch_resolver  # noqa: E402
+import buyer  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -538,6 +543,59 @@ _paid("POST", "uptime/watch", "$0.01",
 _paid("GET", "uptime/report", "$0.001",
       "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. When the endpoint is down (or substitutes=true) it also returns the 3 best live substitutes from ~35,000 x402 APIs. Header X-Watch-Key. By OMENZ.",
       {"id": "uw_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
+
+# Buyer Kit (founder 2026-11-17: "more tools for agents who are going to be buying stuff"): budget/*, pay/verify, delivery-check
+_paid("POST", "budget/create", "$0.002",
+      "Shared Budget: one spending cap a whole TEAM of agents draws from (total, per day or per month), with a per-purchase max, an escalate line and allowed/blocked payees. Spend Gate is stateless, so 5 agents can each stay under $1 and spend $5 together; a Shared Budget keeps the one running total. Returns budget_id + owner_key + spender_key (shown once). Bookkeeping only: OMENZ never holds or moves money. By OMENZ.",
+      {"name": "research crew", "cap_usd": 2, "period": "day", "per_tx_max_usd": 0.05, "escalate_above_usd": 0.02},
+      {"properties": {"name": {"type": "string"}, "cap_usd": {"type": "number"}, "period": {"type": "string", "enum": ["total", "day", "month"]},
+                      "per_tx_max_usd": {"type": "number"}, "escalate_above_usd": {"type": "number"},
+                      "allowed_recipients": {"type": "array"}, "blocked_recipients": {"type": "array"}, "ttl_days": {"type": "integer"}},
+       "required": ["cap_usd"]}, body=True)
+_paid("POST", "budget/spend", "$0.001",
+      "Shared Budget: ask before each purchase. ALLOW records it against the team cap (returns spend_id + what's left); DENY or ESCALATE records nothing, with the reason. Idempotent by idempotency_key, so retries never double-count. Header X-Budget-Key. Honest limit: two spends in the same instant can both pass; per_tx_max_usd bounds that. By OMENZ.",
+      {"budget_id": "bg_...", "amount_usd": 0.01, "recipient": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "agent": "worker-3",
+       "url": "https://www.omenz.org/api/tollbooth/v1/local-facts", "idempotency_key": "job42-call7"},
+      {"properties": {"budget_id": {"type": "string"}, "amount_usd": {"type": "number"}, "recipient": {"type": "string"}, "agent": {"type": "string"},
+                      "url": {"type": "string"}, "memo": {"type": "string"}, "idempotency_key": {"type": "string"}}, "required": ["budget_id", "amount_usd"]}, body=True)
+_paid("POST", "budget/release", "$0.001",
+      "Shared Budget: give a recorded spend back to the cap when the purchase failed, was refunded or never happened. Header X-Budget-Key. By OMENZ.",
+      {"budget_id": "bg_...", "spend_id": "sp_...", "reason": "seller timed out"},
+      {"properties": {"budget_id": {"type": "string"}, "spend_id": {"type": "string"}, "reason": {"type": "string"}}, "required": ["budget_id", "spend_id"]}, body=True)
+_paid("GET", "budget/status", "$0.001",
+      "Shared Budget: cap, spent, remaining this window, spend by agent and by payee, recent purchases. Header X-Budget-Key (owner or spender). By OMENZ.",
+      {"id": "bg_..."}, {"properties": {"id": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["id"]})
+_paid("POST", "pay/verify", "$0.002",
+      "Payment Verify: did this x402 payment really settle on Base? Send the tx hash or the seller's PAYMENT-RESPONSE header; get SETTLED / MISMATCH / PENDING / FAILED / NOT_FOUND with payer, payee, USDC amount, block, confirmations and time, checked against the payee/amount you expected. Proof for disputes, refunds and books. Public chain data, never needs a key. By OMENZ.",
+      {"tx_hash": "0x...", "expected_pay_to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "expected_amount_usd": 0.001},
+      {"properties": {"tx_hash": {"type": "string"}, "payment_response": {"type": "string"}, "expected_pay_to": {"type": "string"},
+                      "expected_payer": {"type": "string"}, "expected_amount_usd": {"type": "number"}, "min_confirmations": {"type": "integer"}}}, body=True)
+_paid("POST", "delivery-check", "$0.002",
+      "Delivery Check: you paid; did you get what was advertised? Send the paid endpoint's url (+ method) and the JSON it returned. We read the seller's own x402 discovery output example (unpaid probe) or use your JSON Schema, then compare fields and value types: MATCH / PARTIAL / MISMATCH / NO_CONTRACT, with exactly what's missing, empty or the wrong kind, and error bodies caught. Evidence for finance/refund-request. By OMENZ.",
+      {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "delivered": {"status": "up"}},
+      {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "delivered": {}, "schema": {"type": "object"},
+                      "example": {}, "must_have": {"type": "array"}}, "required": ["delivered"]}, body=True)
+
+
+def _attach_output_examples():
+    """Advertise what each OMENZ route returns (the AYNE sample response) in its x402 discovery data, so buyers and
+    Delivery Check can hold us to it. Same shape the x402 bazaar helper writes for output=OutputConfig(example=...)."""
+    try:
+        fx = ayne.fixtures()
+    except Exception:
+        return
+    for k, v in ROUTES.items():
+        sample = (fx.get(k) or {}).get("sample_response")
+        baz = (v.get("extensions") or {}).get("bazaar")
+        if not isinstance(sample, dict) or not isinstance(baz, dict) or (baz.get("info") or {}).get("output"):
+            continue
+        baz.setdefault("info", {})["output"] = {"type": "json", "example": sample}
+        sch = baz.get("schema")
+        if isinstance(sch, dict) and isinstance(sch.get("properties"), dict):
+            sch["properties"]["output"] = {"type": "object", "properties": {"type": {"type": "string"}, "example": {"type": "object"}}, "required": ["type"]}
+
+
+_attach_output_examples()
 
 # Facilitator: Coinbase CDP when the founder has set CDP_API_KEY_ID/SECRET in Vercel (settlements then index our routes in
 # the CDP Bazaar, where Coinbase's agents shop); otherwise PayAI (keyless). An explicit X402_FACILITATOR env var wins.
@@ -1465,6 +1523,49 @@ def uptime_watch(request: Request, body: dict = Body(...)):
 def uptime_report(request: Request, id: str = Query(""), substitutes: bool = Query(False), x_watch_key: str | None = Header(None)):
     request.state.extra["action"] = "uptime_report"
     return _locker_call(uptime.report, id, x_watch_key, substitutes)
+
+
+@app.post(BASE + "/v1/budget/create")
+def budget_create(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "budget_create"
+    return _locker_call(buyer.budget_create, body, 1 if getattr(request.state, "ayne", False) else None)
+
+
+@app.post(BASE + "/v1/budget/spend")
+def budget_spend(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "budget_spend"
+    return _locker_call(buyer.budget_spend, body.get("budget_id"), x_budget_key, body)
+
+
+@app.post(BASE + "/v1/budget/release")
+def budget_release(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "budget_release"
+    return _locker_call(buyer.budget_release, body.get("budget_id"), x_budget_key, body.get("spend_id"), body.get("reason"))
+
+
+@app.post(BASE + "/v1/budget/freeze")
+def budget_freeze(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
+    """Free: the owner can always stop the team spending."""
+    request.state.extra["action"] = "budget_freeze"
+    return _locker_call(buyer.budget_freeze, body.get("budget_id"), x_budget_key, body.get("frozen", True))
+
+
+@app.get(BASE + "/v1/budget/status")
+def budget_status(request: Request, id: str = Query(...), limit: int = 50, x_budget_key: str | None = Header(None)):
+    request.state.extra["action"] = "budget_status"
+    return _locker_call(buyer.budget_status, id, x_budget_key, limit)
+
+
+@app.post(BASE + "/v1/pay/verify")
+def pay_verify(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "pay_verify"
+    return buyer.pay_verify(body)
+
+
+@app.post(BASE + "/v1/delivery-check")
+def delivery_check(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "delivery_check"
+    return buyer.delivery_check(body)
 
 
 @app.get(BASE + "/v1/uptime/run")

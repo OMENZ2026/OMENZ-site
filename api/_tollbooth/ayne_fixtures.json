@@ -1957,5 +1957,167 @@
 ],
 "note": "Public listing data (hosts and endpoints sellers published to the x402 Bazaar). No personal data."
 }
+},
+"POST /api/tollbooth/v1/budget/create": {
+"status": 200,
+"example_input": {
+"name": "research crew",
+"cap_usd": 2,
+"period": "day",
+"per_tx_max_usd": 0.05
+},
+"sample_response": {
+"budget_id": "bg_5f0c2a91d3e84b7a6c1d2e3f",
+"owner_key": "(shown once)",
+"spender_key": "(shown once)",
+"cap_usd": 2,
+"period": "day",
+"expires_at": 1766000000,
+"note": "Give spender_key to every agent on the team (header X-Budget-Key)..."
+}
+},
+"POST /api/tollbooth/v1/budget/spend": {
+"status": 200,
+"example_input": {
+"budget_id": "bg_...",
+"amount_usd": 0.01,
+"recipient": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"agent": "worker-3",
+"idempotency_key": "job42-call7"
+},
+"sample_response": {
+"decision": "ALLOW",
+"spend_id": "sp_a1b2c3d4e5f6",
+"cap_usd": 2,
+"period": "day",
+"window": "2026-11-17",
+"spent_usd": 0.41,
+"remaining_usd": 1.59,
+"frozen": false,
+"next": "Pay now. If the purchase fails, POST budget/release with this spend_id."
+}
+},
+"POST /api/tollbooth/v1/budget/release": {
+"status": 200,
+"example_input": {
+"budget_id": "bg_...",
+"spend_id": "sp_a1b2c3d4e5f6",
+"reason": "seller timed out"
+},
+"sample_response": {
+"released": true,
+"spend_id": "sp_a1b2c3d4e5f6",
+"amount_usd": 0.01,
+"cap_usd": 2,
+"period": "day",
+"window": "2026-11-17",
+"spent_usd": 0.4,
+"remaining_usd": 1.6,
+"frozen": false
+}
+},
+"GET /api/tollbooth/v1/budget/status": {
+"status": 200,
+"example_input": {
+"id": "bg_..."
+},
+"sample_response": {
+"budget_id": "bg_5f0c2a91d3e84b7a6c1d2e3f",
+"name": "research crew",
+"role": "owner",
+"cap_usd": 2,
+"period": "day",
+"window": "2026-11-17",
+"spent_usd": 0.41,
+"remaining_usd": 1.59,
+"frozen": false,
+"per_tx_max_usd": 0.05,
+"escalate_above_usd": null,
+"purchases_this_window": 23,
+"by_agent": {
+"worker-1": 0.2,
+"worker-3": 0.21
+},
+"by_recipient": {
+"0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840": 0.41
+},
+"recent": [
+{
+"id": "sp_a1b2c3d4e5f6",
+"at": 1763400000,
+"amount_usd": 0.01,
+"recipient": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"status": "spent",
+"agent": "worker-3"
+}
+],
+"expires_at": 1766000000
+}
+},
+"POST /api/tollbooth/v1/pay/verify": {
+"status": 200,
+"example_input": {
+"tx_hash": "0x...",
+"expected_pay_to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"expected_amount_usd": 0.001
+},
+"sample_response": {
+"tx_hash": "0x9c1e...(sample)",
+"network": "base",
+"asset": "USDC",
+"checked_at": "2026-11-17T23:10:00Z",
+"from_payment_response": false,
+"block": 38912345,
+"confirmations": 35,
+"tx_status": "success",
+"settled_at": "2026-11-17T23:08:50Z",
+"usdc_transfers": [
+{
+"from": "0x35fe83e8...(payer)",
+"to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"amount_usd": 0.001
+}
+],
+"payment": {
+"from": "0x35fe83e8...(payer)",
+"to": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
+"amount_usd": 0.001
+},
+"verdict": "SETTLED",
+"reasons": [
+"0.001 USDC moved from the payer to 0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840"
+]
+}
+},
+"POST /api/tollbooth/v1/delivery-check": {
+"status": 200,
+"example_input": {
+"url": "https://example-seller.com/v1/price",
+"method": "GET",
+"delivered": {
+"error": "upstream timeout"
+}
+},
+"sample_response": {
+"verdict": "MISMATCH",
+"basis": "example",
+"source": "seller_x402_discovery",
+"fields_checked": 0,
+"missing": [
+"symbol",
+"price",
+"as_of"
+],
+"type_mismatch": [],
+"empty": [],
+"extra_fields": [
+"error"
+],
+"reasons": [
+"the response looks like an error body, not the advertised result",
+"missing 3 advertised field(s): symbol, price, as_of"
+],
+"next": "Keep this as evidence: finance/refund-request turns it into a structured refund ask; receipt/put stores it."
+}
 }
 }

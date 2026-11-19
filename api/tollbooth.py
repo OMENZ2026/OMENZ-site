@@ -88,6 +88,9 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/market/job         $0.01   OMENZ Market job desk: working providers for a job + verified history + Guard request (/guarded $0.05)
   POST /api/tollbooth/v1/dispute/packet     $0.10   Dispute Packet: settlement proof + promise + delivery check + timeline + signed refund request
   POST /api/tollbooth/v1/po/issue|redeem    $0.01 / $0.002  Agent Purchase Order: signed single-use 'may spend $X with Y for Z', budget-backed
+  GET  /api/tollbooth/v1/loadouts           free    OMENZ Loadouts catalog: Agent Skins + robot loadouts (HOST MODE...), platform profiles, capability words
+  POST /api/tollbooth/v1/loadout/check|compile|simulate  $0.01 / $0.02 / $0.005  loadout x platform compatibility, platform plan + signed install receipt, sim run
+  POST /api/tollbooth/v1/robot/action-gate   $0.002  ALLOW / CONFIRM_FIRST / DENY before one physical robot action, signed receipt
   GET  /.well-known/mcp.json                 free    MCP discovery card
   GET  /api/tollbooth/v1/market/sellers?q=   $0.25   x402 seller lead list by capability (usage, prices, example endpoint)
 Every request is instrumented (key="tollbooth" events; no keys, contents or IPs logged; search routes keep only common capability words, see pricing-policy). Spec: omenz-stack/products/agent_pobox/SPEC.md
@@ -143,6 +146,7 @@ import guard  # noqa: E402
 import rescue  # noqa: E402
 import dispute  # noqa: E402
 import po  # noqa: E402
+import loadout  # noqa: E402
 import secret_scan  # noqa: E402
 import spend_gate  # noqa: E402
 import splits  # noqa: E402
@@ -708,6 +712,28 @@ _paid("POST", "po/redeem", "$0.002",
       {"token": "(PO token)", "amount_usd": 0.003, "pay_to": "0x9287e3102d411029025c7617d75245bfc7920f17", "url": "https://prices.genexxis.com/token-price"},
       {"properties": {"token": {"type": "string"}, "amount_usd": {"type": "number"}, "pay_to": {"type": "string"}, "seller": {"type": "string"},
                       "url": {"type": "string"}}, "required": ["token", "amount_usd"]}, body=True)
+
+_LO_IN = {"loadout": "host-mode", "platform": "unitree-g1"}
+_LO_SCHEMA = {"properties": {"loadout": {"description": "preset id (GET /v1/loadouts) or an omenz.loadout.v0 object"},
+                             "platform": {"description": "platform profile id or a custom {id, native, addon} manifest"},
+                             "allow_addons": {"type": "boolean"}}, "required": ["loadout"]}
+_paid("POST", "loadout/check", "$0.01",
+      "OMENZ Loadout Check: will this job loadout (Agent Skin or robot loadout like HOST MODE, PERSONAL TRAINER, RECEPTIONIST) run on this robot or agent? Provider-neutral capability words vs the platform profile (ROS 2 via ros-mcp, Unitree G1/Go2 via unitree_sdk2, digital MCP agent, OMENZ sim, or your own manifest): READY / DEGRADED / NOT_COMPATIBLE per capability and workflow, add-ons to install, safety-declaration gaps (e-stop, speed, no-go zones, contact), and what a human must confirm. Deterministic. By OMENZ.",
+      _LO_IN, _LO_SCHEMA, body=True)
+_paid("POST", "loadout/compile", "$0.02",
+      "OMENZ Loadout Compile: turn a loadout into the platform plan (nav2 action goals for ros-mcp, unitree_sdk2 calls, or MCP tools + an Authorize passport request) plus an Ed25519-signed install receipt (omenz.loadout-install.v0: allowed capabilities, speed/payload limits, no-go zones, confirm list, expiry). Dry-run plans from public SDK docs; OMENZ never sends commands to hardware. By OMENZ.",
+      {**_LO_IN, "platform": "ros2-mobile-manipulator", "valid_hours": 24}, _LO_SCHEMA, body=True)
+_paid("POST", "loadout/simulate", "$0.005",
+      "OMENZ Loadout Simulate: run one loadout workflow (e.g. HOST MODE drink_run) in the OMENZ 2D sim home: step-by-step trace, simulated time, and the action-gate decision on every step, so you see where it stops for a human yes before any robot moves. Deterministic, not physics. By OMENZ.",
+      {"loadout": "host-mode", "workflow": "drink_run", "auto_confirm": False},
+      {"properties": {"loadout": {}, "workflow": {"type": "string"}, "auto_confirm": {"type": "boolean"}, "context": {"type": "object"}},
+       "required": ["loadout"]}, body=True)
+_paid("POST", "robot/action-gate", "$0.002",
+      "OMENZ Robot Action Gate: call before ONE physical action from a third-party skill or loadout. Checks the signed install receipt (or loadout), the capability, speed and payload limits, no-go zones, forbidden capabilities (face ID), people/children nearby and the human-confirm list: ALLOW / CONFIRM_FIRST / DENY + a signed receipt for the audit trail. The robot's own safety system still has the last word. By OMENZ.",
+      {"install_token": "(from loadout/compile)", "action": {"cap": "arm.handover", "args": {"object": "cup"}},
+       "context": {"human_confirmed": False, "children_present": True}},
+      {"properties": {"install_token": {"type": "string"}, "loadout": {}, "action": {"type": "object"}, "context": {"type": "object"}},
+       "required": ["action"]}, body=True)
 
 
 def _attach_output_examples():
@@ -1874,6 +1900,51 @@ def po_issue(request: Request, body: dict = Body(...), x_budget_key: str | None 
 def po_redeem(request: Request, body: dict = Body(...), x_budget_key: str | None = Header(None)):
     request.state.extra["action"] = "po_redeem"
     return _locker_call(po.redeem, body, x_budget_key)
+
+
+@app.get(BASE + "/v1/loadouts")
+def loadouts_catalog(request: Request):
+    request.state.extra["action"] = "loadouts_catalog"
+    return loadout.catalog()
+
+
+def _lo_log(request, body, action):
+    request.state.extra["action"] = action
+    lo, pf = (body or {}).get("loadout"), (body or {}).get("platform")
+    request.state.extra["loadout"] = lo if isinstance(lo, str) and lo in loadout.PRESETS else ("custom" if lo else None)
+    request.state.extra["platform"] = pf if isinstance(pf, str) and pf in loadout.PLATFORMS else ("custom" if pf else None)
+
+
+@app.post(BASE + "/v1/loadout/check")
+def loadout_check(request: Request, body: dict = Body(...)):
+    _lo_log(request, body, "loadout_check")
+    r = _locker_call(loadout.check, body)
+    if isinstance(r, dict):
+        request.state.extra["verdict"] = r.get("verdict")
+        request.state.extra["missing_caps"] = (r.get("summary") or {}).get("blocking", [])[:8]
+    return r
+
+
+@app.post(BASE + "/v1/loadout/compile")
+def loadout_compile(request: Request, body: dict = Body(...)):
+    _lo_log(request, body, "loadout_compile")
+    return _locker_call(loadout.compile_, body)
+
+
+@app.post(BASE + "/v1/loadout/simulate")
+def loadout_simulate(request: Request, body: dict = Body(...)):
+    _lo_log(request, body, "loadout_simulate")
+    return _locker_call(loadout.simulate, body)
+
+
+@app.post(BASE + "/v1/robot/action-gate")
+def robot_action_gate(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "robot_action_gate"
+    r = _locker_call(loadout.gate, body)
+    if isinstance(r, dict):
+        request.state.extra["verdict"] = r.get("decision")
+        request.state.extra["cap"] = ((body or {}).get("action") or {}).get("cap") if isinstance((body or {}).get("action"), dict) else None
+    return r
 
 
 @app.get(BASE + "/v1/market/cheapest")

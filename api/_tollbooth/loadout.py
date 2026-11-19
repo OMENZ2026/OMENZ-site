@@ -115,7 +115,7 @@ P_DIGITAL = {
     "native": {"speech.say": "text reply", "speech.listen": "text input", "display.show": "rich output",
                "notify.owner": "message / email tool", "timer.count": "scheduler", "home.music": "smart-home API tool",
                "home.lights": "smart-home API tool"},
-    "addon": {}, "verified_on_hardware": False,
+    "addon": {}, "verified_on_hardware": False, "body": False,
 }
 PLATFORMS = {p["id"]: p for p in (P_ROS2, P_G1, P_GO2, P_SIM, P_DIGITAL)}
 
@@ -164,7 +164,7 @@ PRESETS = {
                    "tools": ["timer.count", "home.music"], "context": {"jacket_fields": ["fitness_level", "session_length_min", "avoid_moves"]},
                    "permissions": {**SAFE_HOME, "require_human_confirm": ["gesture.demo_exercise"], "no_go_zones": ["stairs"]},
                    "behaviors": ["warm_up", "set", "cool_down"]},
-        "requires": ["speech.say", "speech.listen", "timer.count", "safety.estop"],
+        "requires": ["speech.say", "speech.listen", "timer.count"],
         "optional": ["gesture.demo_exercise", "display.show", "home.music", "sense.detect_people"],
         "workflows": [_wf("set", ("speech.say", {"text": "10 squats, with me!"}), ("gesture.demo_exercise", {"move": "squat"}),
                           ("timer.count", {"reps": 10}), ("speech.say", {"text": "Nice. Water break."}))],
@@ -254,7 +254,15 @@ def _resolve(body):
     if not isinstance(pf, dict) or not isinstance(pf.get("native", {}), dict):
         raise LockerError(400, "platform: a profile id or {id, native:{cap: how}, addon:{cap: how}}")
     pf = {"id": str(pf.get("id") or "custom")[:60], "name": pf.get("name") or "custom", "native": pf.get("native") or {},
-          "addon": pf.get("addon") or {}, "bridge": pf.get("bridge"), "verified_on_hardware": bool(pf.get("verified_on_hardware"))}
+          "addon": pf.get("addon") or {}, "bridge": pf.get("bridge"), "verified_on_hardware": bool(pf.get("verified_on_hardware")),
+          "body": pf.get("body", True) is not False}
+    # Bodies: any physical step makes the e-stop required. No body: safety.* and physical steps don't apply.
+    caps_all = set(req) | set(lo.get("optional") or [])
+    if pf["body"] and caps_all & PHYSICAL and "safety.estop" not in req:
+        lo = {**lo, "requires": req + ["safety.estop"]}
+    if not pf["body"]:
+        lo = {**lo, "requires": [c for c in req if not c.startswith("safety.")],
+              "optional": [c for c in lo.get("optional") or [] if not c.startswith("safety.") and c not in PHYSICAL]}
     return lo, pf, unknown
 
 
@@ -273,11 +281,9 @@ def _safety_gaps(lo, pf):
     caps = set(lo.get("requires") or []) | set(lo.get("optional") or [])
     gaps = []
     physical = caps & PHYSICAL
-    if physical and lo.get("kind") != "digital":
+    if physical and lo.get("kind") != "digital" and pf.get("body", True):
         if "safety.estop" not in pf["native"]:
             gaps.append("platform shows no e-stop: do not run physical behaviors")
-        if "safety.estop" not in (lo.get("requires") or []):
-            gaps.append("loadout does not require safety.estop")
         if "max_speed_mps" not in perm:
             gaps.append("permissions.max_speed_mps not declared")
         if "contact_with_people" not in perm:

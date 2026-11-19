@@ -45,6 +45,10 @@
       "destination": "/api/tollbooth"
     },
     {
+      "source": "/.well-known/x402list.txt",
+      "destination": "/api/tollbooth"
+    },
+    {
       "source": "/.well-known/402index-verify.txt",
       "destination": "/api/tollbooth"
     },

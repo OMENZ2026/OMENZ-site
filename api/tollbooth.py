@@ -1364,6 +1364,13 @@ def index402_verify():
     return PlainTextResponse("2fada1cb216de389e3560d4579a52f9f99ad17ac06f2f83d3a0e58ea20911d10")
 
 
+@app.get("/.well-known/x402list.txt")
+def x402list_verify():
+    """x402-list.com owner-update domain proof (one-time token, request 8db56da6, 2026-11-19)."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("x402list-verify-__hbxBYGCSSMxV92Z0XRTIPY-FX8CQxbn6FIs72LP24\n")
+
+
 @app.get("/openapi.json")
 @app.get(BASE + "/openapi.json")
 def openapi_doc():

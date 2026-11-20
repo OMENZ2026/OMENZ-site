@@ -17,7 +17,7 @@ import urllib.parse
 import business_facts as bf
 from checker import visible_text
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 NOTICE = re.compile(
     r"[^.!?\n|*]{0,70}\b(temporar(?:y|ily) closed|closed (?:for|on|until|through|today|tomorrow|this|all day)|"
     r"(?:holiday|special|seasonal|winter|summer|thanksgiving|christmas) hours|we(?:'| wi)ll be closed|"
@@ -86,6 +86,17 @@ def lookup(url):
     out["phone"] = _f(phones[0]["value"], phones[0]["confidence"], phones[0]["sources"]) if phones else         _unknown("no phone shown on the pages read (tap-to-call link or visible text)")
     out["other_phones"] = [p["value"] for p in phones[1:3]]
     a = r.get("address")
+    # 11-20 fix: on a LOCATION page (/location/pasadena/), the address whose structured data comes from THAT page wins.
+    # Multi-location sites list every branch in the footer, so "seen on most pages" picked another city (Boston for Pasadena).
+    if re.search(r"/(locations?|stores?|branches?)/[^/]+", in_path):
+        here = "schema:" + in_path.rstrip("/")
+        own = [c for c in [a] + (r.get("address_candidates") or []) if c and any(src.rstrip("/") == here for src in c["sources"])]
+        if own:
+            a = dict(own[0], confidence="high")
+        elif a and not any(src.rstrip("/") == "page_text:" + in_path.rstrip("/") for src in a["sources"]):
+            a = None
+    if a and not a.get("postal_code") and re.fullmatch(r"\d{5}(-\d{4})?", str(a.get("country") or "")):
+        a = dict(a, postal_code=a["country"], country=None)  # ZIP parsed into the country slot
     street_seen = bool(a) and a["street"] and a["street"].lower() in seen_text
     if a and a["confidence"] == "high" and street_seen:
         out["address"] = _f({k: a.get(k) for k in ("street", "city", "region", "postal_code", "country")},

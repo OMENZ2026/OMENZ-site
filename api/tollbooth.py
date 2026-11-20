@@ -53,7 +53,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/context-diet        $0.002  Context Diet
   GET  /api/tollbooth/v1/status              free    Machine Commerce Status Page (OMENZ)
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
-  GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
+  GET  /api/tollbooth/swapmeet/v1[/search|/new|/hot], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
   POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.002  Job Jacket: check a job's minimum working state out/in
   POST /api/tollbooth/v1/wallet-watch $0.01, GET wallet-watch/report $0.002   Wallet Watch: low-balance / low-runway alert to your PO Box
   POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.002   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
@@ -1212,6 +1212,22 @@ def swapmeet_search(request: Request, q: str = Query("")):
     request.state.extra["need_words"] = market.need_words(q)
     r = swapmeet.search(q)
     return JSONResponse(r, status_code=422 if "error" in r else 200)
+
+
+_HOT = {"at": 0, "data": None}
+
+
+@app.get(BASE + "/swapmeet/v1/hot")
+def swapmeet_hot():
+    """Free. What's hot this week at the Swap Meet: biggest movers by paying wallets + busy newcomers (snapshot deltas)."""
+    if not _HOT["data"] or time.time() - _HOT["at"] > 3600:
+        try:
+            req = urllib.request.Request(f"https://api.apify.com/v2/key-value-stores/{market.STORE}/records/swapmeet_hot",
+                                         headers={"Authorization": "Bearer " + os.environ.get("APIFY_LOG_TOKEN", "")})
+            _HOT.update(at=time.time(), data=json.loads(urllib.request.urlopen(req, timeout=15).read()))
+        except Exception as e:
+            return JSONResponse({"error": "hot list unavailable", "detail": str(e)[:120]}, status_code=503)
+    return _HOT["data"]
 
 
 @app.get(BASE + "/swapmeet/v1/new")

@@ -72,6 +72,10 @@
 
   <div id="aisles"></div>
 
+  <h2>What's hot this week <span class="tag">HOT</span></h2>
+  <p class="stats" id="hot-meta">Loading the week's movement…</p>
+  <div class="grid" id="hot"></div>
+
   <h2>New arrivals <span class="tag">FRESH</span></h2>
   <div class="grid" id="new"><p class="stats">No new booths yet. Be the first.</p></div>
 
@@ -129,6 +133,14 @@ async function bring() {
   else { m.className = 'msg no'; m.innerText = (d.reason || d.error || 'Could not open the booth') + (d.fix ? ' ' + d.fix : ''); }
 }
 load();
+fetch(API + '/hot').then(r => r.json()).then(h => {
+  if (!h || h.error) { document.getElementById('hot-meta').innerText = 'Weekly movement not available right now.'; return; }
+  document.getElementById('hot-meta').innerText = `${h.from} → ${h.to}: ${h.booths.new.toLocaleString()} new booths, ${h.booths.closed.toLocaleString()} closed, ${h.sellers.new} new sellers. Payers = unique paying wallets (30 days).`;
+  const card = (x, tag) => `<div class="booth"><div class="name">${esc(x.host)}</div><div class="what">${esc(x.what || 'No description')}</div>
+    <div class="row"><span class="tag">${tag}</span><span class="stats">${esc(x.payers30)} payers${x.payers_change ? ' (+' + esc(x.payers_change) + ' this week)' : ''}</span></div>
+    <div class="row"><span class="stats">check before paying: /v1/market/reliability</span><a href="${esc(x.example)}" rel="nofollow noopener" target="_blank">Visit</a></div></div>`;
+  document.getElementById('hot').innerHTML = (h.biggest_movers || []).slice(0, 6).map(x => card(x, 'MOVER')).join('') + (h.busy_newcomers || []).slice(0, 6).map(x => card(x, 'NEW')).join('');
+}).catch(() => { document.getElementById('hot-meta').innerText = 'Weekly movement not available right now.'; });
 </script>
 </body>
 </html>

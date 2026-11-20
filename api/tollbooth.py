@@ -1760,7 +1760,7 @@ def jacket_history(request: Request, x_jacket_id: str | None = Header(None), x_j
 @app.get(BASE + "/v1/track-record/rollup")
 def track_record_rollup():
     try:
-        return track_record.rollup()
+        return track_record.rollup(routes=ROUTES)
     except Exception as e:
         return JSONResponse({"error": "rollup failed", "detail": str(e)[:160]}, status_code=503)
 

@@ -54,7 +54,7 @@ def _kv(method, key, body=None):
 def _events(since_ts):
     tok = os.environ.get("APIFY_LOG_TOKEN", "")
     out, off = [], 0
-    while off < 20000:
+    while off < 80000:  # was 20000: truncated days once traffic passed ~10k/day (fixed 11-20)
         u = (f"https://api.apify.com/v2/datasets/{DATASET}/items?desc=1&limit=1000&offset={off}&clean=1"
              "&fields=key,ts,route,status,paid,latency_ms,ua_class")
         b = json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"Authorization": "Bearer " + tok}), timeout=20))
@@ -70,7 +70,7 @@ def _tool(route):
     return r.split("/v1/", 1)[1].split("/")[0].split("?")[0] if "/v1/" in r else None
 
 
-def rollup(force=False):
+def rollup(force=False, routes=None):
     rec = _kv("GET", EARNED_KEY) or {"days": {}, "rolled_at": 0}
     if not force and time.time() - rec.get("rolled_at", 0) < 3600:
         return {"rolled": False, "reason": "rolled up less than an hour ago", "days_recorded": len(rec["days"])}
@@ -97,10 +97,48 @@ def rollup(force=False):
             lat = sorted(t.pop("lat"))
             t["median_latency_ms"] = lat[len(lat) // 2] if lat else None
         rec["days"][day] = tools
+    if routes:
+        try:
+            rec.setdefault("probes", {})[time.strftime("%Y-%m-%d", time.gmtime())] = self_probe(routes)
+            rec["probes"] = dict(sorted(rec["probes"].items())[-365:])
+        except Exception as e:
+            rec["probe_error"] = str(e)[:160]
     rec["days"] = dict(sorted(rec["days"].items())[-365:])
     rec["rolled_at"] = int(time.time())
     _kv("PUT", EARNED_KEY, rec)
     return {"rolled": True, "days_updated": sorted(days), "days_recorded": len(rec["days"])}
+
+
+def self_probe(routes, base="https://www.omenz.org"):
+    """Daily self-probe (11-20): one UNPAID request per paid route. OK = HTTP 402 with a PAYMENT-REQUIRED header
+    (the route is up and selling). Builds an uptime history even on days with no outside traffic."""
+    from concurrent.futures import ThreadPoolExecutor
+    def one(key):
+        method, path = key.split(" ", 1)
+        t0 = time.time()
+        try:
+            req = urllib.request.Request(base + path, method=method, data=(b"{}" if method == "POST" else None),
+                                         headers={"Content-Type": "application/json", "User-Agent": "omenz-selfprobe/1"})
+            urllib.request.urlopen(req, timeout=12)
+            return _tool(path), False, int((time.time() - t0) * 1000), 200
+        except urllib.error.HTTPError as e:
+            return _tool(path), e.code == 402 and bool(e.headers.get("payment-required")), int((time.time() - t0) * 1000), e.code
+        except Exception:
+            return _tool(path), False, None, None
+    out = {}
+    with ThreadPoolExecutor(16) as ex:
+        for tool, ok, ms, code in ex.map(one, [k for k in routes if "{" not in k]):
+            if not tool:
+                continue
+            a = out.setdefault(tool, {"probes": 0, "ok": 0, "ms": []})
+            a["probes"] += 1
+            a["ok"] += ok
+            if ms is not None:
+                a["ms"].append(ms)
+    for a in out.values():
+        ms = sorted(a.pop("ms"))
+        a["median_ms"] = ms[len(ms) // 2] if ms else None
+    return out
 
 
 def _earned():
@@ -125,7 +163,16 @@ def _earned():
     for a in per.values():
         a["success_rate_30d"] = round(1 - a["server_errors_30d"] / a["calls_30d"], 4) if a["calls_30d"] else None
         a["paid_success_rate_30d"] = round(a["completed_30d"] / a["paid_30d"], 4) if a["paid_30d"] else None
-    return per, {"days_recorded": len(rec["days"]), "first_day": min(rec["days"]) if rec["days"] else None,
+    for day, tools in (rec.get("probes") or {}).items():
+        if day < cut:
+            continue
+        for tool, pr in tools.items():
+            a = per.setdefault(tool, {"days_seen": 0, "calls_30d": 0, "quoted_30d": 0, "paid_30d": 0, "completed_30d": 0,
+                                      "server_errors_30d": 0, "first_seen": day, "success_rate_30d": None, "paid_success_rate_30d": None})
+            a["selfprobe_days_30d"] = a.get("selfprobe_days_30d", 0) + 1
+            a["selfprobe_ok_days_30d"] = a.get("selfprobe_ok_days_30d", 0) + (pr["ok"] == pr["probes"])
+            a["selfprobe_last_ms"] = pr.get("median_ms")
+    return per, {"days_recorded": len(rec["days"]), "selfprobe_days": len(rec.get("probes") or {}), "first_day": min(rec["days"]) if rec["days"] else None,
                  "rolled_at": rec.get("rolled_at")}
 
 

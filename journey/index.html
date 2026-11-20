@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Journey | OMENZ</title>
+  <meta name="description" content="Every stop an AI agent makes on the way to getting work done, and the OMENZ tool that handles it. Discover, trust, authorize, pay, verify, recover." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="Agent Journey | OMENZ" />
+  <meta property="og:description" content="Where does an agent have to stop on its way to getting work done? Just call OMENZ. We handle that part." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#060a14; --panel:#0c1424; --panel2:#0f1a30; --line:#1d2a44; --text:#f4f6fa; --muted:#b3bccb; --dim:#7c889c; --blue:#1e8cff; --glow:rgba(30,140,255,.45); }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:var(--text); line-height:1.55;
+           background: radial-gradient(1200px 700px at 50% -10%, #0d2a5a 0%, var(--bg) 60%) fixed, var(--bg); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+    header { display:flex; align-items:center; gap:10px; padding:16px 0; border-bottom:1px solid var(--line); }
+    header img { width:34px; }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    header nav { margin-left:auto; display:flex; gap:14px; font-size:.9rem; }
+    header nav a { color:var(--muted); font-weight:400; letter-spacing:0; }
+    .hero { text-align:center; padding: 40px 0 10px; }
+    .hero img { width:110px; }
+    .hero h1 { margin: 12px 0 6px; font-size: clamp(1.8rem, 5.5vw, 2.8rem); }
+    .hero h1 span { color: var(--blue); text-shadow: 0 0 18px var(--glow); }
+    .hero p { margin: 0 auto; max-width: 640px; color: var(--muted); }
+    .path { position: relative; margin: 34px 0 0; padding-left: 34px; }
+    .path::before { content:""; position:absolute; left:12px; top:6px; bottom:6px; width:2px; background: linear-gradient(var(--blue), rgba(30,140,255,.15)); box-shadow: 0 0 10px var(--glow); }
+    .stop { position:relative; margin: 0 0 16px; background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+    .stop::before { content:""; position:absolute; left:-28px; top:20px; width:14px; height:14px; border-radius:50%; background: var(--blue); box-shadow: 0 0 14px var(--glow); }
+    .stop h2 { margin:0 0 2px; font-size: 1.05rem; letter-spacing: 2px; color: var(--blue); }
+    .stop .q { margin: 0 0 10px; color: var(--muted); }
+    .tools { display:flex; flex-wrap:wrap; gap:8px; }
+    .tool { display:inline-flex; gap:8px; align-items:baseline; border:1px solid var(--line); border-radius: 10px; padding: 7px 10px; font-size:.9rem; background:#08101e; }
+    .tool b { font-weight:700; }
+    .tool code { color: var(--dim); font-size: .78rem; }
+    .tool .p { color: var(--blue); font-size:.82rem; }
+    .cta { text-align:center; margin: 34px 0 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .cta a { display:inline-block; background: var(--blue); color:#fff; text-decoration:none; border-radius:10px; padding:12px 18px; font-weight:700; box-shadow: 0 0 18px var(--glow); }
+    .cta a.ghost { background: transparent; border:1px solid var(--line); box-shadow:none; }
+    .note { color: var(--dim); font-size:.85rem; margin-top: 26px; text-align:center; }
+    a { color: var(--blue); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/omenz-logo-glow.png" alt="" /><a href="/">OMENZ</a>
+      <nav><a href="/skins/">Agent Skins</a><a href="/swapmeet/">Swap Meet</a><a href="/api/tollbooth/ayne/v1">Try free</a></nav>
+    </header>
+
+    <section class="hero">
+      <img src="/omenz-logo-glow.png" alt="OMENZ" />
+      <h1>Every stop on the way to <span>getting the job done</span></h1>
+      <p>Where does an agent have to stop between "I have a job" and "it's done"? At each stop, OMENZ makes it faster, safer or cheaper.
+         Just call OMENZ. We handle that part.</p>
+    </section>
+
+    <div class="path" id="path"></div>
+
+    <div class="cta">
+      <a href="/api/tollbooth/ayne/v1">Try every tool free (AYNE)</a>
+      <a class="ghost" href="/skins/">Equip a whole job (Skins)</a>
+      <a class="ghost" href="/api/tollbooth/v1/conventions">How the tools chain</a>
+    </div>
+    <p class="note">Pay per call in USDC on Base (x402): no account, no API key. Errors are never charged.
+      Live prices: <a href="/api/tollbooth">service index</a> · <a href="/openapi.json">openapi.json</a> · <a href="/llms.txt">llms.txt</a></p>
+  </div>
+  <script>
+  const STOPS = [
+    ["DISCOVER", "Which paid tool can do this job?", [["Capability Finder", "GET /v1/market/find"], ["Market job desk", "POST /v1/market/job"], ["Cheapest working tool", "GET /v1/market/cheapest"]]],
+    ["TRUST", "Is this seller real and reliable?", [["Reliability score", "GET /v1/market/reliability"], ["Payee check", "GET /v1/market/payee"], ["Seller track record", "GET /v1/seller-record"], ["Proof of life", "GET /v1/alive"]]],
+    ["AUTHORIZE", "Should I pay this, right now, at this price?", [["Authorize", "POST /v1/authorize"], ["Spend gate", "POST /v1/spend-gate"], ["Permission Passport", "POST /v1/passport/check"], ["Purchase Order", "POST /v1/po/issue"]]],
+    ["BUDGET", "Can the team afford it?", [["Shared Budget", "POST /v1/budget/spend"], ["Delegation Budget", "POST /v1/budget/delegate"], ["Wallet runway", "GET /v1/wallet/runway"], ["Wallet Watch", "POST /v1/wallet-watch"]]],
+    ["PAY", "Pay safely, once.", [["Transaction Guard", "POST /v1/guard"], ["Checkout (open)", "POST /v1/checkout/open"], ["Settlement cost", "GET /v1/settlement-cost"], ["Allowance check", "GET /v1/allowance"]]],
+    ["VERIFY", "Did the money really settle?", [["Payment Verify", "POST /v1/pay/verify"], ["Transaction Decode", "GET /v1/tx/decode"], ["Token balance", "GET /v1/token/balance"]]],
+    ["RECEIVE + VALIDATE", "Did I get what I paid for?", [["Delivery Check", "POST /v1/delivery-check"], ["Checkout (close)", "POST /v1/checkout/close"], ["Claim evidence", "POST /v1/claim-evidence"], ["Checkpoint milestones", "POST /v1/checkpoint/submit"]]],
+    ["RECORD", "Keep proof.", [["Spend Receipt", "POST /v1/spend-receipt"], ["Receipt Locker", "POST /v1/receipt/put"], ["Job Ledger", "POST /v1/ledger/append"], ["Evidence bundle", "POST /v1/evidence/bundle"]]],
+    ["HAND OFF", "Pass the work on without losing state.", [["Job Jacket", "POST /v1/jacket/checkout"], ["Handoff Packager", "POST /v1/handoff/pack"], ["Agent Locker", "POST /v1/locker/put"], ["Agent PO Box", "POST /v1/pobox/drop"]]],
+    ["RECOVER", "Something went wrong. Now what?", [["Settlement Rescue", "POST /v1/settlement/rescue"], ["Dispute Packet", "POST /v1/dispute/packet"], ["Failure Receipt", "POST /v1/failure/put"], ["Substitute provider", "GET /v1/uptime/report"]]],
+    ["CONTINUE", "Keep the job running.", [["Work queue", "POST /v1/queue/claim"], ["Uptime Watch", "POST /v1/uptime/watch"], ["Freshness", "GET /v1/freshness"], ["Changed?", "GET /v1/changed"]]]
+  ];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function draw(prices) {
+    document.getElementById("path").innerHTML = STOPS.map(([name, q, tools]) =>
+      `<div class="stop"><h2>${esc(name)}</h2><p class="q">${esc(q)}</p><div class="tools">` +
+      tools.map(([label, route]) => { const p = prices[route]; return `<span class="tool"><b>${esc(label)}</b><code>${esc(route)}</code>${p ? `<span class="p">${esc(p)}</span>` : ""}</span>`; }).join("") +
+      `</div></div>`).join("");
+  }
+  draw({});
+  fetch("/openapi.json").then(r => r.json()).then(o => {
+    const prices = {};
+    for (const [path, ops] of Object.entries(o.paths || {})) for (const [m, op] of Object.entries(ops)) {
+      const x = op["x-payment-info"] || {}; const amt = x.price && typeof x.price === "object" ? x.price.amount : x.price;
+      const short = path.replace(/^\/api\/tollbooth/, "");
+      if (amt != null) prices[m.toUpperCase() + " " + short] = "$" + String(amt).replace(/^\$/, "");
+    }
+    draw(prices);
+  }).catch(() => {});
+  </script>
+</body>
+</html>

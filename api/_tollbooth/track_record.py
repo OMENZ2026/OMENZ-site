@@ -52,16 +52,29 @@ def _kv(method, key, body=None):
 
 
 def _events(since_ts):
+    """Events since since_ts, newest first. Pages are fetched 8 at a time in parallel (11-20): one-by-one paging of a busy
+    day (20k-40k events) blew the 30 s function limit."""
+    from concurrent.futures import ThreadPoolExecutor
     tok = os.environ.get("APIFY_LOG_TOKEN", "")
-    out, off = [], 0
-    while off < 80000:  # was 20000: truncated days once traffic passed ~10k/day (fixed 11-20)
+
+    def page(off):
         u = (f"https://api.apify.com/v2/datasets/{DATASET}/items?desc=1&limit=1000&offset={off}&clean=1"
              "&fields=key,ts,route,status,paid,latency_ms,ua_class")
-        b = json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"Authorization": "Bearer " + tok}), timeout=20))
-        out += b
-        off += len(b)
-        if len(b) < 1000 or str(b[-1].get("ts", "")) < since_ts:
-            break
+        return json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"Authorization": "Bearer " + tok}), timeout=15))
+
+    out, off = [], 0
+    with ThreadPoolExecutor(8) as ex:
+        while off < 80000:
+            pages = list(ex.map(page, range(off, off + 8000, 1000)))
+            off += 8000
+            done = False
+            for b in pages:
+                out += b
+                if len(b) < 1000 or (b and str(b[-1].get("ts", "")) < since_ts):
+                    done = True
+                    break
+            if done:
+                break
     return [e for e in out if str(e.get("ts", "")) >= since_ts]
 
 

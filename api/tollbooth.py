@@ -767,6 +767,39 @@ else:
 server.register("eip155:*", ExactEvmServerScheme())
 server.register_extension(bazaar_resource_server_extension)
 
+
+# Stale-402 tolerance (11-20). Buyers who reuse an earlier 402 were rejected locally whenever we edited a route's
+# description/example (extension_echo_mismatch) or any non-money field (No matching payment requirements); a funded
+# repeat Authorize payer was turned away 4 times this way. Money terms stay strict: scheme, network, asset and payTo must
+# match and the signed amount must be at least today's price. The facilitator still verifies the signature against OUR
+# current requirements, so this only stops us refusing good money over discovery text.
+def _lenient_match(available, payload):
+    a = getattr(payload, "accepted", None)
+    if a is None:
+        return None
+    for req in available:
+        try:
+            if (req.scheme == a.scheme and req.network == a.network and str(req.asset).lower() == str(a.asset).lower()
+                    and str(req.pay_to).lower() == str(a.pay_to).lower() and int(a.amount) >= int(req.amount)):
+                return req
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+_strict_validate_extensions = server.validate_extensions
+
+
+def _validate_extensions_money_only(payment_required, payment_payload):
+    ext = getattr(payment_payload, "extensions", None)
+    if ext and "bazaar" in ext:  # bazaar = discovery metadata only; an old echo must not block a payment
+        payment_payload = payment_payload.model_copy(update={"extensions": {k: v for k, v in ext.items() if k != "bazaar"}})
+    return _strict_validate_extensions(payment_required, payment_payload)
+
+
+server.find_matching_requirements = _lenient_match
+server.validate_extensions = _validate_extensions_money_only
+
 app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 _mw = None
 

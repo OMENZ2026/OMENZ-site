@@ -901,12 +901,22 @@ async def x402_mw(request, call_next):
         return await _ayne(request, call_next, t0)
     resp = await _mw(request, call_next)
     path = request.url.path
+    rid = None
+    if path.startswith(BASE + "/v1/"):
+        # composability v0 (11-20): one request id + tool name on every response, so agents can chain and cite calls
+        rid = "rq_" + os.urandom(8).hex()
+        try:
+            resp.headers["X-OMENZ-Request-Id"] = rid
+            resp.headers["X-OMENZ-Tool"] = path[len(BASE) + 4:].split("?")[0]
+        except Exception:
+            pass
     if path.startswith(BASE + "/v1/") or path == BASE + "/swapmeet/v1/search":
         payer = _payer(request)
         ev = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "tollbooth", "route": path[len(BASE):],
               "method": request.method, "status": resp.status_code, "latency_ms": int((time.time() - t0) * 1000),
               "paid": bool(payer) and resp.status_code < 400, "payer": payer, "price": PRICE_OF.get(path, "free"),
               "ua_class": _ua_class(request.headers.get("user-agent")), "country": request.headers.get("x-vercel-ip-country", ""),
+              "request_id": rid, "parent_request_id": (request.headers.get("x-omenz-parent-request-id") or "")[:40] or None,
               **getattr(request.state, "extra", {})}
         if payer and resp.status_code == 402 and request.headers.get("x-payment") and not request.headers.get("payment-signature"):
             # x402 v1 client (X-PAYMENT): the v2 server ignores it silently; tell the buyer how to pay instead (11-20)
@@ -1240,6 +1250,29 @@ def needs_route(request: Request, body: dict = Body(...)):
     code, r = needs.submit(body, request.headers.get("user-agent"))
     request.state.extra.update({"action": "need", "need_ok": code == 200})
     return JSONResponse(r, status_code=code)
+
+
+@app.get(BASE + "/v1/conventions")
+def conventions_route():
+    """Free. How OMENZ tools fit together (composability v0, 11-20)."""
+    return {"schema": "omenz.conventions.v0", "price": "free",
+            "request_ids": {"response_headers": ["X-OMENZ-Request-Id (rq_...)", "X-OMENZ-Tool"],
+                            "chain": "send X-OMENZ-Parent-Request-Id: <rq_ of the previous OMENZ call> to link a workflow (Authorize -> Guard -> Pay -> Checkout close -> Receipt)"},
+            "signed_records": {"shape": "omenz.<thing>.v<N> with issuer 'omenz.org' and at/iat (unix seconds)",
+                               "signature": "Ed25519; verify offline with GET /v1/passport/key", "kinds": sorted([
+                                   "authorization", "attestation", "spend-receipt", "sale-receipt", "settlement-rescue", "dispute-packet",
+                                   "purchase-order", "po-redemption", "purchase-snapshot", "refund-request", "evidence-bundle", "contract",
+                                   "checkpoint", "checkpoint-receipt", "loadout-install", "action-gate", "handoff"])},
+            "id_prefixes": {"az_": "authorization", "po_": "purchase order", "ct_": "contract", "ck_": "checkpoint", "eb_": "evidence bundle",
+                            "rr_": "refund request", "li_": "loadout install", "box_": "PO box", "rq_": "request"},
+            "outcomes": {"bad_input": "BAD_INPUT (in 'verdict' or 'status'; HTTP 200 or 4xx, never charged on 4xx)",
+                         "upstream_down": "UNAVAILABLE", "unknown_not_guessed": "fields we can't back are null, never invented"},
+            "money": {"protocol": "x402 v2 (PAYMENT-SIGNATURE); v1 X-PAYMENT gets an explicit upgrade message",
+                      "accepted_if": "scheme, network, asset, payTo match and signed amount >= today's price (older 402 copies still work)",
+                      "errors_not_charged": True, "pricing_policy": "/v1/pricing-policy"},
+            "workflow_examples": [["market/job", "guard", "(pay seller)", "checkout/close", "settlement/rescue if weird"],
+                                  ["checkpoint/create", "checkpoint/submit per milestone", "checkpoint/status"],
+                                  ["loadout/compile", "passport/issue", "jacket/create", "robot/action-gate per physical step"]]}
 
 
 @app.get(BASE + "/v1/track-record")
@@ -2232,4 +2265,4 @@ async def doubled_path_fix(request: Request, call_next):
 from starlette.middleware.cors import CORSMiddleware  # noqa: E402
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "HEAD", "OPTIONS"], allow_headers=["*"],
-                   expose_headers=["PAYMENT-REQUIRED", "Payment-Required", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE", "x-ayne"], max_age=86400)
+                   expose_headers=["PAYMENT-REQUIRED", "Payment-Required", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE", "x-ayne", "X-OMENZ-Request-Id", "X-OMENZ-Tool"], max_age=86400)

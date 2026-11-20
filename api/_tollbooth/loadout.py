@@ -209,7 +209,7 @@ PRESETS = {
     },
     "skin-daycare-starter": {
         "schema": "omenz.loadout.v0", "id": "skin-daycare-starter", "name": "DAYCARE STARTER package (digital agent)", "kind": "digital",
-        "for": "Founder example: 'I plan on starting a daycare.' Research jurisdiction rules, organize the paperwork checklist, track costs. Prepares; a licensed human files and signs.",
+        "for": "Starting a daycare? Research your city and state rules, organize the paperwork checklist, track costs. Prepares; a licensed human files and signs.",
         "layers": {"skin": {"name": "Business Starter: Daycare"}, "persona": {"tone": "organized"},
                    "job": {"title": "startup assistant", "goals": ["licensing checklist for the city/state", "budget", "document folder"]},
                    "tools": ["POST /v1/claim-evidence", "POST /v1/ledger/create", "POST /v1/finance/forecast", "POST /v1/handoff/pack"],

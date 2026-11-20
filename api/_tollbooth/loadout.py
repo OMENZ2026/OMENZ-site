@@ -303,7 +303,12 @@ def catalog():
     return {"version": VERSION, "schema": "omenz.loadout.v0",
             "flow": "HUMAN REQUEST -> OMENZ LOADOUT -> PLATFORM ADAPTER -> ROBOT CAPABILITIES",
             "presets": [{"id": p["id"], "name": p["name"], "kind": p["kind"], "for": p["for"], "requires": p["requires"],
-                         "optional": p["optional"]} for p in PRESETS.values()],
+                         "optional": p["optional"],
+                         "job": ((p.get("layers") or {}).get("job") or {}),
+                         "tools": ((p.get("layers") or {}).get("tools") or []),
+                         "limits": {k: v for k, v in ((p.get("layers") or {}).get("permissions") or {}).items()
+                                    if k in ("spend_cap_usd_per_day", "forbidden", "require_human_confirm", "max_speed_mps", "contact_with_people")}}
+                        for p in PRESETS.values()],
             "platforms": [{"id": p["id"], "name": p["name"], "bridge": p["bridge"], "verified_on_hardware": p["verified_on_hardware"]}
                           for p in PLATFORMS.values()],
             "packs": list(PACKS.values()),

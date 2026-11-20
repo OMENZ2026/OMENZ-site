@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Skins | OMENZ</title>
+  <meta name="description" content="What do you need your agent to do? Pick a job, equip the skin. OMENZ handles the tools, limits and permissions behind the button." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="Agent Skins | OMENZ" />
+  <meta property="og:description" content="Don't just dress the agent. Equip it. Pick a job; OMENZ handles the nerd stuff." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#060a14; --panel:#0c1424; --panel2:#0f1a30; --line:#1d2a44; --text:#f4f6fa; --muted:#b3bccb; --dim:#7c889c; --blue:#1e8cff; --glow:rgba(30,140,255,.45); }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:var(--text); line-height:1.55;
+           background: radial-gradient(1200px 700px at 50% -10%, #0d2a5a 0%, var(--bg) 60%) fixed, var(--bg); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px 64px; }
+    header { display:flex; align-items:center; gap:10px; padding:16px 0; border-bottom:1px solid var(--line); }
+    header img { width:30px; filter: drop-shadow(0 0 10px var(--blue)); }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    header nav { margin-left:auto; display:flex; gap:14px; font-size:.9rem; }
+    header nav a { color:var(--muted); font-weight:400; letter-spacing:0; }
+    .hero { text-align:center; padding: 44px 0 18px; }
+    .hero img { width:84px; filter: drop-shadow(0 0 22px var(--blue)); }
+    .hero h1 { margin: 14px 0 6px; font-size: clamp(1.9rem, 6vw, 3rem); letter-spacing: 1px; }
+    .hero h1 span { color: var(--blue); text-shadow: 0 0 18px var(--glow); }
+    .hero p { margin: 0 auto; max-width: 620px; color: var(--muted); }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin: 26px 0 8px; }
+    .chip { background: var(--panel); border:1px solid var(--line); color:var(--text); border-radius: 999px; padding: 10px 16px;
+            font-size: .98rem; cursor:pointer; }
+    .chip[aria-pressed="true"] { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), 0 0 18px var(--glow); }
+    h2 { margin: 34px 0 10px; font-size: 1.15rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+    .card { background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius:14px;
+            padding: 18px; display:flex; flex-direction:column; gap:10px; }
+    .card .badge { align-self:flex-start; font-size:.72rem; letter-spacing:1.5px; color: var(--blue); border:1px solid var(--blue);
+                   border-radius:6px; padding:2px 8px; }
+    .card h3 { margin:0; font-size:1.12rem; }
+    .card p { margin:0; color: var(--muted); font-size:.93rem; }
+    .card .meta { color: var(--dim); font-size:.82rem; }
+    button { background: var(--blue); color:#fff; border:0; border-radius:10px; padding:12px 16px; font-size:1rem; font-weight:700;
+             cursor:pointer; box-shadow: 0 0 18px var(--glow); }
+    button.ghost { background: transparent; border:1px solid var(--line); box-shadow:none; color: var(--text); }
+    .card button { margin-top:auto; }
+    dialog { max-width: 680px; width: calc(100% - 32px); background: var(--panel); color: var(--text); border:1px solid var(--blue);
+             border-radius: 16px; padding: 22px; box-shadow: 0 0 40px var(--glow); }
+    dialog::backdrop { background: rgba(2,6,14,.75); }
+    dialog h3 { margin: 0 0 4px; font-size: 1.35rem; }
+    dialog .sub { color: var(--muted); margin: 0 0 14px; }
+    dialog ul { margin: 6px 0 14px; padding-left: 20px; color: var(--muted); }
+    dialog li { margin: 3px 0; }
+    .k { color: var(--text); }
+    pre { background:#050912; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; font-size:.82rem; color:#cfe3ff; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .note { color: var(--dim); font-size:.85rem; margin-top: 30px; text-align:center; }
+    .err { color: var(--muted); text-align:center; padding: 30px; }
+    a { color: var(--blue); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/omenz-logo.png" alt="" /><a href="/">OMENZ</a>
+      <nav><a href="/swapmeet/">Swap Meet</a><a href="/api/tollbooth/ayne/v1">Try free (AYNE)</a></nav>
+    </header>
+
+    <section class="hero">
+      <img src="/omenz-logo.png" alt="OMENZ" />
+      <h1>What do you need your <span>agent</span> to do?</h1>
+      <p>Pick a job. Equip the skin. OMENZ handles the tools, the spending limits and the permissions behind the button.
+         Don't just dress the agent. Equip it.</p>
+    </section>
+
+    <div class="chips" id="chips" role="group" aria-label="Pick a job"></div>
+
+    <h2 id="skins-h">Skins</h2>
+    <div class="grid" id="skins"><div class="err">Loading the skins…</div></div>
+
+    <h2>Departments</h2>
+    <div class="grid" id="packs"></div>
+
+    <h2>For robots (dry-run plans)</h2>
+    <div class="grid" id="robots"></div>
+
+    <p class="note">Skins prepare and assist: a human approves anything that publishes, sends, signs or spends past its limit.
+      Robot plans are dry runs from public SDK docs and have not been verified on hardware.<br />
+      Catalog: <a href="/api/tollbooth/v1/loadouts">/api/tollbooth/v1/loadouts</a> (free, machine-readable).</p>
+  </div>
+
+  <dialog id="equip">
+    <h3 id="d-title"></h3>
+    <p class="sub" id="d-for"></p>
+    <div id="d-body"></div>
+    <div class="row">
+      <button id="d-copy">Copy equip request (for your agent)</button>
+      <a id="d-mail"><button class="ghost" type="button">Set it up for me</button></a>
+      <button class="ghost" id="d-close" type="button">Close</button>
+    </div>
+  </dialog>
+
+  <script>
+  const API = "/api/tollbooth/v1/loadouts";
+  const JOBS = [
+    ["all", "Everything"], ["finance", "Finance"], ["sales", "Sales"], ["marketing", "Marketing"],
+    ["research", "Research"], ["service", "Customer service"], ["buying", "Buying"], ["startup", "Starting a business"], ["robot", "Robots"]
+  ];
+  const JOB_OF = { "skin-accountant": ["finance"], "skin-purchasing": ["finance", "buying"], "skin-sales-operator": ["sales"],
+    "skin-marketing-operator": ["marketing"], "skin-researcher": ["research", "sales", "marketing"], "skin-customer-service": ["service"],
+    "skin-daycare-starter": ["startup"] };
+  const PACK_JOB = { "pack-finance": "finance", "pack-sales": "sales", "pack-marketing": "marketing", "pack-small-business": "startup" };
+  const TOOL_WORDS = {
+    "/v1/ledger/create": "keeps the books (job ledger)", "/v1/ledger/append": "records every entry", "/v1/spend-receipt": "a signed receipt for each purchase",
+    "/v1/finance/forecast": "spend forecast", "/v1/budget/create": "a spending cap", "/v1/budget/spend": "draws from the budget",
+    "/v1/wallet/runway": "how many days the money lasts", "/v1/authorize": "checks a payment before money moves",
+    "/v1/claim-evidence": "checks a source says what you cite", "/v1/handoff/pack": "clean handoff to a human or agent",
+    "/v1/market/find": "finds the right paid tool", "/v1/freshness": "knows when facts go stale", "/v1/changed": "spots real page changes",
+    "/v1/dedupe": "avoids duplicate work", "/v1/context-diet": "keeps notes short", "/v1/event-check": "checks company news against SEC filings",
+    "/v1/site-check": "checks a business website", "/v1/local-facts": "phone, address and hours from the business's own site",
+    "/v1/agent-ready": "scores how findable a business is", "/v1/branch": "finds the right location", "/v1/pobox/drop": "drops drafts for your review",
+    "/v1/terms-changed": "watches competitor pricing/terms", "/v1/uptime/watch": "watches a service for 30 days",
+    "/v1/queue/escalate": "escalates hard cases to a human", "/v1/failure/put": "records what went wrong",
+    "/v1/market/cheapest": "finds the cheapest working seller", "/v1/market/job": "finds providers for a job", "/v1/guard": "Transaction Guard before paying",
+    "/v1/checkout/open": "checkout: checks before paying", "/v1/checkout/close": "checkout: verifies delivery after paying",
+    "/v1/settlement/rescue": "rescues a stuck payment safely", "/v1/allowance": "checks wallet approvals"
+  };
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let data = null, job = "all";
+  try { job = localStorage.getItem("omenz-skin-job") || "all"; } catch (e) {}
+
+  function chips() {
+    document.getElementById("chips").innerHTML = JOBS.map(([k, label]) =>
+      `<button class="chip" aria-pressed="${k === job}" data-job="${k}">${label}</button>`).join("");
+    document.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+      job = b.dataset.job; try { localStorage.setItem("omenz-skin-job", job); } catch (e) {} render();
+    });
+  }
+  function words(t) { const r = t.split(" ")[1] || t; return TOOL_WORDS[r] || r; }
+  function card(p, kind) {
+    const tools = (p.tools || []).length;
+    const badge = kind === "robot" ? "ROBOT" : kind === "pack" ? "DEPARTMENT" : "SKIN";
+    const meta = kind === "pack" ? `${p.members.length} skins · one department budget` :
+                 kind === "robot" ? `needs: ${(p.requires || []).join(", ")}` : `${tools} tools equipped`;
+    const title = esc(p.name).replace(/ \((digital agent|robot)\)/, "");
+    return `<div class="card"><span class="badge">${badge}</span><h3>${title}</h3><p>${esc(p.for || "")}</p>
+      <div class="meta">${esc(meta)}</div><button data-id="${esc(p.id)}" data-kind="${kind}">EQUIP</button></div>`;
+  }
+  function render() {
+    chips();
+    const presets = data.presets || [];
+    const skins = presets.filter(p => p.kind === "digital" && (job === "all" || (JOB_OF[p.id] || []).includes(job)));
+    const robots = presets.filter(p => p.kind !== "digital");
+    const packs = (data.packs || []).filter(p => job === "all" || PACK_JOB[p.id] === job || (job === "finance" && p.id === "pack-small-business"));
+    document.getElementById("skins").innerHTML = skins.length ? skins.map(p => card(p, "skin")).join("") : `<div class="err">No skin for this job yet. Tell us: <a href="mailto:hello@omenz.org?subject=Skin%20request">hello@omenz.org</a></div>`;
+    document.getElementById("packs").innerHTML = packs.map(p => card({ ...p, for: p.members.map(m => (presets.find(x => x.id === m) || {}).name || m).map(n => n.replace(/ skin.*| package.*/i, "")).join(" · ") }, "pack")).join("") || `<div class="err">No department pack for this job yet.</div>`;
+    document.getElementById("robots").innerHTML = (job === "all" || job === "robot") ? robots.map(p => card(p, "robot")).join("") : `<div class="err">Pick “Robots” or “Everything” to see robot loadouts.</div>`;
+    document.querySelectorAll(".card button").forEach(b => b.onclick = () => equip(b.dataset.id, b.dataset.kind));
+  }
+  function equip(id, kind) {
+    const presets = data.presets || [];
+    const d = document.getElementById("equip");
+    let p = kind === "pack" ? (data.packs || []).find(x => x.id === id) : presets.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById("d-title").textContent = (p.name || id).replace(/ \((digital agent|robot)\)/, "");
+    let body = "", req;
+    if (kind === "pack") {
+      document.getElementById("d-for").textContent = "A whole department. Every member works under one department budget: a member can never spend more than the department allows.";
+      body = "<ul>" + p.members.map(m => { const s = presets.find(x => x.id === m) || {}; return `<li><span class="k">${esc((s.name || m).replace(/ \(digital agent\)/, ""))}</span>: ${esc((s.job || {}).title || "")}</li>`; }).join("") + "</ul>";
+      req = { "1_department_budget": { "POST /api/tollbooth/v1/budget/create": { cap_usd: 10, period: "day" } },
+              "2_equip_each_member": p.members.map(m => ({ "POST /api/tollbooth/v1/loadout/compile": { loadout: m, platform: "digital-agent-mcp" } })),
+              "3_member_allowances": "POST /api/tollbooth/v1/budget/delegate per member (child cap <= department cap)" };
+    } else {
+      document.getElementById("d-for").textContent = p.for || "";
+      const goals = ((p.job || {}).goals || []).map(g => `<li>${esc(g)}</li>`).join("");
+      const tools = (p.tools || []).map(t => `<li>${esc(words(t))}</li>`).join("");
+      const lim = p.limits || {};
+      const limits = [lim.spend_cap_usd_per_day != null ? `spends at most $${lim.spend_cap_usd_per_day}/day` : "",
+                      (lim.require_human_confirm || []).length ? `asks you before: ${lim.require_human_confirm.join(", ").replace(/notify\.owner/, "big steps")}` : "",
+                      (lim.forbidden || []).length ? `never: ${lim.forbidden.join(", ").replace(/_/g, " ")}` : ""].filter(Boolean).map(x => `<li>${esc(x)}</li>`).join("");
+      body = (goals ? `<div class="k">The job</div><ul>${goals}</ul>` : "") + (tools ? `<div class="k">Equipped with</div><ul>${tools}</ul>` : "") +
+             (limits ? `<div class="k">Limits</div><ul>${limits}</ul>` : "");
+      req = { "POST https://www.omenz.org/api/tollbooth/v1/loadout/compile": { loadout: id, platform: kind === "robot" ? "omenz-sim-home" : "digital-agent-mcp" },
+              price: "$0.02 (x402, USDC on Base)", try_free_first: "POST https://www.omenz.org/api/tollbooth/ayne/v1/loadout/compile" };
+    }
+    body += `<div class="k">For your agent (developers)</div><pre id="d-req">${esc(JSON.stringify(req, null, 2))}</pre>`;
+    document.getElementById("d-body").innerHTML = body;
+    document.getElementById("d-mail").href = "mailto:hello@omenz.org?subject=" + encodeURIComponent("Equip: " + document.getElementById("d-title").textContent) +
+      "&body=" + encodeURIComponent("I want this set up for my business. What I need it to do:\n\n");
+    document.getElementById("d-copy").onclick = async () => {
+      try { await navigator.clipboard.writeText(JSON.stringify(req, null, 2)); document.getElementById("d-copy").textContent = "Copied"; }
+      catch (e) { document.getElementById("d-copy").textContent = "Select the text above to copy"; }
+    };
+    document.getElementById("d-copy").textContent = "Copy equip request (for your agent)";
+    if (d.showModal) d.showModal(); else d.setAttribute("open", "");
+  }
+  document.getElementById("d-close").onclick = () => document.getElementById("equip").close();
+  fetch(API).then(r => r.json()).then(j => { data = j; render(); })
+    .catch(() => { document.getElementById("skins").innerHTML = `<div class="err">Couldn't load the skins right now. The catalog is at <a href="${API}">${API}</a>.</div>`; });
+  </script>
+</body>
+</html>

@@ -53,13 +53,15 @@ def _b64json(v):
 
 
 def _reason(status, headers, body):
+    """Body error first (servers may explain there), then the PAYMENT-REQUIRED header's error."""
+    try:
+        j = json.loads(body or b"{}")
+        if isinstance(j, dict) and (j.get("error") or j.get("invalidReason")):
+            return str(j.get("error") or j.get("invalidReason"))[:300]
+    except Exception:
+        pass
     pr = _hdr(headers, "payment-required")
     d = _b64json(pr) if pr else None
-    if d is None:
-        try:
-            d = json.loads(body or b"{}")
-        except Exception:
-            d = {}
     return str((d or {}).get("error") or (d or {}).get("invalidReason") or "")[:300]
 
 

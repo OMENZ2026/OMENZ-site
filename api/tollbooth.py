@@ -970,6 +970,23 @@ def _pay_error(resp):
         return "unparsed" if v else "no_header"
 
 
+def _pay_snippet(method, url, price):
+    """AYNE -> paid conversion (11-20): a tested x402 v2 snippet at the moment an agent has just seen the sample.
+    Verified end to end against OMENZ with an unfunded key (facilitator answered insufficient_funds = it would pay)."""
+    call = f's.get("{url}?...")' if method == "GET" else f's.post("{url}", json={{...}})'
+    return {"price": price, "network": "Base (USDC)", "account_needed": False,
+            "python": ["pip install \"x402[requests,evm]\" eth-account",
+                       "from eth_account import Account",
+                       "from x402 import x402ClientSync",
+                       "from x402.mechanisms.evm.exact import ExactEvmScheme",
+                       "from x402.http.clients.requests import x402_requests",
+                       "client = x402ClientSync().register(\"eip155:8453\", ExactEvmScheme(Account.from_key(YOUR_WALLET_KEY)))",
+                       "s = x402_requests(client)  # pays automatically when it gets a 402",
+                       call],
+            "safer": "Check a payment first with POST /v1/authorize, or wrap every purchase with omenz-authorize (github.com/OMENZ2026/omenz-authorize)",
+            "errors_not_charged": True}
+
+
 async def _ayne(request, call_next, t0):
     from starlette.concurrency import run_in_threadpool
     path = request.url.path
@@ -1016,7 +1033,8 @@ async def _ayne(request, call_next, t0):
                              "paid_route": {"method": method, "url": "https://www.omenz.org" + BASE + "/v1" + sub,
                                             "price": ROUTES[paid_key]["accepts"]["price"]},
                              "description": ROUTES[paid_key]["description"], "example_input": fx.get("example_input"),
-                             "sample_response": fx.get("sample_response")})
+                             "sample_response": fx.get("sample_response"),
+                             "pay_for_real": _pay_snippet(method, "https://www.omenz.org" + BASE + "/v1" + sub, ROUTES[paid_key]["accepts"]["price"])})
         resp.headers["x-ayne"] = "sample"
         ev.update(mode="sample", status=200)
     else:

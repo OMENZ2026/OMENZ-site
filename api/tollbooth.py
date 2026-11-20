@@ -80,6 +80,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/sale/record        $0.002  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
+  GET  /api/tollbooth/v1/token/balance?address=&token=  $0.002  Token Balance (Base): any ERC-20 or native ETH
+  GET  /api/tollbooth/v1/allowance?owner=&token=&spender=  $0.002  Allowance Check: can this spender move my tokens? UNLIMITED flagged + revoke call
   GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
   POST /api/tollbooth/v1/guard              $0.05   Transaction Guard: GO/CAUTION/STOP before money moves (budget, counterparty, duplicate, price, economics, delivery)
   POST /api/tollbooth/v1/guard/credit       credits max($0.01, 10 bps of protected value), cap $5
@@ -653,6 +655,15 @@ _paid("GET", "tx/decode", "$0.002",
 _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
+
+_paid("GET", "token/balance", "$0.002",
+      "Token Balance (Base): balance of any ERC-20 (symbol + decimals resolved) or native ETH for an address, raw and human units, read live from Base. For agents checking they can afford a purchase, or that a payment arrived. Public chain data, never needs a key. By OMENZ.",
+      {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"},
+      {"properties": {"address": {"type": "string"}, "token": {"type": "string", "description": "ERC-20 address on Base; omit or 'eth' for native ETH"}}, "required": ["address"]})
+_paid("GET", "allowance", "$0.002",
+      "Allowance Check (Base): how much can this spender move from this wallet right now? Reads the live ERC-20 allowance and the owner's balance: UNLIMITED (risk HIGH) / COVERS_FULL_BALANCE / LIMITED / NO_ALLOWANCE, with a safe next action and the exact revoke call (approve(spender, 0)). Optional intended_usd says whether a stablecoin allowance covers your next payment. For agents before approving, paying through a contract, or cleaning up old approvals. Public chain data, never signs. By OMENZ.",
+      {"owner": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "spender": "0x000000000022D473030F116dDEE9F6B43aC78BA3"},
+      {"properties": {"owner": {"type": "string"}, "token": {"type": "string"}, "spender": {"type": "string"}, "intended_usd": {"type": "number"}}, "required": ["owner", "token", "spender"]})
 
 _paid("GET", "settlement-cost", "$0.002",
       "Settlement Cost Check (Base): what moving money costs RIGHT NOW (live gas price, L1 data fee, ETH/USD from Chainlink on Base) for an x402 settlement (~86,550 gas, measured), a USDC transfer, an ETH transfer and an approval, in ETH and USD. Send amount_usd (+ payments_per_day) to learn whether a payment that small is worth settling on its own: SETTLE / BATCH_OR_CREDITS / DONT_SETTLE_SINGLY, the overhead %, break-even payment size, and cheaper options (CDP free tier, Circle Gateway batching, prepaid credits). By OMENZ.",
@@ -1878,6 +1889,18 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/token/balance")
+def token_balance_route(request: Request, address: str = Query(...), token: str | None = None):
+    request.state.extra["action"] = "token_balance"
+    return chain_tools.token_balance(address, token)
+
+
+@app.get(BASE + "/v1/allowance")
+def allowance_route(request: Request, owner: str = Query(...), token: str = Query(...), spender: str = Query(...), intended_usd: float | None = None):
+    request.state.extra["action"] = "allowance_check"
+    return chain_tools.allowance_check(owner, token, spender, intended_usd)
 
 
 @app.get(BASE + "/v1/settlement-cost")

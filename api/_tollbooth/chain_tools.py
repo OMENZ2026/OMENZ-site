@@ -226,3 +226,72 @@ def name_resolve(q):
                 "note": "Pay this address only if it matches what the seller's own 402 says (authorize checks payTo)." if addr else "name has no address record"}
     except ChainError as e:
         return {**out, "status": "UNAVAILABLE", "reason": str(e)}
+
+
+# ---- Token Balance + Allowance Check (chore hunt 2026-11-20: erc20-balance 785 payers, allowance 301 payers in the
+# x402 market at $0.003; OMENZ at the $0.002 floor. Allowance is on the money path: "can this spender drain me?") ----
+
+def _word(addr):
+    return addr.lower()[2:].rjust(64, "0")
+
+
+def _bad(name, v):
+    return None if v and ADDR.match(v) else {"status": "BAD_INPUT", "reasons": [f"{name} must be a 0x address (40 hex)"]}
+
+
+def token_balance(address, token=None):
+    """ERC-20 (or native ETH when token omitted / 'eth') balance on Base."""
+    err = _bad("address", address)
+    if err:
+        return err
+    out = {"service": "OMENZ Token Balance", "version": VERSION, "chain": "base", "address": to_checksum_address(address),
+           "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    try:
+        if not token or token.lower() in ("eth", "native"):
+            raw = int(_rpc(BASE_RPCS, "eth_getBalance", [address, "latest"]), 16)
+            return {**out, "status": "OK", "token": "ETH (native)", "symbol": "ETH", "decimals": 18, "raw": str(raw), "balance": raw / 1e18}
+        err = _bad("token", token)
+        if err:
+            return err
+        sym, dec = _token(token, {})
+        if dec is None:
+            return {**out, "status": "NOT_A_TOKEN", "token": token, "reasons": ["no ERC-20 decimals() at this address on Base"]}
+        raw = int(_call(BASE_RPCS, token, "balanceOf(address)", _word(address)), 16)
+        return {**out, "status": "OK", "token": to_checksum_address(token), "symbol": sym, "decimals": dec, "raw": str(raw), "balance": _amt(raw, dec)}
+    except ChainError as e:
+        return {**out, "status": "UNAVAILABLE", "reason": str(e)}
+
+
+def allowance_check(owner, token, spender, intended_usd=None):
+    """How much `spender` may move from `owner` right now. UNLIMITED / EXCEEDS_BALANCE flagged, with a safe next action."""
+    for n, v in (("owner", owner), ("token", token), ("spender", spender)):
+        err = _bad(n, v)
+        if err:
+            return err
+    out = {"service": "OMENZ Allowance Check", "version": VERSION, "chain": "base", "owner": to_checksum_address(owner),
+           "token": to_checksum_address(token), "spender": to_checksum_address(spender), "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    try:
+        sym, dec = _token(token, {})
+        if dec is None:
+            return {**out, "status": "NOT_A_TOKEN", "reasons": ["no ERC-20 decimals() at this address on Base"]}
+        raw = int(_call(BASE_RPCS, token, "allowance(address,address)", _word(owner) + _word(spender)), 16)
+        bal = int(_call(BASE_RPCS, token, "balanceOf(address)", _word(owner)), 16)
+        flags, risk = [], "NONE"
+        if raw == 0:
+            verdict, nxt = "NO_ALLOWANCE", "Spender cannot move this token from the owner. Nothing to revoke."
+        elif raw >= UNLIMITED:
+            verdict, risk, nxt = "UNLIMITED", "HIGH", "Spender can move the owner's ENTIRE balance, now and later. Revoke (approve spender 0) unless this is a contract you trust."
+            flags.append("unlimited approval")
+        elif raw >= bal and bal > 0:
+            verdict, risk, nxt = "COVERS_FULL_BALANCE", "MEDIUM", "Allowance covers everything the owner holds. Lower it to what the next payment needs."
+            flags.append("allowance >= balance")
+        else:
+            verdict, risk, nxt = "LIMITED", "LOW", "Spender can move at most the allowance shown."
+        res = {**out, "status": "OK", "verdict": verdict, "risk": risk, "symbol": sym, "decimals": dec,
+               "allowance_raw": str(raw), "allowance": None if raw >= UNLIMITED else _amt(raw, dec), "owner_balance": _amt(bal, dec),
+               "flags": flags, "next_action": nxt, "revoke_call": {"to": to_checksum_address(token), "function": "approve(spender, 0)"} if raw else None}
+        if intended_usd is not None and sym in ("USDC", "USDT", "DAI") and raw < UNLIMITED:
+            res["covers_intended"] = _amt(raw, dec) >= float(intended_usd)
+        return res
+    except ChainError as e:
+        return {**out, "status": "UNAVAILABLE", "reason": str(e)}

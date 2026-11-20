@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/s/:slug",
+      "destination": "/api/s?slug=:slug"
+    },
+    {
       "source": "/.well-known/omenz-flyer.json",
       "destination": "/api/hit?f=index"
     },
@@ -75,58 +79,7 @@
       "maxDuration": 30
     }
   },
-  "redirects": [
-    {
-      "source": "/s/run-it",
-      "destination": "https://omenz-shop.fourthwall.com/products/run-it-premium-tee",
-      "permanent": false
-    },
-    {
-      "source": "/s/evolve-or-dissolve",
-      "destination": "https://omenz-shop.fourthwall.com/products/evolve-or-dissolve-premium-tee",
-      "permanent": false
-    },
-    {
-      "source": "/s/caught-in-code",
-      "destination": "https://omenz-shop.fourthwall.com/products/caught-in-code-the-divine-download-tee",
-      "permanent": false
-    },
-    {
-      "source": "/s/dont-chip-flash-me-bro",
-      "destination": "https://omenz-shop.fourthwall.com/products/dont-chip-flash-me-bro",
-      "permanent": false
-    },
-    {
-      "source": "/s/human-difficulties-detected",
-      "destination": "https://omenz-shop.fourthwall.com/products/human-difficulties-detected",
-      "permanent": false
-    },
-    {
-      "source": "/s/ai-shole",
-      "destination": "https://omenz-shop.fourthwall.com/products/ai-shole",
-      "permanent": false
-    },
-    {
-      "source": "/s/irregular-high-frequency",
-      "destination": "https://omenz-shop.fourthwall.com/products/irregular-high-frequency",
-      "permanent": false
-    },
-    {
-      "source": "/s/cultural-malware",
-      "destination": "https://omenz-shop.fourthwall.com/products/cultural-malware",
-      "permanent": false
-    },
-    {
-      "source": "/s/wifey-protocol",
-      "destination": "https://omenz-shop.fourthwall.com/products/wifey-protocol",
-      "permanent": false
-    },
-    {
-      "source": "/s/shegpt",
-      "destination": "https://omenz-shop.fourthwall.com/products/shegpt",
-      "permanent": false
-    }
-  ],
+  "redirects": [],
   "crons": [
     {
       "path": "/api/tollbooth/v1/track-record/rollup",

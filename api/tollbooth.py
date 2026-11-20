@@ -846,8 +846,41 @@ async def x402_mw(request, call_next):
               "paid": bool(payer) and resp.status_code < 400, "payer": payer, "price": PRICE_OF.get(path, "free"),
               "ua_class": _ua_class(request.headers.get("user-agent")), "country": request.headers.get("x-vercel-ip-country", ""),
               **getattr(request.state, "extra", {})}
+        if payer and resp.status_code == 402:
+            ev["pay_error"] = _pay_error(resp)  # why a sent payment was rejected (added 11-20: funded repeat payers were being turned away)
+            ev.update(_pay_shape(request))
         _log(ev)
     return resp
+
+
+def _pay_shape(request):
+    """Which header + x402 version + what the client signed for (amount, payTo, resource), no secrets."""
+    for h in ("payment-signature", "x-payment"):
+        v = request.headers.get(h)
+        if v:
+            out = {"pay_header": h}
+            try:
+                d = json.loads(base64.b64decode(v + "=" * (-len(v) % 4)))
+                a = d.get("accepted") or {}
+                au = (d.get("payload") or {}).get("authorization") or {}
+                out.update({"pay_version": d.get("x402Version"), "pay_scheme": a.get("scheme") or d.get("scheme"),
+                            "pay_network": a.get("network") or d.get("network"), "pay_amount": a.get("amount") or au.get("value"),
+                            "pay_to": str(a.get("payTo") or au.get("to") or "")[:42],
+                            "pay_resource": str((d.get("resource") or {}).get("url") or "")[:200],
+                            "pay_valid_before": au.get("validBefore")})
+            except Exception:
+                out["pay_version"] = "unparsed"
+            return out
+    return {}
+
+
+def _pay_error(resp):
+    v = resp.headers.get("payment-required") or resp.headers.get("x-payment-required") or ""
+    try:
+        d = json.loads(base64.b64decode(v + "=" * (-len(v) % 4)))
+        return str(d.get("error") or d.get("invalidReason") or "no_reason")[:300]
+    except Exception:
+        return "unparsed" if v else "no_header"
 
 
 async def _ayne(request, call_next, t0):

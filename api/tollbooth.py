@@ -43,6 +43,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/vendor-check?url=   $0.01   Vendor Due-Diligence Pack
   POST /api/tollbooth/v1/contract/build      $0.002  A2A Contract Builder (signed terms + deterministic acceptance tests)
   POST /api/tollbooth/v1/contract/accept     $0.005  Acceptance Test as a Service -> PASS/FAIL, escrow verdict, signed attestation (reputation)
+  POST /api/tollbooth/v1/checkpoint/create | checkpoint/submit, GET checkpoint/status  $0.005 / $0.01 / $0.002  Checkpoint: milestone tranches with per-milestone RELEASE/REFUND/RETRY verdicts
   GET  /api/tollbooth/v1/reputation?agent=   $0.002  Reputation Receipts: an agent's OMENZ-checked job history
   POST /api/tollbooth/v1/evidence/bundle     $0.002  Machine Evidence Bundle (signed, hash-listed)
   POST /api/tollbooth/v1/finance/{reconcile,forecast,watchdog,snapshot,refund-request}  Agent finance back office
@@ -452,6 +453,17 @@ _paid("GET", "vendor-check", "$0.01",
       "Vendor Due-Diligence Pack: before your agent depends on an unknown paid API: reliability score + the vendor domain's health (live/parked/moved) + its terms/pricing page digest (material lines) + flags. Never pays. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive"}, {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 
+_paid("POST", "checkpoint/create", "$0.005",
+      "OMENZ Checkpoint (create): split an agent job into paid milestones. Each milestone has an amount, its own deterministic acceptance tests (required_fields, field_types, regex, min_items, max_bytes, equals, url_alive, claim_evidence) and an optional deadline. Returns a signed plan and checkpoint_id. OMENZ never holds funds. By OMENZ.",
+      {"buyer": "agent-b", "seller": "agent-s", "job": "research report", "total_usd": 3, "milestones": [{"name": "outline", "amount_usd": 1, "acceptance": [{"type": "required_fields", "fields": ["outline"]}]}, {"name": "report", "amount_usd": 2, "acceptance": [{"type": "min_items", "field": "sections", "n": 3}], "deadline_hours": 48}]},
+      {"properties": {"buyer": {"type": "string"}, "seller": {"type": "string"}, "job": {"type": "string"}, "total_usd": {"type": "number"}, "milestones": {"type": "array"}}, "required": ["milestones"]}, body=True)
+_paid("POST", "checkpoint/submit", "$0.01",
+      "OMENZ Checkpoint (submit): deliver one milestone. Its acceptance tests run; you get PASS/FAIL and the escrow verdict for THAT tranche: RELEASE (buyer pays it now), RETRY (seller fixes, max 3 attempts) or REFUND (failed or late, not owed), a signed receipt, and running totals (released / refunded / pending). A decided milestone can't be passed or counted twice. Seller track record updated. By OMENZ.",
+      {"checkpoint_id": "ck_...", "milestone": "outline", "delivered": {"outline": "1. intro 2. method 3. results"}},
+      {"properties": {"checkpoint_id": {"type": "string"}, "milestone": {"type": "string"}, "delivered": {"type": "object"}}, "required": ["checkpoint_id", "milestone", "delivered"]}, body=True)
+_paid("GET", "checkpoint/status", "$0.002",
+      "OMENZ Checkpoint (status): where a milestone job stands: each milestone RELEASE / REFUND / RETRY / PENDING with attempts, and released / refunded / pending USD. By OMENZ.",
+      {"id": "ck_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 _paid("POST", "contract/build", "$0.002",
       "A2A Contract Builder: turn a machine job into signed terms both agents hold: deliverable, deterministic acceptance tests (required_fields, field_types, regex, min_items, max_bytes, equals, url_alive, claim_evidence), max spend, deadline, parties. Ed25519-signed by OMENZ; verify offline with /v1/passport/key. By OMENZ.",
       {"terms": {"buyer": "agent-a", "seller": "agent-b", "deliverable": "hours for 3 restaurants", "max_spend_usd": 0.1, "deadline": 1900000000,
@@ -1367,6 +1379,28 @@ def vendor_check(request: Request, url: str = Query(...), method: str | None = N
         return JSONResponse({"error": "vendor check failed; not charged"}, status_code=502)
     request.state.extra.update({"action": "vendor_check", "verdict": r.get("verdict")})
     return r
+
+
+@app.post(BASE + "/v1/checkpoint/create")
+def checkpoint_create(request: Request, body: dict = Body(...)):
+    import checkpoint
+    request.state.extra["action"] = "checkpoint_create"
+    return _locker_call(checkpoint.create, body)
+
+
+@app.post(BASE + "/v1/checkpoint/submit")
+def checkpoint_submit(request: Request, body: dict = Body(...)):
+    import checkpoint
+    r = _locker_call(checkpoint.submit, body)
+    request.state.extra.update({"action": "checkpoint_submit", "verdict": r.get("escrow_verdict") if isinstance(r, dict) else None})
+    return r
+
+
+@app.get(BASE + "/v1/checkpoint/status")
+def checkpoint_status(request: Request, id: str = Query(...)):
+    import checkpoint
+    request.state.extra["action"] = "checkpoint_status"
+    return _locker_call(checkpoint.status, id)
 
 
 @app.post(BASE + "/v1/contract/build")

@@ -16,12 +16,12 @@
            background: radial-gradient(1200px 700px at 50% -10%, #0d2a5a 0%, var(--bg) 60%) fixed, var(--bg); }
     .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px 64px; }
     header { display:flex; align-items:center; gap:10px; padding:16px 0; border-bottom:1px solid var(--line); }
-    header img { width:30px; filter: drop-shadow(0 0 10px var(--blue)); }
+    header img { width:34px; }
     header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
     header nav { margin-left:auto; display:flex; gap:14px; font-size:.9rem; }
     header nav a { color:var(--muted); font-weight:400; letter-spacing:0; }
     .hero { text-align:center; padding: 44px 0 18px; }
-    .hero img { width:84px; filter: drop-shadow(0 0 22px var(--blue)); }
+    .hero img { width:120px; }
     .hero h1 { margin: 14px 0 6px; font-size: clamp(1.9rem, 6vw, 3rem); letter-spacing: 1px; }
     .hero h1 span { color: var(--blue); text-shadow: 0 0 18px var(--glow); }
     .hero p { margin: 0 auto; max-width: 620px; color: var(--muted); }
@@ -60,12 +60,12 @@
 <body>
   <div class="wrap">
     <header>
-      <img src="/omenz-logo.png" alt="" /><a href="/">OMENZ</a>
+      <img src="/omenz-logo-glow.png" alt="" /><a href="/">OMENZ</a>
       <nav><a href="/swapmeet/">Swap Meet</a><a href="/api/tollbooth/ayne/v1">Try free (AYNE)</a></nav>
     </header>
 
     <section class="hero">
-      <img src="/omenz-logo.png" alt="OMENZ" />
+      <img src="/omenz-logo-glow.png" alt="OMENZ" />
       <h1>What do you need your <span>agent</span> to do?</h1>
       <p>Pick a job. Equip the skin. OMENZ handles the tools, the spending limits and the permissions behind the button.
          Don't just dress the agent. Equip it.</p>
@@ -140,7 +140,7 @@
     const badge = kind === "robot" ? "ROBOT" : kind === "pack" ? "DEPARTMENT" : "SKIN";
     const meta = kind === "pack" ? `${p.members.length} skins · one department budget` :
                  kind === "robot" ? `needs: ${(p.requires || []).join(", ")}` : `${tools} tools equipped`;
-    const title = esc(p.name).replace(/ \((digital agent|robot)\)/, "");
+    const title = esc(p.name).replace(/ \((digital agent|robot)\)/, "").replace(/ (skin|package)$/i, "");
     return `<div class="card"><span class="badge">${badge}</span><h3>${title}</h3><p>${esc(p.for || "")}</p>
       <div class="meta">${esc(meta)}</div><button data-id="${esc(p.id)}" data-kind="${kind}">EQUIP</button></div>`;
   }

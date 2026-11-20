@@ -55,6 +55,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   GET  /api/tollbooth/swapmeet/v1[/search|/new], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
   POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.002  Job Jacket: check a job's minimum working state out/in
+  POST /api/tollbooth/v1/wallet-watch $0.01, GET wallet-watch/report $0.002   Wallet Watch: low-balance / low-runway alert to your PO Box
   POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.002   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
   GET/POST /api/tollbooth/myop/v1/...       free    MYOP: play with your agent (operator+agent games; page omenz.org/myop/)
@@ -136,6 +137,7 @@ import track_record  # noqa: E402
 import swapmeet  # noqa: E402
 import jacket  # noqa: E402
 import uptime  # noqa: E402
+import wallet_watch  # noqa: E402
 import passport  # noqa: E402
 import preflight  # noqa: E402
 import pobox  # noqa: E402
@@ -580,6 +582,13 @@ _paid("GET", "jacket/history", "$0.002",
       "Job Jacket history: every version (who, when, checkpoint, note, state hash; never the contents) and the current lease. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
       {}, {"properties": {}})
 
+_paid("POST", "wallet-watch", "$0.01",
+      "Wallet Watch: never run dry mid-job. Register an agent's Base wallet with min_usdc and/or min_days (runway at its recent spend rate); OMENZ checks it daily for up to 30 days and drops ONE alert into your Agent PO Box when it runs low (re-arms after you top up). Read-only public chain data; never touches the wallet. Returns watch_id + watch_key (shown once). By OMENZ.",
+      {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "min_usdc": 2, "min_days": 3, "pobox_id": "box_...", "days": 30},
+      {"properties": {"address": {"type": "string"}, "min_usdc": {"type": "number"}, "min_days": {"type": "number"}, "pobox_id": {"type": "string"}, "days": {"type": "integer"}}, "required": ["address"]}, body=True)
+_paid("GET", "wallet-watch/report", "$0.002",
+      "Wallet Watch report: current USDC, runway days, state OK / ALERTING, low checks and the last 14 checks. Header X-Watch-Key. By OMENZ.",
+      {"id": "ww_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 _paid("POST", "uptime/watch", "$0.01",
       "Uptime Watch: register a paid endpoint your agent depends on; OMENZ checks it daily (and on each report) for 30 days: up/down, latency, live x402 price and payTo, so you catch outages, price drift and swapped payout wallets before paying. Never pays the endpoint. Returns watch_id + watch_key (shown once). By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "days": 30},
@@ -1844,6 +1853,18 @@ def track_record_rollup():
         return JSONResponse({"error": "rollup failed", "detail": str(e)[:160]}, status_code=503)
 
 
+@app.post(BASE + "/v1/wallet-watch")
+def wallet_watch_route(request: Request, body: dict = Body(...)):
+    request.state.extra["action"] = "wallet_watch"
+    return _locker_call(wallet_watch.watch, body.get("address"), body.get("min_usdc"), body.get("min_days"), body.get("pobox_id"), body.get("days", 30))
+
+
+@app.get(BASE + "/v1/wallet-watch/report")
+def wallet_watch_report(request: Request, id: str = Query(""), x_watch_key: str | None = Header(None)):
+    request.state.extra["action"] = "wallet_watch_report"
+    return _locker_call(wallet_watch.report, id, x_watch_key)
+
+
 @app.post(BASE + "/v1/uptime/watch")
 def uptime_watch(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "uptime_watch"
@@ -2154,7 +2175,11 @@ def uptime_run():
     except Exception as e:
         fac = {"error": str(e)[:120]}
     try:
-        return {**uptime.run_due(), "facilitators": fac}
+        try:
+            ww = wallet_watch.run_due()
+        except Exception as e:
+            ww = {"error": str(e)[:120]}
+        return {**uptime.run_due(), "facilitators": fac, "wallet_watch": ww}
     except Exception as e:
         return JSONResponse({"error": "uptime run failed", "detail": str(e)[:160]}, status_code=503)
 

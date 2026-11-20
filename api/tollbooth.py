@@ -1600,6 +1600,27 @@ def agent_card():
 
 
 _MCP_TOOLS = None
+# 11-20: free OMENZ tools in MCP too (trust builders); tools/call runs the real free route, not AYNE.
+_RO = {"readOnlyHint": True, "idempotentHint": True, "openWorldHint": False}
+_MCP_FREE = [
+    {"name": "swapmeet_search", "title": "AI Agent Swap Meet search (free)", "_method": "GET", "_free_path": BASE + "/swapmeet/v1/search",
+     "description": "Free. Search ~35,000 paid agent services (x402 Bazaar) by what you need; shows busy booths and OMENZ-verified history.",
+     "inputSchema": {"type": "object", "properties": {"q": {"type": "string", "description": "what you need, e.g. 'token price'"}}, "required": ["q"]}, "annotations": _RO},
+    {"name": "omenz_track_record", "title": "OMENZ track record (free)", "_method": "GET", "_free_path": BASE + "/v1/track-record",
+     "description": "Free. Test evidence per OMENZ tool plus the earned record of real outside calls, success rates and daily self-probe uptime.",
+     "inputSchema": {"type": "object", "properties": {}}, "annotations": _RO},
+    {"name": "omenz_loadouts", "title": "Agent Skins + robot loadouts catalog (free)", "_method": "GET", "_free_path": BASE + "/v1/loadouts",
+     "description": "Free. Every OMENZ skin (Accountant, Researcher, Sales, Marketing, Customer Service, Purchasing...), department pack and robot job, with the tools and limits each equips.",
+     "inputSchema": {"type": "object", "properties": {}}, "annotations": _RO},
+    {"name": "omenz_conventions", "title": "How OMENZ tools chain (free)", "_method": "GET", "_free_path": BASE + "/v1/conventions",
+     "description": "Free. Request ids and chaining, signed record shapes, id prefixes and payment acceptance rules for composing OMENZ tools into workflows.",
+     "inputSchema": {"type": "object", "properties": {}}, "annotations": _RO},
+    {"name": "omenz_tell_us_what_you_need", "title": "Tell OMENZ what you need (free)", "_method": "POST", "_free_path": BASE + "/v1/needs",
+     "description": "Free. Tell OMENZ a capability you need and what you'd pay per call; recurring needs get built, tested and listed.",
+     "inputSchema": {"type": "object", "properties": {"need": {"type": "string"}, "would_pay_usd_per_call": {"type": "number"}, "frequency": {"type": "string"},
+                                                      "current_workaround": {"type": "string"}, "reply_box_id": {"type": "string"}}, "required": ["need"]},
+     "annotations": {"readOnlyHint": False, "idempotentHint": False, "openWorldHint": False}},
+]
 
 
 @app.get("/mcp")
@@ -1615,7 +1636,7 @@ async def mcp_post(request: Request):
     from starlette.concurrency import run_in_threadpool
     global _MCP_TOOLS
     if _MCP_TOOLS is None:
-        _MCP_TOOLS = discovery.mcp_tools(ROUTES)
+        _MCP_TOOLS = discovery.mcp_tools(ROUTES) + _MCP_FREE
     try:
         msg = json.loads(await request.body() or b"{}")
     except Exception:
@@ -1652,7 +1673,7 @@ async def mcp_post(request: Request):
             for a, h in discovery.HEADER_ARGS.items():
                 if a in args:
                     headers[h] = str(args.pop(a))
-            path = BASE + "/ayne/v1" + t["_path"].split("/v1", 1)[1]
+            path = t["_free_path"] if t.get("_free_path") else BASE + "/ayne/v1" + t["_path"].split("/v1", 1)[1]
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://omenz.internal", timeout=28) as cl:
                 if t["_method"] == "GET":
                     r = await cl.get(path, params={k: (json.dumps(v) if isinstance(v, (dict, list)) else v) for k, v in args.items()}, headers=headers)

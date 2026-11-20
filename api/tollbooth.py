@@ -80,6 +80,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/sale/record        $0.002  Sale Record (sellers): verified, counted-once sale + signed sale receipt -> Seller Track Record
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
+  POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
   GET  /api/tollbooth/v1/token/balance?address=&token=  $0.002  Token Balance (Base): any ERC-20 or native ETH
   GET  /api/tollbooth/v1/allowance?owner=&token=&spender=  $0.002  Allowance Check: can this spender move my tokens? UNLIMITED flagged + revoke call
   GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
@@ -665,6 +666,11 @@ _paid("GET", "allowance", "$0.002",
       {"owner": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "spender": "0x000000000022D473030F116dDEE9F6B43aC78BA3"},
       {"properties": {"owner": {"type": "string"}, "token": {"type": "string"}, "spender": {"type": "string"}, "intended_usd": {"type": "number"}}, "required": ["owner", "token", "spender"]})
 
+_paid("POST", "seller/acceptance-check", "$0.05",
+      "Seller Payment-Acceptance Check: is your x402 server turning away paying agents? We probe YOUR route with a throwaway, unfunded key (no money can move): a fresh payment must reach your facilitator; a payment echoing an older 402 (changed description/example, changed timeout) must not be refused; an x402 v1 X-PAYMENT must not be ignored silently. Verdict ACCEPTS_GOOD_MONEY / REFUSES_GOOD_MONEY / SERVES_UNPAID / NO_VALID_402 with each problem and the exact fix. OMENZ found this leak on its own server: a funded repeat buyer was refused 4 times. Max 5 requests to your URL. By OMENZ.",
+      {"url": "https://www.omenz.org/api/tollbooth/v1/site-check?url=https://example.com", "method": "GET"},
+      {"properties": {"url": {"type": "string", "description": "your x402 route (https)"}, "method": {"type": "string", "enum": ["GET", "POST"]}}, "required": ["url"]}, body=True)
+
 _paid("GET", "settlement-cost", "$0.002",
       "Settlement Cost Check (Base): what moving money costs RIGHT NOW (live gas price, L1 data fee, ETH/USD from Chainlink on Base) for an x402 settlement (~86,550 gas, measured), a USDC transfer, an ETH transfer and an approval, in ETH and USD. Send amount_usd (+ payments_per_day) to learn whether a payment that small is worth settling on its own: SETTLE / BATCH_OR_CREDITS / DONT_SETTLE_SINGLY, the overhead %, break-even payment size, and cheaper options (CDP free tier, Circle Gateway batching, prepaid credits). By OMENZ.",
       {"amount_usd": 0.001, "payments_per_day": 5000},
@@ -890,6 +896,12 @@ async def x402_mw(request, call_next):
               "paid": bool(payer) and resp.status_code < 400, "payer": payer, "price": PRICE_OF.get(path, "free"),
               "ua_class": _ua_class(request.headers.get("user-agent")), "country": request.headers.get("x-vercel-ip-country", ""),
               **getattr(request.state, "extra", {})}
+        if payer and resp.status_code == 402 and request.headers.get("x-payment") and not request.headers.get("payment-signature"):
+            # x402 v1 client (X-PAYMENT): the v2 server ignores it silently; tell the buyer how to pay instead (11-20)
+            pr = resp.headers.get("payment-required")
+            resp = JSONResponse({"x402Version": 2, "error": "x402 v1 X-PAYMENT is not accepted here: this server speaks x402 v2. "
+                                 "Read the PAYMENT-REQUIRED header of this 402 and resend the payment in a PAYMENT-SIGNATURE header.",
+                                 "docs": "https://www.omenz.org/llms.txt"}, status_code=402, headers={"PAYMENT-REQUIRED": pr} if pr else None)
         if payer and resp.status_code == 402:
             ev["pay_error"] = _pay_error(resp)  # why a sent payment was rejected (added 11-20: funded repeat payers were being turned away)
             ev.update(_pay_shape(request))
@@ -1901,6 +1913,18 @@ def token_balance_route(request: Request, address: str = Query(...), token: str 
 def allowance_route(request: Request, owner: str = Query(...), token: str = Query(...), spender: str = Query(...), intended_usd: float | None = None):
     request.state.extra["action"] = "allowance_check"
     return chain_tools.allowance_check(owner, token, spender, intended_usd)
+
+
+@app.post(BASE + "/v1/seller/acceptance-check")
+async def acceptance_check_route(request: Request):
+    from starlette.concurrency import run_in_threadpool
+    import acceptance
+    request.state.extra["action"] = "seller_acceptance_check"
+    try:
+        b = await request.json()
+    except Exception:
+        b = {}
+    return await run_in_threadpool(acceptance.check, str(b.get("url") or ""), str(b.get("method") or "GET"))
 
 
 @app.get(BASE + "/v1/settlement-cost")

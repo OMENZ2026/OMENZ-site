@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Quickstart | OMENZ</title>
+  <meta name="description" content="Your agent's first five minutes with OMENZ: try any tool free, then pay per call in USDC on Base with x402. No account, no API key." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="Agent Quickstart | OMENZ" />
+  <meta property="og:description" content="Try free, then pay per call with x402. No account, no API key. Errors are never charged." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#060a14; --panel:#0c1424; --panel2:#0f1a30; --line:#1d2a44; --text:#f4f6fa; --muted:#b3bccb; --dim:#7c889c; --blue:#1e8cff; --glow:rgba(30,140,255,.45); }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:var(--text); line-height:1.6;
+           background: radial-gradient(1200px 700px at 50% -10%, #0d2a5a 0%, var(--bg) 60%) fixed, var(--bg); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 64px; }
+    header { display:flex; align-items:center; gap:10px; padding:16px 0; border-bottom:1px solid var(--line); }
+    header img { width:34px; }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    header nav { margin-left:auto; display:flex; gap:14px; font-size:.9rem; flex-wrap:wrap; }
+    header nav a { color:var(--muted); font-weight:400; letter-spacing:0; }
+    .hero { text-align:center; padding: 36px 0 6px; }
+    .hero img { width:96px; }
+    .hero h1 { margin: 10px 0 6px; font-size: clamp(1.8rem, 5vw, 2.6rem); }
+    .hero h1 span { color: var(--blue); text-shadow: 0 0 18px var(--glow); }
+    .hero p { margin:0 auto; max-width: 600px; color: var(--muted); }
+    .step { margin: 22px 0; background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius: 14px; padding: 18px; }
+    .step h2 { margin: 0 0 6px; font-size: 1.1rem; }
+    .step h2 b { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background: var(--blue); box-shadow: 0 0 12px var(--glow); margin-right:8px; font-size:.9rem; }
+    .step p { margin: 6px 0; color: var(--muted); }
+    pre { background:#050912; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; font-size:.84rem; color:#cfe3ff; margin: 10px 0 0; }
+    .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:.8rem; color: var(--dim); margin: 2px 4px 2px 0; }
+    a { color: var(--blue); }
+    .note { color: var(--dim); font-size:.85rem; text-align:center; margin-top: 26px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/omenz-logo-glow.png" alt="" /><a href="/">OMENZ</a>
+      <nav><a href="/journey/">Agent Journey</a><a href="/skins/">Agent Skins</a><a href="/swapmeet/">Swap Meet</a></nav>
+    </header>
+
+    <section class="hero">
+      <img src="/omenz-logo-glow.png" alt="OMENZ" />
+      <h1>Your agent's first <span>five minutes</span></h1>
+      <p>Try any OMENZ tool free. When it's useful, pay per call in USDC on Base with x402. No account, no API key, errors never charged.</p>
+      <p><span class="pill">110 paid tools</span><span class="pill">from $0.002</span><span class="pill">x402 v2</span><span class="pill">MCP server</span></p>
+    </section>
+
+    <div class="step">
+      <h2><b>1</b>Try it free (AYNE playzone)</h2>
+      <p>Same path as the paid route, with <code>/ayne</code> in front. Tools on your own input run live; tools that return OMENZ data show a labeled sample plus how to pay for real.</p>
+      <pre>curl "https://www.omenz.org/api/tollbooth/ayne/v1/market/find?q=token+price"</pre>
+      <p>Every tool: <a href="/api/tollbooth/ayne/v1">/api/tollbooth/ayne/v1</a> · MCP clients: <code>https://www.omenz.org/mcp</code> (tools/call runs in AYNE)</p>
+    </div>
+
+    <div class="step">
+      <h2><b>2</b>See the price (unpaid call = HTTP 402)</h2>
+      <p>Call the paid route without paying. You get the price and payment terms in the <code>PAYMENT-REQUIRED</code> header (x402 v2).</p>
+      <pre>curl -i "https://www.omenz.org/api/tollbooth/v1/site-check?url=https://example.com"</pre>
+    </div>
+
+    <div class="step">
+      <h2><b>3</b>Pay automatically (Python)</h2>
+      <p>The official x402 client signs a USDC payment when it gets a 402 and retries. Tested end to end against OMENZ.</p>
+      <pre>pip install "x402[requests,evm]" eth-account
+
+from eth_account import Account
+from x402 import x402ClientSync
+from x402.mechanisms.evm.exact import ExactEvmScheme
+from x402.http.clients.requests import x402_requests
+
+client = x402ClientSync().register("eip155:8453", ExactEvmScheme(Account.from_key(YOUR_WALLET_KEY)))
+s = x402_requests(client)   # pays when it gets a 402
+r = s.get("https://www.omenz.org/api/tollbooth/v1/site-check?url=https://example.com")
+print(r.json())</pre>
+      <p>Your wallet needs a little USDC on Base. Keep your key in your own process; OMENZ never sees it.</p>
+    </div>
+
+    <div class="step">
+      <h2><b>4</b>Buy safely from anyone, not just OMENZ</h2>
+      <p>Before your agent pays <em>any</em> x402 seller: <a href="/api/tollbooth">Authorize</a> ($0.002) checks the endpoint, price, payee (incl. OFAC sanctions) and your spend policy, then returns APPROVE / REVIEW / DECLINE with a signed code.
+         For every purchase, wrap your paying client with <a href="https://github.com/OMENZ2026/omenz-authorize">omenz-authorize</a> (MIT, Python + JS): Guard before paying, receipt after, Settlement Rescue if a payment goes weird.</p>
+      <pre>pip install "git+https://github.com/OMENZ2026/omenz-authorize#subdirectory=python"</pre>
+    </div>
+
+    <div class="step">
+      <h2><b>5</b>Chain tools into a workflow</h2>
+      <p>Every response carries <code>X-OMENZ-Request-Id</code>. Send it back as <code>X-OMENZ-Parent-Request-Id</code> on the next call to link a job: discover → authorize → pay → verify → receipt.</p>
+      <p>Rules, record shapes and id prefixes: <a href="/api/tollbooth/v1/conventions">/v1/conventions</a> (free). Whole jobs pre-equipped: <a href="/skins/">Agent Skins</a>.</p>
+    </div>
+
+    <p class="note">Discovery: <a href="/llms.txt">llms.txt</a> · <a href="/openapi.json">openapi.json</a> · <a href="/.well-known/x402">/.well-known/x402</a> · <a href="/api/tollbooth/v1/track-record">track record</a> · <a href="/api/tollbooth/v1/pricing-policy">pricing policy</a><br />
+      Need something we don't have? <code>POST /api/tollbooth/v1/needs</code> (free) or <a href="mailto:hello@omenz.org">hello@omenz.org</a>.</p>
+  </div>
+</body>
+</html>

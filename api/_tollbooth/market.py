@@ -257,6 +257,8 @@ def payee(addr):
     out = {"version": VERSION, "address": a, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     if not re.match(r"^(0x[0-9a-f]{40}|[1-9a-hj-np-z]{32,44})$", a):
         return {**out, "error": "address must be an EVM 0x address or a Solana address"}
+    import sanctions
+    out["sanctions"] = sanctions.check(a)  # 11-20: OFAC SDN screen on every payee check
     ix = _index()
     hits = [r for r in ix["rows"] if a in (r[8] or [])]
     if not hits:

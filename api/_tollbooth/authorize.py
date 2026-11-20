@@ -48,6 +48,13 @@ def authorize(req):
     pay_to = (chosen.get("pay_to") or "").lower()
 
     if pay_to:
+        import sanctions
+        sc = sanctions.check(pay_to)
+        checks["sanctions"] = sc
+        if sc["listed"]:
+            decline.append(f"payee is on the OFAC SDN list ({sc['entity']}): paying it may be illegal")
+        elif sc["addresses_screened"]:
+            passed.append("payee not on OFAC SDN list")
         try:
             pc = market.payee(pay_to)
             checks["payee"] = {k: pc.get(k) for k in ("verdict", "x402_endpoints")}

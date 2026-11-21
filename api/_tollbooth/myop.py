@@ -44,9 +44,13 @@ def _kv(method, key, body=None):
     return kv(method, key, body)
 
 
+import contextvars
+UA_CLASS = contextvars.ContextVar("myop_ua_class", default="")  # set per request by tollbooth.py (11-21: tag self-tests)
+
+
 def _log(ev):
     import ayne
-    ayne.log({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "myop", **ev})
+    ayne.log({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "key": "myop", **({"ua_class": UA_CLASS.get()} if UA_CLASS.get() else {}), **ev})
 
 
 def _take_game():

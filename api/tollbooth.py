@@ -1272,6 +1272,13 @@ def myop_index():
     return myop.index(BASE)
 
 
+@app.middleware("http")
+async def _myop_ua(request: Request, call_next):
+    if "/myop/v1" in request.url.path:
+        myop.UA_CLASS.set(_ua_class(request.headers.get("user-agent", "")))
+    return await call_next(request)
+
+
 def _myop(fn, *a):
     try:
         return fn(*a)

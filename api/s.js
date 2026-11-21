@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
   const ua = h["user-agent"] || "";
   const item = { ts: new Date().toISOString(), key: "shirt", slug, found: !!dest, referer: (h["referer"] || "").slice(0, 200),
                  utm_source: String(q.utm_source || "").slice(0, 40), utm_campaign: String(q.utm_campaign || "").slice(0, 60),
-                 ua_class: /^omenz-/i.test(ua) ? "test" : /bot|crawl|spider|preview|facebookexternalhit|slack|whatsapp|telegram/i.test(ua) ? "bot" : /mozilla/i.test(ua) ? "browser" : "other",
+                 ua_class: /omenz-/i.test(ua) ? "test" : /bot|crawl|spider|preview|facebookexternalhit|slack|whatsapp|telegram/i.test(ua) ? "bot" : /mozilla/i.test(ua) ? "browser" : "other",
                  ua: ua.slice(0, 160), country: h["x-vercel-ip-country"] || "" };
   const token = process.env.APIFY_LOG_TOKEN;
   if (token) {

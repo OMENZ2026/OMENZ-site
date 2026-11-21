@@ -599,7 +599,7 @@ _paid("POST", "uptime/watch", "$0.01",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "days": 30},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}, "days": {"type": "integer"}}, "required": ["url"]}, body=True)
 _paid("GET", "uptime/report", "$0.002",
-      "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. When the endpoint is down (or substitutes=true) it also returns the 3 best live substitutes from ~35,000 x402 APIs. Header X-Watch-Key. By OMENZ.",
+      "Uptime Watch report: uptime %, median latency, incidents, price changes and payout-wallet changes for a watched endpoint, plus recent checks. When the endpoint is down (or substitutes=true) it also returns the 3 best live substitutes from ~38,000 x402 APIs. Header X-Watch-Key. By OMENZ.",
       {"id": "uw_..."}, {"properties": {"id": {"type": "string"}}, "required": ["id"]})
 
 # Buyer Kit (founder 2026-11-17: "more tools for agents who are going to be buying stuff"): budget/*, pay/verify, delivery-check
@@ -637,7 +637,7 @@ _paid("POST", "delivery-check", "$0.002",
                       "example": {}, "must_have": {"type": "array"}}, "required": ["delivered"]}, body=True)
 
 _paid("GET", "market/cheapest", "$0.002",
-      "Cheapest Working Tool: 'I need X' -> the cheapest x402 provider that ANSWERS right now. Matches from ~35,000 indexed endpoints, sorted by price, each live-probed (unpaid) in that order; returns the pick + runners-up by live price and latency, and the cheap-but-dead ones it skipped. Never pays a target. By OMENZ.",
+      "Cheapest Working Tool: 'I need X' -> the cheapest x402 provider that ANSWERS right now. Matches from ~38,000 indexed endpoints, sorted by price, each live-probed (unpaid) in that order; returns the pick + runners-up by live price and latency, and the cheap-but-dead ones it skipped. Never pays a target. By OMENZ.",
       {"q": "token price", "max_price_usd": 0.01, "want": 3},
       {"properties": {"q": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "want": {"type": "integer"},
                       "min_match": {"type": "number"}}, "required": ["q"]})
@@ -725,7 +725,7 @@ _paid("POST", "settlement/rescue", "$0.05",
                       "pay_to": {"type": "string"}, "amount_usd": {"type": "number"}, "window_hours": {"type": "integer"}}}, body=True)
 
 _paid("POST", "market/job", "$0.01",
-      "OMENZ Market job desk: tell OMENZ the JOB ('token price', 'weather by city', 'company enrichment by domain'). We search ~35,000 x402 endpoints, live-probe the matches (unpaid), and rank WORKING providers by live price and latency, each with its OMENZ-verified history (purchases checked, delivery rate, verified sales), plus settlement economics and a ready-to-send Transaction Guard request for the pick. Then guard -> pay -> checkout/close -> (settlement/rescue if weird). Want it guarded in the same call? POST market/job/guarded ($0.05). Never pays a provider. By OMENZ.",
+      "OMENZ Market job desk: tell OMENZ the JOB ('token price', 'weather by city', 'company enrichment by domain'). We search ~38,000 x402 endpoints, live-probe the matches (unpaid), and rank WORKING providers by live price and latency, each with its OMENZ-verified history (purchases checked, delivery rate, verified sales), plus settlement economics and a ready-to-send Transaction Guard request for the pick. Then guard -> pay -> checkout/close -> (settlement/rescue if weird). Want it guarded in the same call? POST market/job/guarded ($0.05). Never pays a provider. By OMENZ.",
       {"need": "token price", "max_price_usd": 0.01, "purpose": "BTC price for the daily report"},
       {"properties": {"need": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "want": {"type": "integer"},
                       "purpose": {"type": "string"}, "payer": {"type": "string"}, "budget_id": {"type": "string"}}, "required": ["need"]}, body=True)
@@ -1630,7 +1630,7 @@ _MCP_TOOLS = None
 _RO = {"readOnlyHint": True, "idempotentHint": True, "openWorldHint": False}
 _MCP_FREE = [
     {"name": "swapmeet_search", "title": "AI Agent Swap Meet search (free)", "_method": "GET", "_free_path": BASE + "/swapmeet/v1/search",
-     "description": "Free. Search ~35,000 paid agent services (x402 Bazaar) by what you need; shows busy booths and OMENZ-verified history.",
+     "description": "Free. Search ~38,000 paid agent services (x402 Bazaar) by what you need; shows busy booths and OMENZ-verified history.",
      "inputSchema": {"type": "object", "properties": {"q": {"type": "string", "description": "what you need, e.g. 'token price'"}}, "required": ["q"]}, "annotations": _RO},
     {"name": "omenz_track_record", "title": "OMENZ track record (free)", "_method": "GET", "_free_path": BASE + "/v1/track-record",
      "description": "Free. Test evidence per OMENZ tool plus the earned record of real outside calls, success rates and daily self-probe uptime.",

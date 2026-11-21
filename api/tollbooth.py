@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/token/check?token=        $0.005  Token Check (Base): safe to hold/accept? proxy, owner powers, OFAC
   GET  /api/tollbooth/v1/token/balance?address=&token=  $0.002  Token Balance (Base): any ERC-20 or native ETH
   GET  /api/tollbooth/v1/allowance?owner=&token=&spender=  $0.002  Allowance Check: can this spender move my tokens? UNLIMITED flagged + revoke call
   GET  /api/tollbooth/v1/settlement-cost    $0.002  Settlement Cost Check: live Base gas/USD cost of a settlement + settle/batch verdict
@@ -148,6 +149,7 @@ import buyer  # noqa: E402
 import checkout  # noqa: E402
 import facilitators  # noqa: E402
 import chain_tools  # noqa: E402
+import token_check  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -683,6 +685,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
 
+_paid("GET", "token/check", "$0.005",
+      "OMENZ Token Check (Base): is this token safe to hold or accept, before your agent buys, swaps or takes it as payment? Reads the contract itself: real ERC-20 or not, upgradeable proxy (EIP-1967 / OpenZeppelin slots: code can change under you), active owner and the powers in its bytecode (mint, pause, blacklist/freeze, fees, tx limits), owner/admin on the OFAC SDN list. SAFE_TO_HOLD / CAUTION / RED_FLAGS with every reason; regulated stablecoins labeled (issuer freeze is by design). Deterministic: no AI grades, no price predictions. Public chain data, never signs. By OMENZ.",
+      {"token": "0x4200000000000000000000000000000000000006"},
+      {"properties": {"token": {"type": "string", "description": "ERC-20 contract address on Base"}}, "required": ["token"]})
 _paid("GET", "token/balance", "$0.002",
       "Token Balance (Base): balance of any ERC-20 (symbol + decimals resolved) or native ETH for an address, raw and human units, read live from Base. For agents checking they can afford a purchase, or that a payment arrived. Public chain data, never needs a key. By OMENZ.",
       {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"},
@@ -2086,6 +2092,12 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/token/check")
+def token_check_route(request: Request, token: str = Query(...)):
+    request.state.extra["action"] = "token_check"
+    return token_check.check(token)
 
 
 @app.get(BASE + "/v1/token/balance")

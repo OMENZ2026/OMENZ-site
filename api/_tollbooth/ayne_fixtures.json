@@ -101,7 +101,7 @@
 },
 "sample_response": {
 "locker_id": "lk_042227ab13ce8ea8c767b8cc",
-"access_key": "4krhaCJmMzNPCCMeYTnFLr3zjR6OxEU5c0QqjWTdtPc",
+"access_key": "example-access-key-shown-once-to-the-caller",
 "expires_at": 1795273118,
 "bytes": 103,
 "fields": [
@@ -119,7 +119,7 @@
 },
 "sample_response": {
 "box_id": "pb_f0b6e2d57af0bb25efdbfdf3",
-"owner_key": "CHAT3j5B0rhL626Nzy4JbOYneCv_0HQfNf10oLbjN0M",
+"owner_key": "example-owner-key-shown-once-to-the-caller",
 "expires_at": 1797260318,
 "note": "Share box_id so others can drop messages. Keep owner_key private: it's shown once and is the only way to open the box."
 }
@@ -187,7 +187,7 @@
 },
 "sample_response": {
 "locker_id": "lk_eb34dea59d2ccd96d35b4378",
-"access_key": "aEUCqxS4G-XLUxW3eXoBUHG4qHuYgImOj9YmbDlzJM8",
+"access_key": "example-access-key-shown-once-to-the-caller",
 "expires_at": 1795273118,
 "bytes": 164,
 "fields": [
@@ -384,7 +384,7 @@
 },
 "sample_response": {
 "locker_id": "lk_84bb1215ea485a7941f9ab02",
-"access_key": "WNOYSSEnMwvLw07oW0mWGPARMcdWAMrmsjw0oz9bcwI",
+"access_key": "example-access-key-shown-once-to-the-caller",
 "expires_at": 1795877919,
 "bytes": 279,
 "fields": [
@@ -818,8 +818,8 @@
 },
 "sample_response": {
 "queue_id": "wq_a8cc9525d18032b3b4acbfed",
-"owner_key": "aXY8Q8_0Z7L3ZYdSbSTGqCJmMM1bScUwMSrvKxfYaj4",
-"worker_key": "Kw8iXMTAXNpQyf2g3U7AzDjcimH7c3voRDqxRo2nhIY",
+"owner_key": "example-owner-key-shown-once-to-the-caller",
+"worker_key": "example-worker-key-shown-once-to-the-caller",
 "expires_at": 1797260325,
 "note": "Keys are shown once. Give worker_key to your worker agents; keep owner_key. Send either as header X-Queue-Key."
 }

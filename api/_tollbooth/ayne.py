@@ -30,7 +30,8 @@ LIVE = {
 }
 # 11-21: OMENZ's best-selling tool runs LIVE in AYNE a few times per visitor per day (then the labeled sample),
 # so an agent can see Authorize judge ITS OWN target before paying. Counted in KV per visitor/day.
-LIMITED_LIVE = {"POST /authorize": 3, "GET /authorize": 3}
+# 11-21 (AYNE data, 7d): the two most-tried sample routes were agent-ready (29) and market/find (21) -> a small live taste each.
+LIMITED_LIVE = {"POST /authorize": 3, "GET /authorize": 3, "GET /agent-ready": 1, "GET /market/find": 2}
 _fx = None
 _count = {"day": None, "total": 0, "v": {}}
 

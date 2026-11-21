@@ -163,10 +163,44 @@ def reliability(url, method=None):
                 reasons.append("+0 WARNING: live payTo differs from the listing")
     else:
         reasons.append(f"+0 not taking payment right now ({q['status']}: {q.get('reason')})")
+    evm = [(o.get("pay_to") or "").lower() for o in (q.get("options") or []) if str(o.get("pay_to") or "").lower().startswith("0x") and len(o.get("pay_to")) == 42]
+    pt = (evm[0] if evm else None) or next((x for x in (r[8] if r and r[8] else []) if str(x).startswith("0x")), None)
+    if pt:
+        try:
+            pi = payer_independence(pt)
+            out["payer_independence"] = pi
+            if pi["distinct_payers"] and pi["suspect_share"] is not None and pi["suspect_share"] >= 0.5:
+                # informational, no score change: services that pay out by design (sends, refunds, rewards) overlap heavily too
+                reasons.append(f"+0 NOTE: {pi['cycling_suspects']} of {pi['distinct_payers']} recent payers also received USDC from the payee: "
+                               "normal for payout/send/refund services, a red flag for anything else")
+            elif pi["distinct_payers"]:
+                reasons.append(f"+0 {pi['independent_payers']} of {pi['distinct_payers']} payers in the last {pi['window_days']} days look independent")
+        except Exception as e:
+            out["payer_independence"] = {"error": f"unavailable ({type(e).__name__})"}
     grade = "A" if score >= 80 else "B" if score >= 60 else "C" if score >= 40 else "D"
     return {**out, "score": min(100, score), "grade": grade, "reasons": reasons,
             "limits": "Usage comes from the public Bazaar index (weekly); we can't see whether paid responses were correct. "
                       "Pair with Claim->Evidence / Acceptance checks on what you receive."}
+
+
+def payer_independence(pay_to, days=2):
+    """Who really pays this seller? (suggested by @flowexecutor on Threads, 11-17; built 11-21)
+    Public Base data only: USDC transfers INTO pay_to vs transfers OUT of pay_to in the same window.
+    A payer that also RECEIVED USDC from pay_to (or is pay_to) looks like the seller's own wallets cycling."""
+    import wallet
+    a = wallet._check(pay_to)
+    head = int(wallet._rpc("eth_blockNumber", []), 16)
+    start = head - int(days * 86400 / wallet.block_s())
+    inc = wallet.logs_range({"address": wallet.USDC, "topics": [wallet.TRANSFER, None, wallet._topic(a)]}, start, head)
+    out = wallet.logs_range({"address": wallet.USDC, "topics": [wallet.TRANSFER, wallet._topic(a)]}, start, head)
+    payers = {("0x" + lg["topics"][1][-40:]).lower() for lg in inc}
+    funded = {("0x" + lg["topics"][2][-40:]).lower() for lg in out}
+    suspects = sorted((payers & funded) | ({a.lower()} & payers))
+    indep = len(payers) - len(suspects)
+    return {"window_days": days, "payments_in": len(inc), "distinct_payers": len(payers), "independent_payers": indep,
+            "cycling_suspects": len(suspects), "suspect_share": round(len(suspects) / len(payers), 3) if payers else None,
+            "method": "payer also received USDC from the payee in the window (or is the payee) = possible self-cycling",
+            "read_with_care": "services that pay out by design (send, transfer, refund, reward, faucet) overlap heavily without any cycling"}
 
 
 def vendor(url, method=None):

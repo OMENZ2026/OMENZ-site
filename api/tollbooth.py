@@ -449,7 +449,7 @@ _paid("GET", "market/find", "$0.002",
       {"properties": {"q": {"type": "string"}, "need": {"type": "string"}, "max_price_usd": {"type": "number"}, "network": {"type": "string"}, "exclude": {"type": "string"},
                       "limit": {"type": "integer"}, "live_check": {"type": "integer"}, "min_payers": {"type": "integer"}}, "required": ["q"]})
 _paid("GET", "market/reliability", "$0.002",
-      "Micropayment Reliability Score: should your agent trust this paid endpoint? 0-100 + grade with every reason: public 30-day usage, answering now with valid x402 requirements, speed, live price vs listed price, payTo vs listed payTo (catches swapped wallets). Never pays. By OMENZ.",
+      "Micropayment Reliability Score: should your agent trust this paid endpoint? 0-100 + grade with every reason: public 30-day usage, answering now with valid x402 requirements, speed, live price vs listed price, payTo vs listed payTo (catches swapped wallets), and payer independence from public Base data (how many recent payers look independent vs also receiving USDC from the payee). Never pays. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET"},
       {"properties": {"url": {"type": "string"}, "method": {"type": "string"}}, "required": ["url"]})
 _paid("GET", "vendor-check", "$0.01",

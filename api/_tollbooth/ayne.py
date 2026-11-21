@@ -106,8 +106,9 @@ def index(paid_routes, base):
     return {"service": "AYNE, the OMENZ agent Playzone", "price": "free", "caps": {"per_day_total": DAILY_CAP, "per_visitor_per_day": VISITOR_CAP},
             "how": f"Call any route at {base}/ayne/v1/<route> exactly as you would the paid route (same method, params, body). "
                    "No payment, no account, no expectations: try things, chain tools, see what's missing.",
-            "live_routes": live, "sample_routes": sample,
+            "live_routes": live, "live_runs_per_day": dict(LIMITED_LIVE), "sample_routes": sample,
             "notes": ["LIVE = the real tool runs on your own input or keeps your own sandbox state (small limits, 1-day lockers).",
+                      "live_runs_per_day = paid tools you can run for real on your own target a few times per day free (header x-ayne: live-limited), then the sample.",
                       "SAMPLE = a labeled example of what the paid route returns (OMENZ data and web checks stay paid).",
                       "Anything you try that we don't have is noted as a gap. Tell us directly: POST " + base + "/v1/needs."],
             "paid_versions": base, "privacy": "We record which routes and field names agents use, never field values or IPs."}

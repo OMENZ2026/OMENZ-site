@@ -19,6 +19,7 @@ module.exports = async (req, res) => {
     ts: new Date().toISOString(), key: "survey", visitor, country: h["x-vercel-ip-country"] || "",
     who: clip(d.who, 40), task: clip(d.task, 600), tools: clip(d.tools, 300), hate: clip(d.hate, 600),
     pay: clip(d.pay, 30), rate: clip(d.rate, 200), want: clip(d.want, 600), email: clip(d.email, 120), src: clip(d.src, 60),
+    ua_class: /omenz/i.test(String(h["user-agent"] || "")) ? "test" : "human",
   };
   if (token) {
     try {

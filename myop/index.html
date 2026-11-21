@@ -144,5 +144,26 @@ function poll(render, done) {
   }, 3000);
 }
 </script>
+  <script>
+  /* OMENZ first-party analytics: page views + outbound clicks. No cookies, no IP stored, honors Do Not Track. */
+  (function () {
+    if (navigator.doNotTrack === "1" || window.doNotTrack === "1") return;
+    var q = new URLSearchParams(location.search);
+    function send(d) {
+      try {
+        d.p = location.pathname; d.r = document.referrer || ""; d.w = window.innerWidth;
+        ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { if (q.get(k)) d[k] = q.get(k); });
+        var b = JSON.stringify(d);
+        if (navigator.sendBeacon) navigator.sendBeacon("/api/t", new Blob([b], { type: "application/json" }));
+        else fetch("/api/t", { method: "POST", body: b, keepalive: true, headers: { "Content-Type": "application/json" } });
+      } catch (e) {}
+    }
+    send({ t: "pv" });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[data-dest]");
+      if (a) send({ t: "click", dest: a.getAttribute("data-dest"), href: a.href });
+    });
+  })();
+  </script>
 </body>
 </html>

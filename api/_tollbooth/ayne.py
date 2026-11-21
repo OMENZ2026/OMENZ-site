@@ -28,6 +28,9 @@ LIVE = {
     "POST /uptime/watch", "GET /uptime/report", "POST /jacket/create", "POST /jacket/checkout", "POST /jacket/checkin", "GET /jacket/history",
     "POST /po/issue", "POST /po/redeem", "POST /loadout/check", "POST /loadout/compile", "POST /loadout/simulate", "POST /robot/action-gate", "POST /budget/create", "POST /budget/delegate", "POST /budget/spend", "POST /budget/release", "GET /budget/status",
 }
+# 11-21: OMENZ's best-selling tool runs LIVE in AYNE a few times per visitor per day (then the labeled sample),
+# so an agent can see Authorize judge ITS OWN target before paying. Counted in KV per visitor/day.
+LIMITED_LIVE = {"POST /authorize": 3, "GET /authorize": 3}
 _fx = None
 _count = {"day": None, "total": 0, "v": {}}
 
@@ -112,3 +115,24 @@ def index(paid_routes, base):
 def internal_secret():
     """Shared secret for trusted internal AYNE calls (the MCP server), derived from the deployment's storage secret."""
     return hashlib.sha256(("ayne-internal|" + os.environ.get("APIFY_LOG_TOKEN", "")).encode()).hexdigest()[:32]
+
+
+def limited_ok(vis, key):
+    """True if this visitor still has a free LIVE run of `key` today (LIMITED_LIVE caps)."""
+    cap = LIMITED_LIVE.get(key)
+    if not cap:
+        return False
+    k = "ayne_lim_" + time.strftime("%Y%m%d", time.gmtime())
+    try:
+        rec = _kv("GET", k) or {}
+    except Exception:
+        return False
+    tag = f"{vis}|{key}"
+    if rec.get(tag, 0) >= cap:
+        return False
+    rec[tag] = rec.get(tag, 0) + 1
+    try:
+        _kv("PUT", k, rec)
+    except Exception:
+        return False
+    return True

@@ -1021,7 +1021,8 @@ async def _ayne(request, call_next, t0):
                                       "The paid routes are always open: " + BASE, "ayne": True}, status_code=429)
     key = f"{method} {sub}"
     paid_key = f"{method} {BASE}/v1{sub}"
-    if key in ayne.LIVE:
+    limited = key not in ayne.LIVE and key in ayne.LIMITED_LIVE and await run_in_threadpool(ayne.limited_ok, vis, key)
+    if key in ayne.LIVE or limited:
         if len(raw) > ayne.MAX_BODY:
             ev.update(mode="too_big")
             await run_in_threadpool(ayne.log, ev)
@@ -1030,7 +1031,7 @@ async def _ayne(request, call_next, t0):
         request.scope["raw_path"] = request.scope["path"].encode()
         request.state.ayne = True
         resp = await call_next(request)
-        resp.headers["x-ayne"] = "live"
+        resp.headers["x-ayne"] = "live-limited" if limited else "live"
         ev.update(mode="live", status=resp.status_code)
     elif paid_key in ROUTES:
         fx = ayne.fixtures().get(paid_key) or {}

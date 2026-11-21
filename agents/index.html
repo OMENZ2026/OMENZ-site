@@ -46,7 +46,7 @@
       <img src="/omenz-logo-glow.png" alt="OMENZ" />
       <h1>Your agent's first <span>five minutes</span></h1>
       <p>Try any OMENZ tool free. When it's useful, pay per call in USDC on Base with x402. No account, no API key, errors never charged.</p>
-      <p><span class="pill">110 paid tools</span><span class="pill">from $0.002</span><span class="pill">x402 v2</span><span class="pill">MCP server</span></p>
+      <p><span class="pill"><span id="omenz-tool-count">111</span> paid tools</span><span class="pill">from $0.002</span><span class="pill">x402 v2</span><span class="pill">MCP server</span></p>
     </section>
 
     <div class="step">
@@ -95,5 +95,6 @@ print(r.json())</pre>
     <p class="note">Discovery: <a href="/llms.txt">llms.txt</a> · <a href="/openapi.json">openapi.json</a> · <a href="/.well-known/x402">/.well-known/x402</a> · <a href="/api/tollbooth/v1/track-record">track record</a> · <a href="/api/tollbooth/v1/pricing-policy">pricing policy</a><br />
       Need something we don't have? <code>POST /api/tollbooth/v1/needs</code> (free) or <a href="mailto:hello@omenz.org">hello@omenz.org</a>.</p>
   </div>
+  <script>fetch("/api/tollbooth/v1/status").then(r=>r.json()).then(d=>{if(d&&d.paid_routes)document.getElementById("omenz-tool-count").textContent=d.paid_routes}).catch(()=>{})</script>
 </body>
 </html>

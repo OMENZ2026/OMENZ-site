@@ -1212,9 +1212,23 @@ def passport_key():
 def swapmeet_aisles(request: Request):
     request.state.extra["action"] = "swapmeet_aisles"
     try:
-        return swapmeet.aisles()
+        out = dict(swapmeet.aisles())
     except Exception as e:
         return JSONResponse({"error": "market index unavailable", "detail": str(e)[:120]}, status_code=503)
+    # Skins aisle (garage 11-21, queue 0ap): whole jobs pre-equipped, OMENZ's own booth row
+    try:
+        cat = loadout.catalog()
+        pres = sorted(cat.get("presets", []), key=lambda p: (p.get("kind") == "embodied", p.get("name", "")))
+        skins = [{"booth": "www.omenz.org", "url": "https://www.omenz.org" + BASE + "/v1/loadout/compile", "method": "POST",
+                  "price_usd": float(str(ROUTES[f"POST {BASE}/v1/loadout/compile"]["accepts"]["price"]).lstrip("$")),
+                  "what": f"Agent Skin {p['name']}: {p.get('for', '')}"[:160], "networks": ["eip155:8453"], "foot_traffic": "new",
+                  "skin_id": p["id"], "kind": p.get("kind"), "appraise": "https://www.omenz.org/skins/"} for p in pres[:12]]
+        if skins:
+            out["aisles"] = list(out.get("aisles", [])) + [{"id": "skins", "name": "Agent Skins (whole jobs, OMENZ)", "booths": skins,
+                                                            "browse": "https://www.omenz.org/skins/", "try_free": BASE + "/ayne/v1/loadout/compile"}]
+    except Exception:
+        pass
+    return out
 
 
 @app.get(BASE + "/swapmeet/v1/search")

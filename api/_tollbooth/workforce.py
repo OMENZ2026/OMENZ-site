@@ -82,7 +82,7 @@ def _item(q, item_id):
 
 def _public(i):
     return {k: i.get(k) for k in ("id", "title", "state", "priority", "holder", "lease_until", "attempts", "max_attempts",
-                                  "not_before", "repeat_every_minutes", "payload", "checkpoint", "result", "bids",
+                                  "not_before", "repeat_every_minutes", "payload", "checkpoint", "result", "bids", "jacket_id",
                                   "escalation", "history", "created")}
 
 
@@ -102,7 +102,7 @@ def create(name=None, supervisor_box_id=None, lease_seconds=900, heartbeat_grace
             "note": "Keys are shown once. Give worker_key to your worker agents; keep owner_key. Send either as header X-Queue-Key."}
 
 
-def enqueue(qid, key, title, payload=None, priority=0, not_before=None, repeat_every_minutes=None, max_attempts=3, bidding=False):
+def enqueue(qid, key, title, payload=None, priority=0, not_before=None, repeat_every_minutes=None, max_attempts=3, bidding=False, jacket_id=None, jacket_fields=None):
     q = _load(qid, key, "owner")
     if not title:
         raise LockerError(422, "title required")
@@ -119,7 +119,10 @@ def enqueue(qid, key, title, payload=None, priority=0, not_before=None, repeat_e
                 "state": "bidding" if bidding else "queued", "attempts": 0, "max_attempts": max(1, min(int(max_attempts or 3), 10)),
                 "not_before": int(not_before) if not_before else None,
                 "repeat_every_minutes": max(1, int(repeat_every_minutes)) if repeat_every_minutes else None,
-                "created": _now(), "bids": [] if bidding else None}
+                "created": _now(), "bids": [] if bidding else None,
+                # 11-20: a task can carry a Job Jacket (id only; the jacket key is never stored here)
+                "jacket_id": str(jacket_id)[:40] if jacket_id else None,
+                "jacket_fields": [str(f)[:60] for f in jacket_fields][:50] if isinstance(jacket_fields, list) else None}
     except (TypeError, ValueError):
         raise LockerError(422, "priority, not_before, repeat_every_minutes, max_attempts must be integers")
     _event(item, "enqueued", "owner")
@@ -128,7 +131,7 @@ def enqueue(qid, key, title, payload=None, priority=0, not_before=None, repeat_e
     return {"item_id": item["id"], "state": item["state"]}
 
 
-def claim(qid, key, worker_id):
+def claim(qid, key, worker_id, jacket_key=None):
     if not worker_id:
         raise LockerError(422, "worker_id required")
     q = _load(qid, key, "worker")
@@ -145,8 +148,20 @@ def claim(qid, key, worker_id):
     _event(i, "claimed", worker_id, resumed_from=i.get("checkpoint"))
     w["current"] = i["id"]
     _save(qid, q)
-    return {"item": _public(i), "lease_seconds": q["lease_seconds"],
-            "note": "a checkpoint is present: resume from it" if i.get("checkpoint") else None}
+    out = {"item": _public(i), "lease_seconds": q["lease_seconds"],
+           "note": "a checkpoint is present: resume from it" if i.get("checkpoint") else None}
+    if i.get("jacket_id"):
+        out["jacket_id"] = i["jacket_id"]
+        if jacket_key:  # one call to start a shift: claim + jacket checkout
+            import jacket
+            try:
+                out["jacket"] = jacket.checkout(i["jacket_id"], jacket_key, {"worker": str(worker_id)[:80], "fields": i.get("jacket_fields"),
+                                                                            "lease_minutes": max(1, q["lease_seconds"] // 60)})
+            except LockerError as e:
+                out["jacket_error"] = str(e)[:200]
+        else:
+            out["jacket_next"] = "send jacket_key with the claim (or POST /v1/jacket/checkout) to get this task's working state"
+    return out
 
 
 def _held(q, item_id, worker_id):

@@ -18,9 +18,9 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = "0.1.0"
+VERSION = "0.2.1"
 UA = "OMENZ-acceptance-check/0.1 (+https://www.omenz.org; unfunded probe key, cannot pay)"
-FACILITATOR_HINTS = ("insufficient", "balance", "funds", "facilitator", "verify failed", "invalid_exact_evm")
+FACILITATOR_HINTS = ("insufficient", "balance", "funds", "facilitator", "verify failed", "invalid_exact_evm", "verification_failed", "verification failed")
 LOCAL_MISMATCH = ("no matching", "extension_echo_mismatch", "echo")
 
 
@@ -97,6 +97,20 @@ def check(url, method="GET"):
     from x402.mechanisms.evm.exact import ExactEvmScheme
 
     req = decode_payment_required_header(pr)
+    # 11-21: probe with the seller's OWN example input (bazaar info) so routes that validate input before payment
+    # aren't misread as refusing money; with no example, a 4xx before the payment step is INCONCLUSIVE, not a problem.
+    ex_body, ex_query = None, None
+    try:
+        bz = (v2.get("extensions") or {}).get("bazaar") or {}
+        inp = (bz.get("info") or {}).get("input") or {}
+        ex_body, ex_query = inp.get("body"), inp.get("queryParams")
+    except Exception:
+        pass
+    import urllib.parse as _up
+    probe_url = url
+    if ex_query and isinstance(ex_query, dict) and "?" not in url:
+        probe_url = url + "?" + _up.urlencode({k: (v if isinstance(v, str) else json.dumps(v)) for k, v in ex_query.items()})
+    probe_body = json.dumps(ex_body).encode() if (method == "POST" and isinstance(ex_body, (dict, list))) else None
     nets = sorted({a.network for a in req.accepts})
     evm = [n for n in nets if n.startswith("eip155:")]
     if not evm:
@@ -111,8 +125,11 @@ def check(url, method="GET"):
         except Exception as e:
             out["probes"].append({"probe": label, "skipped": f"could not build payload: {type(e).__name__}"})
             return None
-        s, h, b, m = _req(url, method, {"PAYMENT-SIGNATURE": encode_payment_signature_header(payload)})
+        s, h, b, m = _req(probe_url, method, {"PAYMENT-SIGNATURE": encode_payment_signature_header(payload)}, probe_body)
         why = _reason(s, h, b)
+        if s not in (402,) and 400 <= s < 500:
+            out["probes"].append({"probe": label, "status": s, "ms": m, "result": "INPUT_REJECTED_BEFORE_PAYMENT", "reason": why})
+            return "INCONCLUSIVE"
         low = why.lower()
         res = ("REACHED_FACILITATOR" if any(k in low for k in FACILITATOR_HINTS) and not any(k in low for k in LOCAL_MISMATCH)
                else "REFUSED_LOCALLY" if any(k in low for k in LOCAL_MISMATCH) else "OTHER")
@@ -146,9 +163,14 @@ def check(url, method="GET"):
     if fresh == "ACCEPTED_WITHOUT_SETTLEMENT":
         problems.append("SERVES_UNPAID: an unfunded payment got a success response")
         fixes.append("Verify (and settle) with the facilitator before running the handler.")
+    elif fresh == "INCONCLUSIVE":
+        problems_note = "the route rejected our probe's input before the payment step; payment acceptance not testable without valid input (send an example in your 402's bazaar extension)"
+        out["inconclusive"] = problems_note
+    elif fresh == "REFUSED_LOCALLY":
+        problems.append("FRESH_PAYMENT_REFUSED: a correctly built payment for your CURRENT 402 was refused at the requirements-matching step")
+        fixes.append("Your server's accepted-requirements comparison rejects its own 402; compare scheme/network/asset/payTo/amount only.")
     elif fresh != "REACHED_FACILITATOR":
-        problems.append("FRESH_PAYMENT_NOT_VERIFIED: a correctly built payment did not reach the facilitator")
-        fixes.append("Check the facilitator config and that your 402 requirements are internally consistent.")
+        out["inconclusive"] = "the fresh payment got an unrecognized answer (custom flow or unusual error text); not counted as a problem"
     if stale_ext == "REFUSED_LOCALLY":
         problems.append("REFUSES_STALE_DISCOVERY_ECHO: buyers who read an older 402 are refused after you edit description/examples")
         fixes.append("Treat the bazaar extension as discovery-only: drop it before validate_extensions (it never affects money).")
@@ -158,6 +180,8 @@ def check(url, method="GET"):
     if v1_res == "IGNORED_SILENTLY":
         problems.append("V1_CLIENTS_DROPPED_SILENTLY: X-PAYMENT (x402 v1) payments get the same 402 with no reason")
         fixes.append("Accept v1 payloads too, or return an explicit error telling v1 clients to upgrade.")
-    verdict = "ACCEPTS_GOOD_MONEY" if not problems else ("SERVES_UNPAID" if fresh == "ACCEPTED_WITHOUT_SETTLEMENT" else "REFUSES_GOOD_MONEY")
+    verdict = ("ACCEPTS_GOOD_MONEY" if not problems else ("SERVES_UNPAID" if fresh == "ACCEPTED_WITHOUT_SETTLEMENT" else "REFUSES_GOOD_MONEY"))
+    if fresh not in ("REACHED_FACILITATOR", "ACCEPTED_WITHOUT_SETTLEMENT", "REFUSED_LOCALLY") and not problems:
+        verdict = "INCONCLUSIVE"
     return {**out, "verdict": verdict, "x402_version": 2, "networks": nets, "problems": problems, "fixes": fixes,
             "note": "OMENZ found this exact leak on its own server (2026-11-20): a funded repeat buyer was refused 4 times."}

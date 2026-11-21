@@ -101,7 +101,7 @@
 },
 "sample_response": {
 "locker_id": "lk_042227ab13ce8ea8c767b8cc",
-"access_key": "example-access-key-shown-once-to-the-caller",
+"access_key": "access-key-issued-once-to-caller-7f3a9c",
 "expires_at": 1795273118,
 "bytes": 103,
 "fields": [
@@ -119,7 +119,7 @@
 },
 "sample_response": {
 "box_id": "pb_f0b6e2d57af0bb25efdbfdf3",
-"owner_key": "example-owner-key-shown-once-to-the-caller",
+"owner_key": "owner-key-issued-once-to-caller-7f3a9c",
 "expires_at": 1797260318,
 "note": "Share box_id so others can drop messages. Keep owner_key private: it's shown once and is the only way to open the box."
 }
@@ -187,7 +187,7 @@
 },
 "sample_response": {
 "locker_id": "lk_eb34dea59d2ccd96d35b4378",
-"access_key": "example-access-key-shown-once-to-the-caller",
+"access_key": "access-key-issued-once-to-caller-7f3a9c",
 "expires_at": 1795273118,
 "bytes": 164,
 "fields": [
@@ -384,7 +384,7 @@
 },
 "sample_response": {
 "locker_id": "lk_84bb1215ea485a7941f9ab02",
-"access_key": "example-access-key-shown-once-to-the-caller",
+"access_key": "access-key-issued-once-to-caller-7f3a9c",
 "expires_at": 1795877919,
 "bytes": 279,
 "fields": [
@@ -818,8 +818,8 @@
 },
 "sample_response": {
 "queue_id": "wq_a8cc9525d18032b3b4acbfed",
-"owner_key": "example-owner-key-shown-once-to-the-caller",
-"worker_key": "example-worker-key-shown-once-to-the-caller",
+"owner_key": "owner-key-issued-once-to-caller-7f3a9c",
+"worker_key": "worker-key-issued-once-to-caller-7f3a9c",
 "expires_at": 1797260325,
 "note": "Keys are shown once. Give worker_key to your worker agents; keep owner_key. Send either as header X-Queue-Key."
 }
@@ -1586,7 +1586,7 @@
 "example_input": {
 "packet": {
 "objective": "ship v2",
-"notes": "...long..."
+"notes": "Long meeting notes: we agreed to ship v2 Friday, Ana owns the tests, budget is $40, skip the redesign for now."
 },
 "required": [
 "objective"
@@ -1596,7 +1596,7 @@
 "sample_response": {
 "packet": {
 "objective": "ship v2",
-"notes": "...long..."
+"notes": "Long meeting notes: we agreed to ship v2 Friday, Ana owns the tests, budget is $40, skip the redesign for now."
 },
 "bytes_before": 47,
 "bytes_after": 47,

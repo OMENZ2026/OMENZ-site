@@ -55,6 +55,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/starter-pack        free    Agent Business Starter Pack
   GET  /api/tollbooth/swapmeet/v1[/search|/new|/hot], POST /booth   free    OMENZ AI Agent Swap Meet (aisles, search, bring a booth)
   POST /api/tollbooth/v1/jacket/create|checkout|checkin  $0.002, GET jacket/history $0.002  Job Jacket: check a job's minimum working state out/in
+  POST /api/tollbooth/v1/send/check $0.005   Send Check: SEND / CAUTION / STOP before an agent sends USDC/ETH (OFAC, poisoning, contract, balance)
   POST /api/tollbooth/v1/wallet-watch $0.01, GET wallet-watch/report $0.002   Wallet Watch: low-balance / low-runway alert to your PO Box
   POST /api/tollbooth/v1/uptime/watch $0.01, GET uptime/report $0.002   Uptime Watch: 30-day monitoring of a paid endpoint (status, latency, price, payTo)
   GET  /api/tollbooth/v1/track-record       free    test evidence per tool (frozen holdouts, release tests), promises, maturity
@@ -582,6 +583,10 @@ _paid("GET", "jacket/history", "$0.002",
       "Job Jacket history: every version (who, when, checkpoint, note, state hash; never the contents) and the current lease. Headers X-Jacket-Id / X-Jacket-Key. By OMENZ.",
       {}, {"properties": {}})
 
+_paid("POST", "send/check", "$0.005",
+      "Send Check: one call before an agent sends USDC or ETH on Base. Recipient on the OFAC sanctions list -> STOP; recipient is the token contract itself -> STOP; ADDRESS POISONING (recipient looks like a payee you used before, same first and last 4 characters, but isn't) -> STOP; sender balance too low -> STOP; recipient is a contract or a never-used address -> CAUTION. Verdict SEND / CAUTION / STOP with reasons. Read-only public chain data; never signs or moves money. By OMENZ.",
+      {"from": "0xc9c7b38C0942914fC8EA12063BC92dcd3b581670", "to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "asset": "USDC", "amount": 0.01},
+      {"properties": {"from": {"type": "string"}, "to": {"type": "string"}, "asset": {"type": "string", "enum": ["USDC", "ETH"]}, "amount": {"type": "number"}, "history_days": {"type": "number"}}, "required": ["to"]}, body=True)
 _paid("POST", "wallet-watch", "$0.01",
       "Wallet Watch: never run dry mid-job. Register an agent's Base wallet with min_usdc and/or min_days (runway at its recent spend rate); OMENZ checks it daily for up to 30 days and drops ONE alert into your Agent PO Box when it runs low (re-arms after you top up). Read-only public chain data; never touches the wallet. Returns watch_id + watch_key (shown once). By OMENZ.",
       {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "min_usdc": 2, "min_days": 3, "pobox_id": "box_...", "days": 30},
@@ -1907,6 +1912,15 @@ def track_record_rollup():
         return track_record.rollup(routes=ROUTES)
     except Exception as e:
         return JSONResponse({"error": "rollup failed", "detail": str(e)[:160]}, status_code=503)
+
+
+@app.post(BASE + "/v1/send/check")
+def send_check_route(request: Request, body: dict = Body(...)):
+    import send_check
+    request.state.extra["action"] = "send_check"
+    r = send_check.check(body)
+    request.state.extra["verdict"] = r.get("verdict")
+    return r
 
 
 @app.post(BASE + "/v1/wallet-watch")

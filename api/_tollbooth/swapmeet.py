@@ -34,9 +34,12 @@ def _kv(method, key, body=None):
     return kv(method, key, body)
 
 
+OMENZ_PRICES = {}  # set by tollbooth.py from its live ROUTES
+
+
 def _booth(r):
     calls = r[5] or 0
-    return {"booth": market._host(r[0]), "url": r[0], "method": r[2], "price_usd": r[3], "what": (r[1] or "")[:160],
+    return {"booth": market._host(r[0]), "url": r[0], "method": r[2], "price_usd": OMENZ_PRICES.get(r[0].split("?")[0], r[3]), "what": (r[1] or "")[:160],
             "networks": (r[4] or [])[:3], "foot_traffic": "busy" if calls >= 1000 else "steady" if calls >= 50 else "quiet",
             "appraise": f"/api/tollbooth/v1/market/reliability?url={r[0]}"}
 

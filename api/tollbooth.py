@@ -843,6 +843,8 @@ def _validate_extensions_money_only(payment_required, payment_payload):
 server.find_matching_requirements = _lenient_match
 server.validate_extensions = _validate_extensions_money_only
 
+# Swap Meet shows OMENZ's own booths at LIVE prices (Bazaar listing data keeps the price from the last settlement; audit 11-21)
+swapmeet.OMENZ_PRICES = {"https://www.omenz.org" + k.split(" ", 1)[1]: float(str(v["accepts"]["price"]).lstrip("$")) for k, v in ROUTES.items()}
 app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 _mw = None
 

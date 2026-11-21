@@ -121,7 +121,7 @@
     "/v1/queue/escalate": "escalates hard cases to a human", "/v1/failure/put": "records what went wrong",
     "/v1/market/cheapest": "finds the cheapest working seller", "/v1/market/job": "finds providers for a job", "/v1/guard": "Transaction Guard before paying",
     "/v1/checkout/open": "checkout: checks before paying", "/v1/checkout/close": "checkout: verifies delivery after paying",
-    "/v1/settlement/rescue": "rescues a stuck payment safely", "/v1/allowance": "checks wallet approvals"
+    "/v1/settlement/rescue": "rescues a stuck payment safely", "/v1/allowance": "checks wallet approvals", "/v1/send/check": "checks a recipient before sending money (sanctions, lookalike addresses)"
   };
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   let data = null, job = "all";

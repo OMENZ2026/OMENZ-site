@@ -334,7 +334,7 @@ PRESETS = {
         "layers": {"skin": {"name": 'Smart Buyer', "look": {"accent_color": "#0aa0ff", "badge": 'OMENZ PURCHASING AGENT'}},
                    "persona": {"tone": 'frugal, careful'},
                    "job": {"title": 'purchasing agent', "goals": ['cheapest working seller', 'no duplicate payments', 'receipt for every spend']},
-                   "tools": ['GET /v1/market/cheapest', 'POST /v1/market/job', 'POST /v1/authorize', 'POST /v1/guard', 'POST /v1/checkout/open', 'POST /v1/checkout/close', 'POST /v1/settlement/rescue', 'GET /v1/allowance', 'POST /v1/budget/spend'],
+                   "tools": ['GET /v1/market/cheapest', 'POST /v1/market/job', 'POST /v1/authorize', 'POST /v1/guard', 'POST /v1/checkout/open', 'POST /v1/checkout/close', 'POST /v1/settlement/rescue', 'GET /v1/allowance', 'POST /v1/send/check', 'POST /v1/budget/spend'],
                    "context": {"jacket_fields": ['budget_id', 'approved_vendors', 'max_price_usd']},
                    "permissions": {'spend_cap_usd_per_day': 5.0, 'require_human_confirm': ['notify.owner'], 'forbidden': ['spend_over_budget']},
                    "behaviors": ['shop', 'guard', 'receipt']},

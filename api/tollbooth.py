@@ -625,11 +625,11 @@ _paid("GET", "budget/status", "$0.002",
       "Shared Budget: cap, spent, remaining this window, spend by agent and by payee, recent purchases. Header X-Budget-Key (owner or spender). By OMENZ.",
       {"id": "bg_..."}, {"properties": {"id": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["id"]})
 _paid("POST", "pay/verify", "$0.002",
-      "Payment Verify: did this x402 payment really settle on Base? Send the tx hash or the seller's PAYMENT-RESPONSE header; get SETTLED / MISMATCH / PENDING / FAILED / NOT_FOUND with payer, payee, USDC amount, block, confirmations and time, checked against the payee/amount you expected. Proof for disputes, refunds and books. Public chain data, never needs a key. By OMENZ.",
+      "Payment Verify: did this x402 payment really settle on Base? Send the tx hash or the seller's PAYMENT-RESPONSE header; get SETTLED / MISMATCH / PENDING / FAILED / NOT_FOUND with payer, payee, USDC amount, block, confirmations and time, checked against the payee/amount you expected. Also Circle Gateway batched payments (GatewayWalletBatched, no per-payment tx): send gateway_nonce or gateway_transfer_id and get PENDING / CONFIRMED / SETTLED / FAILED with payer, payee, amount and the batch tx. Proof for disputes, refunds and books. Public data, never needs a key. By OMENZ.",
       {"tx_hash": "0x...", "expected_pay_to": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "expected_amount_usd": 0.001},
       {"properties": {"tx_hash": {"type": "string"}, "payment_response": {"type": "string"}, "expected_pay_to": {"type": "string"},
                       "expected_payer": {"type": "string"}, "expected_amount_usd": {"type": "number"}, "max_amount_usd": {"type": "number"},
-                      "min_confirmations": {"type": "integer"}}}, body=True)
+                      "min_confirmations": {"type": "integer"}, "gateway_nonce": {"type": "string"}, "gateway_transfer_id": {"type": "string"}}}, body=True)
 _paid("POST", "delivery-check", "$0.002",
       "Delivery Check: you paid; did you get what was advertised? Send the paid endpoint's url (+ method) and the JSON it returned. We read the seller's own x402 discovery output example (unpaid probe) or use your JSON Schema, then compare fields and value types: MATCH / PARTIAL / MISMATCH / NO_CONTRACT, with exactly what's missing, empty or the wrong kind, and error bodies caught. Evidence for finance/refund-request. By OMENZ.",
       {"url": "https://www.omenz.org/api/tollbooth/v1/alive", "method": "GET", "delivered": {"status": "up"}},

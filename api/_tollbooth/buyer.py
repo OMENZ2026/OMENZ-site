@@ -314,6 +314,55 @@ def _decode_payment_response(h):
     return (d.get("transaction") or d.get("txHash") or d.get("transactionHash")), d
 
 
+GATEWAY = "https://gateway-api.circle.com/v1/x402/transfers"
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+NONCE_RE = re.compile(r"^0x[0-9a-fA-F]{64}$")
+GW_VERDICT = {"received": "PENDING", "batched": "PENDING", "confirmed": "CONFIRMED", "completed": "SETTLED", "failed": "FAILED"}
+
+
+def _gateway_verify(body, nonce=None, transfer_id=None):
+    """Circle Gateway batched x402 payments (scheme exact / extra.name GatewayWalletBatched) have no per-payment tx:
+    look the payment up in Circle's public transfer record by EIP-3009 nonce or transfer id (11-21; ~12% of Bazaar
+    payment options use Gateway batching). Circle: credit on 'confirmed', act onchain on 'completed', 'failed' was never charged."""
+    import urllib.request
+    url = f"{GATEWAY}/{transfer_id}" if transfer_id else f"{GATEWAY}?nonce={nonce}"
+    try:
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "OMENZ Payment Verify"}), timeout=20))
+    except Exception as e:
+        return {"verdict": "UNAVAILABLE", "reasons": [f"Circle Gateway lookup failed ({type(e).__name__})"]}
+    rows = [d] if transfer_id and d.get("id") else (d.get("transfers") or [])
+    out = {"rail": "circle_gateway_batched", "lookup": {"nonce": nonce, "transfer_id": transfer_id},
+           "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    if not rows:
+        return {**out, "verdict": "NOT_FOUND", "reasons": ["Circle Gateway has no transfer with this nonce/id (not submitted, wrong id, or not a Gateway batched payment)"]}
+    t = rows[0]
+    amt = round(int(t.get("amount") or 0) / 1e6, 6)
+    out.update(status=t.get("status"), transfer_id=t.get("id"), payer=(t.get("fromAddress") or "").lower(), payee=(t.get("toAddress") or "").lower(),
+               amount_usd=amt, token=t.get("token"), network=t.get("sendingNetwork"), recipient_network=t.get("recipientNetwork"),
+               batch_tx_hash=t.get("txHash"), created_at=t.get("createdAt"), updated_at=t.get("updatedAt"))
+    verdict = GW_VERDICT.get(t.get("status"), "UNKNOWN")
+    mism = []
+    exp_to = str(body.get("expected_pay_to") or "").strip().lower() or None
+    exp_from = str(body.get("expected_payer") or "").strip().lower() or None
+    if exp_to and exp_to != out["payee"]:
+        mism.append(f"payee {out['payee']} is not the expected {exp_to}")
+    if exp_from and exp_from != out["payer"]:
+        mism.append(f"payer {out['payer']} is not the expected {exp_from}")
+    try:
+        if body.get("expected_amount_usd") not in (None, "") and abs(float(body["expected_amount_usd"]) - amt) > 1e-6:
+            mism.append(f"amount ${amt:g} is not the expected ${float(body['expected_amount_usd']):g}")
+        if body.get("max_amount_usd") not in (None, "") and amt > float(body["max_amount_usd"]) + 1e-9:
+            mism.append(f"amount ${amt:g} is above your max ${float(body['max_amount_usd']):g}")
+    except (TypeError, ValueError):
+        return {"verdict": "BAD_INPUT", "reasons": ["expected_amount_usd / max_amount_usd must be numbers"]}
+    if mism and verdict in ("SETTLED", "CONFIRMED", "PENDING"):
+        verdict = "MISMATCH"
+    nxt = {"SETTLED": "settled onchain in a batch: safe for dependent onchain actions", "CONFIRMED": "Circle confirmed it: safe to credit; batch tx not final yet",
+           "PENDING": "accepted by Gateway, waiting for the next batch: don't pay again; check later", "FAILED": "failed: Circle says it was never charged",
+           "MISMATCH": "the payment exists but does not match what you expected", "UNKNOWN": "unrecognized status"}
+    return {**out, "verdict": verdict, "mismatches": mism, "next": nxt.get(verdict)}
+
+
 def pay_verify(body):
     """SETTLED / MISMATCH / PENDING / FAILED / NOT_FOUND / NO_USDC_TRANSFER for one x402 payment on Base."""
     import wallet
@@ -323,8 +372,16 @@ def pay_verify(body):
     if not tx and body.get("payment_response"):
         tx, decoded = _decode_payment_response(body.get("payment_response"))
         tx = str(tx or "")
+    gw_nonce = str(body.get("gateway_nonce") or body.get("nonce") or "").strip()
+    gw_id = str(body.get("gateway_transfer_id") or "").strip().lower()
+    if not gw_id and decoded and UUID_RE.match(str(decoded.get("transaction") or "").lower()):
+        gw_id = str(decoded.get("transaction")).lower()   # Gateway settle responses carry a transfer UUID, not a tx hash
+    if gw_id and UUID_RE.match(gw_id):
+        return _gateway_verify(body, transfer_id=gw_id)
+    if gw_nonce and NONCE_RE.match(gw_nonce) and not TXH.match(tx):
+        return _gateway_verify(body, nonce=gw_nonce.lower())
     if not TXH.match(tx):
-        return {"verdict": "BAD_INPUT", "reasons": ["send tx_hash (0x + 64 hex) or payment_response (the seller's PAYMENT-RESPONSE / X-PAYMENT-RESPONSE header)"]}
+        return {"verdict": "BAD_INPUT", "reasons": ["send tx_hash (0x + 64 hex) or payment_response (the seller's PAYMENT-RESPONSE / X-PAYMENT-RESPONSE header); for Circle Gateway batched payments send gateway_nonce (the EIP-3009 nonce you signed) or gateway_transfer_id"]}
     exp_to = str(body.get("expected_pay_to") or "").strip().lower() or None
     exp_from = str(body.get("expected_payer") or "").strip().lower() or None
     for a, n in ((exp_to, "expected_pay_to"), (exp_from, "expected_payer")):

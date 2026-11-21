@@ -129,12 +129,11 @@ async function bring() {
   const r = await fetch(API + '/booth', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: document.getElementById('burl').value.trim(), method: document.getElementById('bmethod').value, what: document.getElementById('bwhat').value.trim() }) });
   const d = await r.json();
-  if (d.accepted) { m.className = 'msg ok'; m.innerText = `Booth open: ${d.booth.booth} at ${price(d.booth.price_usd)}/call. You're in New Arrivals.` + (d.payment_acceptance && d.payment_acceptance.verdict ? `
-
-Free payment-acceptance check: ${d.payment_acceptance.verdict}` + ((d.payment_acceptance.problems||[]).length ? `
-- ${d.payment_acceptance.problems.map(p=>p.split(':')[0]).join('
-- ')}
-Fix: ${(d.payment_acceptance.fixes||[])[0]||''}` : '') : ''); load(); }
+  if (d.accepted) { const pa = d.payment_acceptance || {}; const probs = pa.problems || [];
+    m.className = 'msg ok'; m.innerText = `Booth open: ${d.booth.booth} at ${price(d.booth.price_usd)}/call. You're in New Arrivals.`
+      + (pa.verdict ? '\n\nFree payment-acceptance check: ' + pa.verdict
+        + (probs.length ? '\n- ' + probs.map(p => p.split(':')[0]).join('\n- ') + '\nFix: ' + ((pa.fixes || [])[0] || '') : '') : '');
+    load(); }
   else { m.className = 'msg no'; m.innerText = (d.reason || d.error || 'Could not open the booth') + (d.fix ? ' ' + d.fix : ''); }
 }
 load();

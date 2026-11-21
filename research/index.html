@@ -48,6 +48,28 @@
 <main class="wrap">
   <div class="hero"><h1>Research</h1><p class="lead">SCRIBE is OMENZ's public record: what we tested, what we expected, what actually happened, and what we changed because of it. Failures included.</p></div>
 
+  <section id="scribe-003">
+    <h2>Do top x402 sellers turn away paying agents?</h2>
+    <p class="sub">SCRIBE 003 · Nov 21, 2026 · finding + fix</p>
+    <p>On Nov 20 we found our own x402 server refusing a funded, returning buyer: 4 tries, 4 refusals. The buyer reused the payment terms it had paid against before, and we had since edited the tool's description. Price, payee and network hadn't changed. We fixed it the same day by matching on money terms only.</p>
+    <p>Then we checked whether others have the same problem. We took one route from each of the 20 largest x402 sellers on Base, ranked by unique paying wallets over 30 days, and sent at most 5 requests each with an empty throwaway key, so no payment could settle. Our own server passed the same test as a control.</p>
+    <ul>
+      <li><b>4 of 20</b> accepted good money in every test.</li>
+      <li><b>11 of 20</b> refused a paying buyer in at least one case:
+        <ul>
+          <li>7 refuse a buyer holding terms with older description text</li>
+          <li>5 refuse when a field that doesn't move money (the timeout) differs</li>
+          <li>7 answer an older (v1) x402 payment with the same 402 and no reason</li>
+          <li>1 refused a fresh, correct payment</li>
+        </ul>
+      </li>
+      <li><b>5 of 20</b> were inconclusive (they check the input before the payment step, or use a custom flow).</li>
+    </ul>
+    <p><b>Why it matters:</b> agents that pay the same tool again often reuse the terms they were given. Every time a seller edits a description, those buyers get turned away, and the seller never sees why.</p>
+    <p><b>The fix for sellers:</b> accept the payment when the money terms match (scheme, network, asset, payee, and an amount at or above the price). Treat discovery text as information only. Answer v1 payments with a clear upgrade message. We shared the evidence with the x402 spec discussion. Totals only: no seller is named here.</p>
+    <p>Check your own route: <code>POST https://www.omenz.org/api/tollbooth/v1/seller/acceptance-check</code> ($0.05, probes with an empty key) · <a href="https://github.com/x402-foundation/x402/issues/4161">x402 spec discussion</a></p>
+  </section>
+
   <section id="scribe-002">
     <h2>Changed? failed its first test, then shipped</h2>
     <p class="sub">SCRIBE 002 · Nov 1, 2026 · finding + change</p>

@@ -81,7 +81,7 @@
 
   <h2>Bring your booth</h2>
   <div class="card">
-    <p class="stats">Sell to agents? Drop your x402 endpoint. We knock on it live: if it answers with a real 402 price, your booth joins New Arrivals. Free. We only keep public endpoint facts.</p>
+    <p class="stats">Sell to agents? Drop your x402 endpoint. We knock on it live: if it answers with a real 402 price, your booth joins New Arrivals. Free, and we also tell you (free) whether your server turns away paying agents: stale-402 refusals, strict matching, silent v1 drops. We only keep public endpoint facts.</p>
     <input id="burl" placeholder="https://your-api.com/x402/endpoint" />
     <select id="bmethod"><option>GET</option><option>POST</option></select>
     <input id="bwhat" maxlength="160" placeholder="What your booth sells (one line)" />
@@ -129,7 +129,12 @@ async function bring() {
   const r = await fetch(API + '/booth', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: document.getElementById('burl').value.trim(), method: document.getElementById('bmethod').value, what: document.getElementById('bwhat').value.trim() }) });
   const d = await r.json();
-  if (d.accepted) { m.className = 'msg ok'; m.innerText = `Booth open: ${d.booth.booth} at ${price(d.booth.price_usd)}/call. You're in New Arrivals.`; load(); }
+  if (d.accepted) { m.className = 'msg ok'; m.innerText = `Booth open: ${d.booth.booth} at ${price(d.booth.price_usd)}/call. You're in New Arrivals.` + (d.payment_acceptance && d.payment_acceptance.verdict ? `
+
+Free payment-acceptance check: ${d.payment_acceptance.verdict}` + ((d.payment_acceptance.problems||[]).length ? `
+- ${d.payment_acceptance.problems.map(p=>p.split(':')[0]).join('
+- ')}
+Fix: ${(d.payment_acceptance.fixes||[])[0]||''}` : '') : ''); load(); }
   else { m.className = 'msg no'; m.innerText = (d.reason || d.error || 'Could not open the booth') + (d.fix ? ' ' + d.fix : ''); }
 }
 load();

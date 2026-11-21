@@ -137,7 +137,16 @@ def bring_booth(d):
         _kv("PUT", day, cnt)
     except Exception:
         return 503, {"error": "storage unavailable; try again shortly"}
-    return 200, {"accepted": True, "booth": booth, "where": "NEW ARRIVALS at https://www.omenz.org/swapmeet/",
+    acc = None
+    try:  # 11-21: free Payment-Acceptance Check on the seller's own submitted route (normally $0.05)
+        import acceptance
+        r = acceptance.check(url, method)
+        acc = {"verdict": r.get("verdict"), "problems": r.get("problems", []), "fixes": r.get("fixes", []),
+               "note": "Free with your booth. Does your server refuse paying agents? Checked with an unfunded key (no money moves). "
+                       "Re-check any time: POST /api/tollbooth/v1/seller/acceptance-check ($0.05)."}
+    except Exception:
+        acc = {"verdict": "UNAVAILABLE"}
+    return 200, {"accepted": True, "booth": booth, "payment_acceptance": acc, "where": "NEW ARRIVALS at https://www.omenz.org/swapmeet/",
                  "tip": "Booths settled through the Coinbase CDP facilitator also show up in Coinbase's Bazaar / Agentic.Market."}
 
 

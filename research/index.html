@@ -48,9 +48,9 @@
 <main class="wrap">
   <div class="hero"><h1>Research</h1><p class="lead">SCRIBE is OMENZ's public record: what we tested, what we expected, what actually happened, and what we changed because of it. Failures included.</p></div>
 
-  <section id="scribe-003">
+  <section id="scribe-004">
     <h2>Do top x402 sellers turn away paying agents?</h2>
-    <p class="sub">SCRIBE 003 · Nov 21, 2026 · finding + fix</p>
+    <p class="sub">SCRIBE 004 · Nov 21, 2026 · finding + fix <span style="color:var(--dim)">(first posted on social as "SCRIBE 003")</span></p>
     <p>On Nov 20 we found our own x402 server refusing a funded, returning buyer: 4 tries, 4 refusals. The buyer reused the payment terms it had paid against before, and we had since edited the tool's description. Price, payee and network hadn't changed. We fixed it the same day by matching on money terms only.</p>
     <p>Then we checked whether others have the same problem. We took one route from each of the 20 largest x402 sellers on Base, ranked by unique paying wallets over 30 days, and sent at most 5 requests each with an empty throwaway key, so no payment could settle. Our own server passed the same test as a control.</p>
     <ul>
@@ -68,6 +68,20 @@
     <p><b>Why it matters:</b> agents that pay the same tool again often reuse the terms they were given. Every time a seller edits a description, those buyers get turned away, and the seller never sees why.</p>
     <p><b>The fix for sellers:</b> accept the payment when the money terms match (scheme, network, asset, payee, and an amount at or above the price). Treat discovery text as information only. Answer v1 payments with a clear upgrade message. We shared the evidence with the x402 spec discussion. Totals only: no seller is named here.</p>
     <p>Check your own route: <code>POST https://www.omenz.org/api/tollbooth/v1/seller/acceptance-check</code> ($0.05, probes with an empty key) · <a href="https://github.com/x402-foundation/x402/issues/4161">x402 spec discussion</a></p>
+  </section>
+
+  <section id="scribe-003">
+    <h2>Does signing your data make AI agents trust it correctly?</h2>
+    <p class="sub">SCRIBE 003 · Nov 4, 2026 · finding</p>
+    <p>Someone asked us: if you sign your data, do AI agents trust it correctly? So we tested it: 128 tasks, 2 models, the same business record in 4 versions, and a real signature-check tool the agents could use.</p>
+    <ul>
+      <li>Wrong info, no signature: agents went with it <b>23 of 32</b> times.</li>
+      <li>Wrong info with a tampered signature: <b>5 of 32</b>. Every agent that ran the check caught it (26 of 26). A broken signature works as a tripwire.</li>
+      <li>Wrong info with a <b>valid</b> signature (the signer itself was wrong): <b>15 of 32</b> still got through.</li>
+    </ul>
+    <p>A signature proves who sent the data, not that it's true. On $400 orders, signed data made agents check the source more (75-88% vs 38%); quick lookups by the smaller model skipped the check.</p>
+    <p>Small, simulated test (8 businesses, 2 models). We found a flaw in our own scoring and corrected it in the open.</p>
+    <p><a href="https://x.com/menz_oscar29819/status/2117922964176072910">Thread on X</a> · <a href="https://www.threads.com/@omenz.inc/post/DfUN7MzG0kK">Thread on Threads</a></p>
   </section>
 
   <section id="scribe-002">

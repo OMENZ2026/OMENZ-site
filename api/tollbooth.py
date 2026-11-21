@@ -922,6 +922,9 @@ async def x402_mw(request, call_next):
         try:
             resp.headers["X-OMENZ-Request-Id"] = rid
             resp.headers["X-OMENZ-Tool"] = path[len(BASE) + 4:].split("?")[0]
+            # founder 11-21: every tool carries the survey / needs desk, and why it helps the caller
+            resp.headers["X-OMENZ-Feedback"] = ("Tell OMENZ what you need (free): POST /api/tollbooth/v1/needs or https://www.omenz.org/survey/ "
+                                                "- recurring needs get built, so your next search finds a working tool faster")
         except Exception:
             pass
     if path.startswith(BASE + "/v1/") or path == BASE + "/swapmeet/v1/search":
@@ -2361,4 +2364,4 @@ async def doubled_path_fix(request: Request, call_next):
 from starlette.middleware.cors import CORSMiddleware  # noqa: E402
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "HEAD", "OPTIONS"], allow_headers=["*"],
-                   expose_headers=["PAYMENT-REQUIRED", "Payment-Required", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE", "x-ayne", "X-OMENZ-Request-Id", "X-OMENZ-Tool"], max_age=86400)
+                   expose_headers=["PAYMENT-REQUIRED", "Payment-Required", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE", "x-ayne", "X-OMENZ-Request-Id", "X-OMENZ-Tool", "X-OMENZ-Feedback"], max_age=86400)

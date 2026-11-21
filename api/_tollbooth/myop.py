@@ -152,11 +152,23 @@ def agent_view(gid, base):
         return {"game": "squeeze", "you_are": "the agent receiving a handoff. You only get your operator's note, not the full brief.",
                 "handoff_note": g["note"], "questions": [q["q"] for q in m["questions"]],
                 "how_to_answer": f"POST {post} with JSON {{\"answers\": [\"...\", \"...\", \"...\", \"...\", \"...\"]}} (one per question, same order). "
-                                 "If the note doesn't say, answer 'unknown' (guessing doesn't help you here)."}
+                                 "If the note doesn't say, answer 'unknown' (guessing doesn't help you here). "
+                                 f"Only the first {ANSWER_CAP} characters of each answer count, and pasting the note back scores 0."}
     rs = _rounds(g)
     return {"game": "trust", "you_are": "the agent. Judge each claim ONLY from the evidence given.",
             "rounds": [{"n": i + 1, "claim": r["claim"], "evidence": r["evidence"]} for i, r in enumerate(rs)],
             "how_to_answer": f"POST {post} with JSON {{\"calls\": [{{\"verdict\": \"SUPPORTED|CONTRADICTED|NOT_ENOUGH\", \"confidence\": 0.0-1.0, \"reason\": \"short\"}}, ...]}} (6 calls, same order)."}
+
+
+ANSWER_CAP = 120  # v0.1 (11-21): only the first 120 chars of an answer count
+
+
+def _copied(answer, note):
+    """True if an answer is mostly the note pasted back (the v0 loophole): >=60% of the note's words, in a long answer."""
+    aw, nw = _norm(answer).split(), _norm(note).split()
+    if len(aw) < 12 or not nw:
+        return False
+    return len(set(aw) & set(nw)) / max(1, len(set(nw))) >= 0.6
 
 
 def agent_answer(gid, d):
@@ -170,13 +182,16 @@ def agent_answer(gid, d):
         m = _mission(g)
         if not isinstance(ans, list) or len(ans) != len(m["questions"]):
             raise MyopError(422, f"answers must be a list of {len(m['questions'])} strings")
-        per = [round(_grade(a, q["keys"]), 2) for a, q in zip(ans, m["questions"])]
+        copied = [_copied(a, g["note"]) for a in ans]
+        per = [0.0 if c else round(_grade(str(a)[:ANSWER_CAP], q["keys"]), 2) for a, q, c in zip(ans, m["questions"], copied)]
         score = round(100 * sum(per) / len(per))
         g.update(answers=[str(a)[:300] for a in ans], per=per, score=score, answered_at=time.time())
         _save(g)
         _log({"event": "answers", "game": "squeeze", "gid": gid, "score": score, "note_len": len(g["note"]),
               "secs": round(g["answered_at"] - g["note_at"])})
-        return {"score": score, "per_question": per, "message": "Scored. Your operator sees the result on their screen."}
+        pen = [i + 1 for i, c in enumerate(copied) if c]
+        return {"score": score, "per_question": per, "message": "Scored. Your operator sees the result on their screen.",
+                **({"penalties": f"questions {pen}: answer was mostly the note pasted back (scores 0)"} if pen else {})}
     if g["agent_calls"] is not None:
         raise MyopError(409, "already answered")
     calls = (d or {}).get("calls")

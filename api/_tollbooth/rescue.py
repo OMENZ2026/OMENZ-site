@@ -49,17 +49,12 @@ def _nonce_state(frm, nonce):
 
 def _find_auth_tx(frm, nonce, hours=48):
     head = int(wallet._rpc("eth_blockNumber", []), 16)
-    start = head - int(hours * 3600 / wallet.BLOCK_S)
+    start = head - int(hours * 3600 / wallet.block_s())
     frm_t = wallet._topic(frm.lower())
     n = "0x" + nonce.lower()[2:].rjust(64, "0")
-    f = start
-    while f <= head:
-        t = min(head, f + wallet.CHUNK - 1)
-        for topic in (T_AUTH_USED, T_AUTH_CANCELED):
-            logs = wallet._rpc("eth_getLogs", [{"address": wallet.USDC, "topics": [topic, frm_t, n], "fromBlock": hex(f), "toBlock": hex(t)}])
-            if logs:
-                return logs[0]["transactionHash"], ("used" if topic == T_AUTH_USED else "canceled")
-        f = t + 1
+    logs = wallet.logs_range({"address": wallet.USDC, "topics": [[T_AUTH_USED, T_AUTH_CANCELED], frm_t, n]}, start, head)
+    if logs:
+        return logs[0]["transactionHash"], ("used" if logs[0]["topics"][0] == T_AUTH_USED else "canceled")
     return None, None
 
 

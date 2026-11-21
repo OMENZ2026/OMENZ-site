@@ -43,17 +43,12 @@ def _fp(payer, pay_to, amount, purpose):
 def _onchain_dupes(payer, pay_to, amount, hours=24):
     """USDC transfers payer -> pay_to on Base in the last `hours` with the same amount."""
     head = int(wallet._rpc("eth_blockNumber", []), 16)
-    start = head - int(hours * 3600 / wallet.BLOCK_S)
-    hits, frm = [], start
-    while frm <= head:
-        to = min(head, frm + wallet.CHUNK - 1)
-        logs = wallet._rpc("eth_getLogs", [{"address": wallet.USDC, "topics": [wallet.TRANSFER, wallet._topic(payer.lower()), wallet._topic(pay_to.lower())],
-                                            "fromBlock": hex(frm), "toBlock": hex(to)}])
-        for lg in logs:
-            amt = int(lg["data"], 16) / 1e6
-            if amount is None or abs(amt - float(amount)) <= 1e-6:
-                hits.append({"tx_hash": lg["transactionHash"], "amount_usd": amt, "block": int(lg["blockNumber"], 16)})
-        frm = to + 1
+    start = head - int(hours * 3600 / wallet.block_s())
+    hits = []
+    for lg in wallet.logs_range({"address": wallet.USDC, "topics": [wallet.TRANSFER, wallet._topic(payer.lower()), wallet._topic(pay_to.lower())]}, start, head):
+        amt = int(lg["data"], 16) / 1e6
+        if amount is None or abs(amt - float(amount)) <= 1e-6:
+            hits.append({"tx_hash": lg["transactionHash"], "amount_usd": amt, "block": int(lg["blockNumber"], 16)})
     return hits
 
 

@@ -21,7 +21,24 @@ LOG_RPCS = ["https://base-rpc.publicnode.com", "https://mainnet.base.org"]
 USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 ADDR = re.compile(r"^0x[0-9a-fA-F]{40}$")
-BLOCK_S = 2  # Base block time
+BLOCK_S = 2  # legacy constant; WRONG since Base moved to ~0.2 s blocks. Use block_s() (measured, cached). Fixed 2026-11-21.
+_BS = {"at": 0, "v": None}
+
+
+def block_s():
+    """Measured average Base block time (s) over the last 200k blocks, cached 1 h. Falls back to 0.2."""
+    import time as _t
+    if _BS["v"] and _t.time() - _BS["at"] < 3600:
+        return _BS["v"]
+    try:
+        h = int(_rpc("eth_blockNumber", []), 16)
+        t1 = int(_rpc("eth_getBlockByNumber", [hex(h), False])["timestamp"], 16)
+        t0 = int(_rpc("eth_getBlockByNumber", [hex(h - 200000), False])["timestamp"], 16)
+        v = max(0.05, min((t1 - t0) / 200000, 5.0))
+    except Exception:
+        v = 0.2
+    _BS.update(at=_t.time(), v=v)
+    return v
 CHUNK = 50000
 MAX_DAYS = 14
 
@@ -63,17 +80,32 @@ def balance(addr):
             "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
 
+def logs_range(flt, start, head, workers=8):
+    """eth_getLogs over [start, head] in 50k-block chunks, fetched in parallel (Base ~0.2 s blocks => big ranges)."""
+    from concurrent.futures import ThreadPoolExecutor
+    spans = [(f, min(head, f + CHUNK - 1)) for f in range(start, head + 1, CHUNK)]
+    with ThreadPoolExecutor(workers) as ex:
+        parts = list(ex.map(lambda sp: _rpc("eth_getLogs", [{**flt, "fromBlock": hex(sp[0]), "toBlock": hex(sp[1])}]), spans))
+    return [lg for p in parts for lg in p]
+
+
 def _outgoing(a, days):
+    """Outgoing USDC transfers in the last `days` (real block time; 50k-block chunks fetched 8 in parallel)."""
+    from concurrent.futures import ThreadPoolExecutor
     head = int(_rpc("eth_blockNumber", []), 16)
-    start = head - int(days * 86400 / BLOCK_S)
-    logs, frm = [], start
-    while frm <= head:
-        to = min(head, frm + CHUNK - 1)
-        got = _rpc("eth_getLogs", [{"address": USDC, "topics": [TRANSFER, _topic(a)], "fromBlock": hex(frm), "toBlock": hex(to)}])
-        logs += got
-        if len(logs) > 20000:
-            raise WalletError("too many transfers to summarize; use a shorter window")
-        frm = to + 1
+    start = head - int(days * 86400 / block_s())
+    spans = [(f, min(head, f + CHUNK - 1)) for f in range(start, head + 1, CHUNK)]
+    if len(spans) > 400:
+        raise WalletError("window too long to summarize; use a shorter window (max ~10 days)")
+
+    def get(sp):
+        return _rpc("eth_getLogs", [{"address": USDC, "topics": [TRANSFER, _topic(a)], "fromBlock": hex(sp[0]), "toBlock": hex(sp[1])}])
+    logs = []
+    with ThreadPoolExecutor(8) as ex:
+        for got in ex.map(get, spans):
+            logs += got
+            if len(logs) > 20000:
+                raise WalletError("too many transfers to summarize; use a shorter window")
     return logs, head, start
 
 

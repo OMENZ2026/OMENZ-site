@@ -83,6 +83,27 @@ def authorize(req):
     except Exception:
         checks["payout_proof"] = {"verdict": "UNAVAILABLE"}
 
+    # 11-22 (IDEA_LEDGER G2): seller TLS certificate. Invalid/expired/mismatched cert = DECLINE; expiring soon = REVIEW.
+    try:
+        import urllib.parse as _up3
+        import link_check
+        _u3 = _up3.urlparse(url)
+        if _u3.scheme == "https" and _u3.hostname:
+            c = link_check._cert(_u3.hostname, _u3.port or 443)
+            checks["seller_tls"] = {k: c.get(k) for k in ("valid", "issuer", "days_left", "error")}
+            if c.get("valid") is False:
+                decline.append(f"seller TLS certificate invalid: {c.get('error')}")
+            elif c.get("valid") and c.get("days_left", 99) < 0:
+                decline.append("seller TLS certificate expired")
+            elif c.get("valid") and c.get("days_left", 99) < 7:
+                review.append(f"seller TLS certificate expires in {c['days_left']} days")
+            elif c.get("valid"):
+                passed.append("seller TLS certificate valid")
+        elif _u3.scheme == "http":
+            review.append("seller endpoint is plain http (payment details travel unencrypted)")
+    except Exception:
+        checks["seller_tls"] = {"valid": None}
+
     # 11-22: seller domain age (RDAP). Brand-new domains are where most payment scams live -> REVIEW, never auto-DECLINE.
     try:
         import datetime as _dt

@@ -59,7 +59,7 @@
     <section class="hero">
       <img src="/omenz-logo-glow.png" alt="OMENZ logo" />
       <h1><span>TIM</span>: Tools in Metrics</h1>
-      <p>Don't take our word for it. Every OMENZ agent tool with its numbers: how it was tested, whether it's up, how fast it answers, what it costs, and how many real outside calls it has handled. Test traffic is never counted.</p>
+      <p>Don't take our word for it. Every OMENZ agent tool with its numbers: how it was tested, whether it's up, how fast it answers, what it costs, and how much outside traffic and paid use it really has. Our own test traffic is never counted.</p>
     </section>
 
     <div class="stats" id="stats"><div class="stat"><b>…</b><span>loading live numbers</span></div></div>
@@ -67,7 +67,7 @@
     <div class="controls">
       <input id="q" type="search" placeholder="Search tools (e.g. token, email, authorize)" aria-label="Search tools" />
       <select id="sort" aria-label="Sort">
-        <option value="calls">Most real calls</option>
+        <option value="calls">Most requests</option>
         <option value="tool">Name A–Z</option>
         <option value="price">Lowest price</option>
         <option value="newest">Newest</option>
@@ -76,8 +76,8 @@
 
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Tool</th><th>Price</th><th>How it's tested</th><th>Up (self-checks)</th><th>Speed</th><th>Real calls 30d</th><th>Success</th></tr></thead>
-        <tbody id="rows"><tr><td colspan="7" class="dim">Loading…</td></tr></tbody>
+        <thead><tr><th>Tool</th><th>Price</th><th>How it's tested</th><th>Up (self-checks)</th><th>Speed</th><th>Requests 30d</th><th>Paid 30d</th><th>Success</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="8" class="dim">Loading…</td></tr></tbody>
       </table>
     </div>
     <p class="note" id="asof"></p>
@@ -87,7 +87,7 @@
       <ul>
         <li><b>Known answers, every 6h:</b> we run the tool on inputs where the right answer is known (a fake phone number, an expired certificate, a made-up package) and alert ourselves if it ever answers wrong.</li>
         <li><b>Frozen holdout:</b> the tool passed a test set locked before the release, the strictest bar we use.</li>
-        <li><b>Real calls:</b> outside traffic only. Our own tests, marketplace verification buys and crawlers are excluded. New tools start at zero and earn their record.</li>
+        <li><b>Requests vs paid:</b> requests are outside calls, most of them free price checks by agents, directories and crawlers. Paid counts completed paid calls, including marketplace verification buys (directories that pay once to confirm a tool works). Our own tests are excluded. New tools start at zero and earn their record.</li>
         <li><b>Raw data, free:</b> <a href="/api/tollbooth/v1/track-record">/api/tollbooth/v1/track-record</a> (JSON for agents). Try any tool free first in <a href="/api/tollbooth/ayne/v1">AYNE</a>.</li>
       </ul>
     </div>
@@ -118,8 +118,8 @@
         var succ = e.success_rate_30d != null ? Math.round(e.success_rate_30d * 100) + "%" : "–";
         var r0 = t.routes[0] || {};
         return "<tr><td><b>" + esc(t.tool) + "</b><br><code>" + esc(r0.method) + " " + esc(r0.path) + (t.routes.length > 1 ? " +" + (t.routes.length - 1) : "") + "</code></td>" +
-          '<td class="price">' + esc(r0.price) + "</td><td>" + test + '</td><td>' + up + "</td><td>" + speed + "</td><td>" + (e.calls_30d || 0) + "</td><td>" + succ + "</td></tr>";
-      }).join("") || '<tr><td colspan="7" class="dim">No tool matches.</td></tr>';
+          '<td class="price">' + esc(r0.price) + "</td><td>" + test + '</td><td>' + up + "</td><td>" + speed + "</td><td>" + (e.calls_30d || 0) + "</td><td>" + (e.paid_30d || 0) + "</td><td>" + succ + "</td></tr>";
+      }).join("") || '<tr><td colspan="8" class="dim">No tool matches.</td></tr>';
     }
     fetch("/api/tollbooth/v1/track-record").then(function (r) { return r.json(); }).then(function (d) {
       all = d.tools || [];
@@ -129,13 +129,14 @@
         '<div class="stat"><b>' + (d.summary || {}).paid_routes + "</b><span>paid routes</span></div>" +
         '<div class="stat"><b>' + all.length + "</b><span>tools</span></div>" +
         '<div class="stat"><b>' + gold + "</b><span>checked on known answers every 6h</span></div>" +
-        '<div class="stat"><b>' + (tot.calls_30d || 0) + "</b><span>real outside calls (30d)</span></div>" +
+        '<div class="stat"><b>' + (tot.calls_30d || 0) + "</b><span>outside requests (30d), mostly free price checks</span></div>" +
+        '<div class="stat"><b>' + (tot.paid_30d || 0) + "</b><span>paid calls (30d), incl. marketplace verification buys</span></div>" +
         '<div class="stat"><b>' + (tot.server_errors_30d || 0) + "</b><span>server errors (30d)</span></div>";
       var ra = (d.earned_record || {}).rolled_at;
       document.getElementById("asof").textContent = "Usage numbers as of " + (ra ? new Date(ra * 1000).toISOString().slice(0, 10) : "–") +
         " (rolled up daily). " + (d.maturity || "");
       render();
-    }).catch(function () { document.getElementById("rows").innerHTML = '<tr><td colspan="7" class="warn">Couldn’t load the numbers right now. Raw JSON: /api/tollbooth/v1/track-record</td></tr>'; });
+    }).catch(function () { document.getElementById("rows").innerHTML = '<tr><td colspan="8" class="warn">Couldn’t load the numbers right now. Raw JSON: /api/tollbooth/v1/track-record</td></tr>'; });
     document.getElementById("q").addEventListener("input", render);
     document.getElementById("sort").addEventListener("change", render);
   </script>

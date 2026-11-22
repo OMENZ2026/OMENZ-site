@@ -20,7 +20,7 @@ import urllib.request
 
 import domain_check
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 SHORTENERS = {"bit.ly", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rebrand.ly", "cutt.ly", "shorturl.at",
               "t.ly", "rb.gy", "tiny.cc", "lnkd.in", "s.id", "bl.ink", "short.io", "trib.al", "dlvr.it", "amzn.to", "youtu.be"}
 
@@ -31,6 +31,12 @@ def _ctx():
         return ssl.create_default_context(cafile=certifi.where())
     except Exception:
         return ssl.create_default_context()
+
+
+_LAST_HEADERS = {}
+SEC_HEADERS = {"strict-transport-security": "HSTS (forces https)", "content-security-policy": "CSP (limits injected scripts)",
+               "x-frame-options": "clickjacking protection", "x-content-type-options": "MIME-sniffing protection",
+               "referrer-policy": "referrer policy"}
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -63,6 +69,7 @@ def _hop(url, opener):
         req = urllib.request.Request(url, method=method, headers={"User-Agent": "Mozilla/5.0 (compatible; OMENZ-LinkCheck/0.1)"})
         try:
             r = opener.open(req, timeout=8)
+            _LAST_HEADERS[url] = {k.lower(): v for k, v in r.headers.items()}
             return r.status, r.headers.get("Location")
         except urllib.error.HTTPError as e:
             if method == "HEAD" and e.code in (405, 403, 501):
@@ -162,9 +169,18 @@ def check(url):
                 passed.append(f"destination domain {age} days old")
     if load_failed and danger:  # the TLS/age reason already explains the failure
         caution = [c for c in caution if not c.startswith("destination did not load")]
+    hdr = _LAST_HEADERS.pop(final, None)
+    _LAST_HEADERS.clear()
+    sec = None
+    if hdr is not None and not load_failed:
+        present = [v for k, v in SEC_HEADERS.items() if k in hdr or (k == "x-frame-options" and "frame-ancestors" in hdr.get("content-security-policy", ""))]
+        missing = [v for k, v in SEC_HEADERS.items() if v not in present]
+        sec = {"present": present, "missing": missing, "score": f"{len(present)}/{len(SEC_HEADERS)}", "server": hdr.get("server")}
+        if fp.scheme == "https" and "strict-transport-security" not in hdr and not danger:
+            passed.append("note: no HSTS header (browsers may be downgraded to http on first visit)")
     verdict = "DANGER" if danger else "UNREACHABLE" if load_failed else "CAUTION" if caution else "OK"
     return {**out, "input": u, "final_url": final[:500], "redirects": hops, "chain": chain, "final_domain": final_dom,
-            "final_domain_age_days": age, "tls": cert, "verdict": verdict, "danger": danger, "caution": caution, "passed": passed,
+            "final_domain_age_days": age, "tls": cert, "security_headers": sec, "verdict": verdict, "danger": danger, "caution": caution, "passed": passed,
             "limits": "Checks the route and the destination's setup, not page content. A legitimate-looking page can still be a scam.",
             "next": {"OK": "safe to follow", "CAUTION": "check the cautions before clicking, signing in or paying",
                      "DANGER": "do not follow, sign in or pay", "UNREACHABLE": "destination is down or blocking checks; retry later before trusting it"}[verdict]}

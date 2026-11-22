@@ -29,10 +29,16 @@ _idx = {"at": 0, "data": None}
 def _index():
     if _idx["data"] and time.time() - _idx["at"] < 3600:
         return _idx["data"]
-    tok = os.environ.get("APIFY_LOG_TOKEN", "")
-    req = urllib.request.Request(f"https://api.apify.com/v2/key-value-stores/{STORE}/records/market_index",
-                                 headers={"Authorization": "Bearer " + tok})
-    raw = urllib.request.urlopen(req, timeout=20).read()
+    # 11-22: read the index bundled with the deployment first (each cold-start download from Apify KV was ~2.9 MB and
+    # ~1,150 of them used up the Apify free plan's monthly transfer); Apify KV is only the fallback now.
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "market_index.json.gz")
+    if os.path.exists(local):
+        raw = open(local, "rb").read()
+    else:
+        tok = os.environ.get("APIFY_LOG_TOKEN", "")
+        req = urllib.request.Request(f"https://api.apify.com/v2/key-value-stores/{STORE}/records/market_index",
+                                     headers={"Authorization": "Bearer " + tok})
+        raw = urllib.request.urlopen(req, timeout=20).read()
     try:
         d = json.loads(gzip.decompress(raw))
     except OSError:

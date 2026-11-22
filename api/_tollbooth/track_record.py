@@ -206,7 +206,8 @@ def build(routes, base):
             "maturity": "New service: first tools live 2026-11-07, most launched 2026-11-14. Paid usage history is just starting; "
                         "we publish test evidence instead of usage claims.",
             "summary": {"tools": len(tools), "paid_routes": len(routes), "tools_with_frozen_holdouts": len(held)},
-            "earned_record": {**(meta or {}), "what": "Real outside calls per tool per UTC day (test traffic excluded): calls, quoted, paid, "
+            "earned_record": {**(meta or {}), "what": "Outside traffic per tool per UTC day (our own test traffic excluded): calls (most are free 402 price "
+                              "quotes from agents, directories and crawlers), quoted, paid (includes marketplace verification buys), "
                               "completed, server errors, success rates. Grows only from real interactions; rolled up daily.",
                               "totals_30d": {k: sum(e.get(k, 0) for e in earned.values()) for k in
                                              ("calls_30d", "quoted_30d", "paid_30d", "completed_30d", "server_errors_30d")}},

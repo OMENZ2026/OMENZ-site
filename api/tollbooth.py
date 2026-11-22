@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/package/check?ecosystem=&name=&version=  $0.003  Package Check: safe to install? (deps.dev + OSV)
   GET  /api/tollbooth/v1/token/check?token=        $0.005  Token Check (Base): safe to hold/accept? proxy, owner powers, OFAC
   GET  /api/tollbooth/v1/token/balance?address=&token=  $0.002  Token Balance (Base): any ERC-20 or native ETH
   GET  /api/tollbooth/v1/allowance?owner=&token=&spender=  $0.002  Allowance Check: can this spender move my tokens? UNLIMITED flagged + revoke call
@@ -150,6 +151,7 @@ import checkout  # noqa: E402
 import facilitators  # noqa: E402
 import chain_tools  # noqa: E402
 import token_check  # noqa: E402
+import package_check  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -685,6 +687,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
 
+_paid("GET", "package/check", "$0.003",
+      "OMENZ Package Check: is this software package safe for your agent to install? npm, PyPI, Go, Cargo, Maven, NuGet. BLOCK if the package does not exist (hallucinated name: slopsquatting risk, with 'did you mean') or the version has HIGH/CRITICAL known vulnerabilities; CAUTION if deprecated, under 30 days old, any known vuln, no license, or a near-miss of a popular package name (typosquat); SAFE_TO_INSTALL otherwise. Returns the vulns, the version to upgrade to, license and package age. Sources: deps.dev + OSV.dev. Deterministic, read-only. By OMENZ.",
+      {"ecosystem": "pypi", "name": "requests", "version": "2.19.0"},
+      {"properties": {"ecosystem": {"type": "string", "enum": ["pypi", "npm", "go", "cargo", "maven", "nuget"]}, "name": {"type": "string"}, "version": {"type": "string"}}, "required": ["ecosystem", "name"]})
 _paid("GET", "token/check", "$0.005",
       "OMENZ Token Check (Base): is this token safe to hold or accept, before your agent buys, swaps or takes it as payment? Reads the contract itself: real ERC-20 or not, upgradeable proxy (EIP-1967 / OpenZeppelin slots: code can change under you), active owner and the powers in its bytecode (mint, pause, blacklist/freeze, fees, tx limits), owner/admin on the OFAC SDN list. SAFE_TO_HOLD / CAUTION / RED_FLAGS with every reason; regulated stablecoins labeled (issuer freeze is by design). Deterministic: no AI grades, no price predictions. Public chain data, never signs. By OMENZ.",
       {"token": "0x4200000000000000000000000000000000000006"},
@@ -2092,6 +2098,12 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/package/check")
+def package_check_route(request: Request, ecosystem: str = Query(...), name: str = Query(...), version: str | None = None):
+    request.state.extra["action"] = "package_check"
+    return package_check.check(ecosystem, name, version)
 
 
 @app.get(BASE + "/v1/token/check")

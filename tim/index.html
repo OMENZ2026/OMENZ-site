@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIM: Tools in Metrics | OMENZ</title>
+  <meta name="description" content="TIM by OMENZ: every OMENZ agent tool with its numbers. How it was tested, whether it's up, how fast it answers, what it costs and how many real calls it has handled." />
+  <link rel="icon" type="image/png" href="/omenz-logo.png" />
+  <meta property="og:title" content="TIM: Tools in Metrics | OMENZ" />
+  <meta property="og:description" content="Don't take our word for it. Every OMENZ tool, with its numbers." />
+  <meta property="og:image" content="https://www.omenz.org/omenz-logo.png" />
+  <style>
+    :root { --bg:#060a14; --panel:#0c1424; --panel2:#0f1a30; --line:#1d2a44; --text:#f4f6fa; --muted:#b3bccb; --dim:#7c889c; --blue:#1e8cff; --glow:rgba(30,140,255,.45); --ok:#3ccf8e; --warn:#ff8a5c; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:var(--text); line-height:1.5;
+           background: radial-gradient(1200px 700px at 50% -10%, #0d2a5a 0%, var(--bg) 60%) fixed, var(--bg); }
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px 64px; }
+    header { display:flex; align-items:center; gap:10px; padding:16px 0; border-bottom:1px solid var(--line); }
+    header img { width:34px; }
+    header a { color:var(--text); text-decoration:none; font-weight:700; letter-spacing:2px; }
+    header nav { margin-left:auto; display:flex; gap:14px; font-size:.9rem; flex-wrap:wrap; }
+    header nav a { color:var(--muted); font-weight:400; letter-spacing:0; }
+    .hero { text-align:center; padding: 36px 0 8px; }
+    .hero img { width:96px; }
+    .hero h1 { margin: 10px 0 6px; font-size: clamp(1.8rem, 5.5vw, 2.7rem); }
+    .hero h1 span { color: var(--blue); text-shadow: 0 0 18px var(--glow); }
+    .hero p { margin: 0 auto; max-width: 680px; color: var(--muted); }
+    .stats { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 24px 0 8px; }
+    .stat { background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius:12px; padding:12px 16px; min-width:150px; text-align:center; }
+    .stat b { display:block; font-size:1.5rem; color:var(--blue); text-shadow:0 0 12px var(--glow); }
+    .stat span { color:var(--muted); font-size:.85rem; }
+    .controls { display:flex; gap:10px; flex-wrap:wrap; margin: 20px 0 10px; }
+    .controls input, .controls select { background:#08101e; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:.95rem; }
+    .controls input { flex:1; min-width:200px; }
+    .tablewrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background: var(--panel); }
+    table { width:100%; border-collapse: collapse; font-size:.9rem; min-width: 760px; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align: top; }
+    th { color:var(--dim); font-weight:700; font-size:.78rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+    td code { color:var(--dim); font-size:.78rem; }
+    .price { color:var(--blue); white-space:nowrap; }
+    .ok { color:var(--ok); } .warn { color:var(--warn); } .dim { color:var(--dim); }
+    .badge { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:1px 8px; font-size:.75rem; color:var(--muted); margin:2px 4px 0 0; white-space:nowrap; }
+    .badge.gold { border-color: rgba(30,140,255,.6); color:#cfe6ff; box-shadow: 0 0 10px rgba(30,140,255,.25); }
+    .note { color:var(--dim); font-size:.85rem; margin-top:14px; }
+    .how { margin-top: 26px; background: linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+    .how h2 { margin:0 0 8px; font-size:1rem; letter-spacing:2px; color:var(--blue); }
+    .how li { color:var(--muted); margin: 4px 0; }
+    a { color: var(--blue); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/omenz-logo-glow.png" alt="OMENZ" />
+      <a href="/">OMENZ</a>
+      <nav><a href="/agents/">Agents</a><a href="/journey/">Journey</a><a href="/swapmeet/">Swap Meet</a><a href="/research/">Research</a></nav>
+    </header>
+
+    <section class="hero">
+      <img src="/omenz-logo-glow.png" alt="OMENZ logo" />
+      <h1><span>TIM</span>: Tools in Metrics</h1>
+      <p>Don't take our word for it. Every OMENZ agent tool with its numbers: how it was tested, whether it's up, how fast it answers, what it costs, and how many real outside calls it has handled. Test traffic is never counted.</p>
+    </section>
+
+    <div class="stats" id="stats"><div class="stat"><b>…</b><span>loading live numbers</span></div></div>
+
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search tools (e.g. token, email, authorize)" aria-label="Search tools" />
+      <select id="sort" aria-label="Sort">
+        <option value="calls">Most real calls</option>
+        <option value="tool">Name A–Z</option>
+        <option value="price">Lowest price</option>
+        <option value="newest">Newest</option>
+      </select>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Price</th><th>How it's tested</th><th>Up (self-checks)</th><th>Speed</th><th>Real calls 30d</th><th>Success</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="7" class="dim">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note" id="asof"></p>
+
+    <div class="how">
+      <h2>HOW TO READ TIM</h2>
+      <ul>
+        <li><b>Known answers, every 6h:</b> we run the tool on inputs where the right answer is known (a fake phone number, an expired certificate, a made-up package) and alert ourselves if it ever answers wrong.</li>
+        <li><b>Frozen holdout:</b> the tool passed a test set locked before the release, the strictest bar we use.</li>
+        <li><b>Real calls:</b> outside traffic only. Our own tests, marketplace verification buys and crawlers are excluded. New tools start at zero and earn their record.</li>
+        <li><b>Raw data, free:</b> <a href="/api/tollbooth/v1/track-record">/api/tollbooth/v1/track-record</a> (JSON for agents). Try any tool free first in <a href="/api/tollbooth/ayne/v1">AYNE</a>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    var GOLDEN = ["token", "package", "domain", "phone", "email", "link", "name", "ip", "fx"];
+    var all = [];
+    function priceNum(t) { var p = (t.routes[0] || {}).price || "$9"; return parseFloat(p.replace("$", "")) || 0; }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); }
+    function render() {
+      var q = document.getElementById("q").value.toLowerCase().trim();
+      var s = document.getElementById("sort").value;
+      var rows = all.filter(function (t) { return !q || t.tool.indexOf(q) >= 0 || JSON.stringify(t.routes).toLowerCase().indexOf(q) >= 0; });
+      rows.sort(function (a, b) {
+        if (s === "tool") return a.tool.localeCompare(b.tool);
+        if (s === "price") return priceNum(a) - priceNum(b);
+        if (s === "newest") return String(b.released).localeCompare(String(a.released));
+        return ((b.earned || {}).calls_30d || 0) - ((a.earned || {}).calls_30d || 0);
+      });
+      document.getElementById("rows").innerHTML = rows.map(function (t) {
+        var e = t.earned || {};
+        var test = '<span class="badge">' + esc((t.testing || {}).test || "release tests") + "</span>";
+        if (String((t.testing || {}).test || "").indexOf("holdout") >= 0) test = '<span class="badge gold">frozen holdout</span>';
+        if (GOLDEN.indexOf(t.tool) >= 0) test += '<span class="badge gold">known answers every 6h</span>';
+        var up = e.selfprobe_days_30d ? ('<span class="' + (e.selfprobe_ok_days_30d === e.selfprobe_days_30d ? "ok" : "warn") + '">' + e.selfprobe_ok_days_30d + "/" + e.selfprobe_days_30d + " days</span>") : '<span class="dim">new</span>';
+        var speed = e.median_latency_ms != null ? e.median_latency_ms + " ms" : (e.selfprobe_last_ms != null ? e.selfprobe_last_ms + " ms" : "–");
+        var succ = e.success_rate_30d != null ? Math.round(e.success_rate_30d * 100) + "%" : "–";
+        var r0 = t.routes[0] || {};
+        return "<tr><td><b>" + esc(t.tool) + "</b><br><code>" + esc(r0.method) + " " + esc(r0.path) + (t.routes.length > 1 ? " +" + (t.routes.length - 1) : "") + "</code></td>" +
+          '<td class="price">' + esc(r0.price) + "</td><td>" + test + '</td><td>' + up + "</td><td>" + speed + "</td><td>" + (e.calls_30d || 0) + "</td><td>" + succ + "</td></tr>";
+      }).join("") || '<tr><td colspan="7" class="dim">No tool matches.</td></tr>';
+    }
+    fetch("/api/tollbooth/v1/track-record").then(function (r) { return r.json(); }).then(function (d) {
+      all = d.tools || [];
+      var tot = (d.earned_record || {}).totals_30d || {};
+      var gold = all.filter(function (t) { return GOLDEN.indexOf(t.tool) >= 0; }).length;
+      document.getElementById("stats").innerHTML =
+        '<div class="stat"><b>' + (d.summary || {}).paid_routes + "</b><span>paid routes</span></div>" +
+        '<div class="stat"><b>' + all.length + "</b><span>tools</span></div>" +
+        '<div class="stat"><b>' + gold + "</b><span>checked on known answers every 6h</span></div>" +
+        '<div class="stat"><b>' + (tot.calls_30d || 0) + "</b><span>real outside calls (30d)</span></div>" +
+        '<div class="stat"><b>' + (tot.server_errors_30d || 0) + "</b><span>server errors (30d)</span></div>";
+      var ra = (d.earned_record || {}).rolled_at;
+      document.getElementById("asof").textContent = "Usage numbers as of " + (ra ? new Date(ra * 1000).toISOString().slice(0, 10) : "–") +
+        " (rolled up daily). " + (d.maturity || "");
+      render();
+    }).catch(function () { document.getElementById("rows").innerHTML = '<tr><td colspan="7" class="warn">Couldn’t load the numbers right now. Raw JSON: /api/tollbooth/v1/track-record</td></tr>'; });
+    document.getElementById("q").addEventListener("input", render);
+    document.getElementById("sort").addEventListener("change", render);
+  </script>
+</body>
+</html>

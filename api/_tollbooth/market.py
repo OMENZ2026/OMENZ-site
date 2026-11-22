@@ -84,15 +84,13 @@ def find(q, max_price_usd=None, network=None, exclude=None, limit=10, live_check
     want_net = nets.get(net, net) or None
     ex = {_host(e) for e in (exclude if isinstance(exclude, list) else [exclude] if exclude else [])} - {""}
     idf = {t: math.log(1 + ix["n"] / (1 + ix["df"].get(t, 0))) for t in qt}
-    scored = []
+    scored, over = [], []
     for r, ts in zip(ix["rows"], ix["toks"]):
         rel = sum(idf[t] for t in qt if t in ts)
         if rel <= 0:
             continue
         cover = sum(1 for t in qt if t in ts) / len(qt)
         if cover < 0.5:
-            continue
-        if cap is not None and (r[3] is None or r[3] > cap + 1e-12):
             continue
         if want_net and want_net not in (r[4] or []):
             continue
@@ -101,7 +99,13 @@ def find(q, max_price_usd=None, network=None, exclude=None, limit=10, live_check
         if (r[6] or 0) < min_payers:
             continue
         usage = math.log10(1 + (r[5] or 0)) + 2 * math.log10(1 + (r[6] or 0))
-        scored.append((rel / sum(idf.values()) * 10 + usage, cover, r))
+        item = (rel / sum(idf.values()) * 10 + usage, cover, r)
+        # 11-22 founder doctrine: discovery != authorization. Over-limit options stay VISIBLE (separate list), never chosen for you.
+        if cap is not None and (r[3] is None or r[3] > cap + 1e-12):
+            if r[3] is not None:
+                over.append(item)
+            continue
+        scored.append(item)
     scored.sort(key=lambda x: -x[0])
     seen_hosts, picks = {}, []
     for s, cover, r in scored:  # at most 2 per host so one vendor's 40 routes don't drown the list
@@ -118,7 +122,13 @@ def find(q, max_price_usd=None, network=None, exclude=None, limit=10, live_check
         if q2.get("cheapest_usd") is not None and p["price_usd"] is not None and abs(q2["cheapest_usd"] - p["price_usd"]) > 1e-9:
             p["live"]["price_drift"] = True
     priced = [p for p in picks if p["price_usd"] is not None]
-    return {**out, "index_generated_at": ix["generated_at"], "matches_total": len(scored), "results": picks,
+    over.sort(key=lambda x: -x[0])
+    top_score = scored[0][0] if scored else 0
+    over_vis = [{**_row(r), "match": round(cv, 2), "over_limit_by_usd": round(r[3] - cap, 6)}
+                for sc, cv, r in over[:3] if not scored or sc > top_score * 0.8]
+    extra = {"over_your_limit": over_vis,
+             "over_limit_note": "Visible for your owner's decision, not authorized at your max_price_usd. Ask before paying more."} if over_vis else {}
+    return {**out, "index_generated_at": ix["generated_at"], "matches_total": len(scored), "results": picks, **extra,
             "cheapest": min(priced, key=lambda p: p["price_usd"])["url"] if priced else None,
             "most_used": max(picks, key=lambda p: p["payers_30d"])["url"] if picks else None,
             "note": "ranked by match, then real 30-day usage; 'live' = unpaid probe just now"}

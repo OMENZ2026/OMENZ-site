@@ -20,7 +20,7 @@ FIELDS = {"need": 1000, "task_context": 1000, "current_workaround": 600, "what_w
           "agent": 80, "operator": 120, "category": 60, "example_input": 1000, "example_output": 1000}
 
 POLICY = {
-    "schema": "omenz.pricing-policy.v0", "updated": "2026-11-15", "publisher": "OMENZ (omenz.org)",
+    "schema": "omenz.pricing-policy.v0", "updated": "2026-11-22", "publisher": "OMENZ (omenz.org)",
     "principles": [
         "Priced per call in USDC on Base via x402: no account, no API key, no subscription.",
         "Prices sit at or below the going rate for comparable listed services (x402 Bazaar median $0.005, Nov 2026); "
@@ -34,7 +34,9 @@ POLICY = {
         "Price changes are announced in this policy and in /api/tollbooth before they take effect.",
     ],
     "credits": "Prepaid credits (POST /v1/credits/buy-1 or buy-5): one payment, then checks draw from the balance with no per-check settlement. OMENZ Authorize via credits: 2% of the payment checked, minimum $0.0003.",
-    "announced_changes": [],
+    "announced_changes": [{"announced": "2026-11-22", "effective": "2026-11-29",
+                           "change": "Eight tools launched on 2026-11-22 at introductory prices move to the going rate that paying buyers pay for comparable x402 services (payer-weighted median, OMENZ market index 2026-11-22): token/check $0.005 -> $0.01, package/check $0.003 -> $0.005, domain/check $0.003 -> $0.005, phone/check $0.002 -> $0.005, email/check $0.002 -> $0.003, ip/check $0.002 -> $0.003, name/resolve $0.002 -> $0.003, lead/check $0.005 -> $0.008 (still below the three checks bought separately). Unchanged: Authorize, Link Check, Weather, FX Rates, Business Days, Time Zones and every other route. Prepaid credits are not affected.",
+                           "reason": "Introductory prices were below the market; new prices sit at the going rate, never above it, per the principles above."}],
     "past_changes": [{"announced": "2026-11-15", "planned_effective": "2026-11-22", "effective": "2026-11-18",
                       "change": "Routes priced $0.001 per call moved to $0.002 per call, 4 days earlier than announced. Reason: measured on 2026-11-18, one x402 settlement on Base costs about $0.0009-0.0017 in gas, so a $0.001 call does not cover its own settlement. Prepaid credits did not change and stay the cheapest way to make many small checks (no per-call settlement)."}],
     "tell_us": "POST /api/tollbooth/v1/needs (free): what you need, what it's worth to you, how often. We read every one.",

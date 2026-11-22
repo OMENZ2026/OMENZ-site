@@ -84,7 +84,6 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
-  GET  /api/tollbooth/v1/name/resolve?name=|address=&expected_address=  $0.002  Name Resolve: ENS/Basename <-> address, MATCH/MISMATCH
   GET  /api/tollbooth/v1/link/check?url=            $0.003  Link Check: unshorten, TLS, domain age
   GET  /api/tollbooth/v1/email/check?email=         $0.002  Email Check: deliverable? disposable, role, spoofable
   GET  /api/tollbooth/v1/phone/check?number=&country=  $0.002  Phone Check: valid? type, formats, warnings (offline)
@@ -694,13 +693,9 @@ _paid("GET", "tx/decode", "$0.002",
       "Transaction Decode (Base): what did this transaction actually do, in plain English. Status, confirmations, function called, every token transfer (symbol + amount), approvals (UNLIMITED approvals flagged), NFT moves, fee, time, and whether it was an x402 payment (EIP-3009 transferWithAuthorization). For agents checking a payment, a refund, or what a contract just did with their money. Public chain data, never needs a key. By OMENZ.",
       {"tx_hash": "0x..."}, {"properties": {"tx_hash": {"type": "string"}}, "required": ["tx_hash"]})
 _paid("GET", "name/resolve", "$0.002",
-      "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
-      {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
+      "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
+      {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
-_paid("GET", "name/resolve", "$0.002",
-      "OMENZ Name Resolve: which wallet does this name really point to, and does it match the address you were given? ENS names (Ethereum) and Basenames (*.base.eth, Base) -> address; address -> forward-verified primary names (ENS + Basename). expected_address -> MATCH / MISMATCH. Also: wallet vs smart contract vs EIP-7702 wallet on Base, OFAC screen of the resolved address, look-alike (non-ASCII) name warning. Resolve right before paying a name. On-chain reads only. By OMENZ.",
-      {"name": "vitalik.eth"},
-      {"properties": {"name": {"type": "string"}, "address": {"type": "string", "description": "reverse lookup instead of name"}, "expected_address": {"type": "string"}}})
 _paid("GET", "link/check", "$0.003",
       "OMENZ Link Check: where does this link really go, and is it safe to follow, sign in or pay? Follows the redirect chain hop by hop (unshortens bit.ly/tinyurl etc.), then checks the destination: TLS certificate (valid, issuer, days to expiry, hostname match), destination domain age (RDAP), plain http, page status. DANGER (bad/expired cert, new domain < 30 days, redirect loop, private-network target) / CAUTION (shortener, lands on a different site than shown, http, expiring cert, many hops, 4xx/5xx) / UNREACHABLE / OK. Never submits forms, runs scripts or pays. By OMENZ.",
       {"url": "https://bit.ly/3x"},
@@ -2125,15 +2120,20 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 
 
 @app.get(BASE + "/v1/name/resolve")
-def name_resolve_route(request: Request, q: str = Query(...)):
+def name_resolve_route(request: Request, q: str | None = None, name: str | None = None, address: str | None = None,
+                       expected_address: str | None = None):
+    """0.2.0 (11-22): original q= shape kept; name_check adds MATCH/MISMATCH, Basename reverse, 7702/contract, OFAC, look-alikes."""
     request.state.extra["action"] = "name_resolve"
-    return chain_tools.name_resolve(q)
-
-
-@app.get(BASE + "/v1/name/resolve")
-def name_resolve_route(request: Request, name: str | None = None, address: str | None = None, expected_address: str | None = None):
-    request.state.extra["action"] = "name_resolve"
-    return name_check.check(name, address, expected_address)
+    q = q or name or address
+    if not q:
+        return {"status": "BAD_INPUT", "verdict": "BAD_INPUT", "reasons": ["send q (a name like vitalik.eth / jesse.base.eth, or a 0x address)"]}
+    is_addr = bool(name_check.ADDR_RE.match(q.strip()))
+    base = chain_tools.name_resolve(q)
+    try:
+        extra = name_check.check(None if is_addr else q, q.strip() if is_addr else None, expected_address)
+    except Exception as e:
+        extra = {"enrichment_error": type(e).__name__}
+    return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
 
 
 @app.get(BASE + "/v1/link/check")

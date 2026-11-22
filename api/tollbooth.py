@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/tim/route?q=&max_price_usd=  $0.002  TIM Router: OMENZ vs market, with evidence
   GET  /api/tollbooth/v1/time/convert?time=&from=&to=  $0.002  Time Zones: convert, DST, business hours
   GET  /api/tollbooth/v1/business-days?country=&date=&add=  $0.002  Business Days: holidays, next/N business days
   GET  /api/tollbooth/v1/weather?lat=&lon=&days=    $0.002  Weather: now, 6h/24h, 5-day, agent flags
@@ -173,6 +174,7 @@ import ip_check  # noqa: E402
 import weather  # noqa: E402
 import business_days  # noqa: E402
 import time_convert  # noqa: E402
+import tim_route  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -708,6 +710,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
+_paid("GET", "tim/route", "$0.002",
+      "TIM Router (Tools in Metrics): which tool should your agent use for this job, OMENZ's or someone else's? Puts OMENZ's matching tool (with its published test evidence, known-answer checks, uptime and paid history) side by side with the best x402 market options (real 30-day payers, price), and honestly recommends theirs when theirs fits better. OMENZ earns only this routing fee and never sits in your payment. Over-limit options stay visible (discovery is not authorization). By OMENZ.",
+      {"q": "weather forecast", "max_price_usd": "0.01"},
+      {"properties": {"q": {"type": "string", "description": "the job, in words"}, "max_price_usd": {"type": "number"}}, "required": ["q"]})
 _paid("GET", "time/convert", "$0.002",
       "OMENZ Time Zones: what time is it there, and is it a good time to reach them? Convert a time between up to 10 IANA zones (or now anywhere), with UTC offset, DST in effect, abbreviation, weekday and a business-hours check per zone (default 09:00-17:00 Mon-Fri, adjustable), plus all_in_business_hours for scheduling across zones. Flags times that don't exist or happen twice around DST switches. By OMENZ.",
       {"time": "2026-11-25 14:30", "from": "America/Los_Angeles", "to": "Europe/London,Asia/Tokyo"},
@@ -2170,6 +2176,17 @@ def name_resolve_route(request: Request, q: str | None = None, name: str | None 
     except Exception as e:
         extra = {"enrichment_error": type(e).__name__}
     return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
+
+
+@app.get(BASE + "/v1/tim/route")
+def tim_route_route(request: Request, q: str = Query(""), max_price_usd: str | None = None):
+    import track_record as _tr
+    request.state.extra["action"] = "tim_route"
+    r = tim_route.route(q, ROUTES, _tr.build(ROUTES, BASE), max_price_usd)
+    request.state.extra["verdict"] = r.get("recommendation")
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/time/convert")

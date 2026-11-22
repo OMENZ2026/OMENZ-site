@@ -107,7 +107,7 @@
   </div>
 
   <script>
-    var GOLDEN = ["token", "package", "domain", "phone", "email", "link", "name", "ip", "fx"];
+    var GOLDEN = ["token", "package", "domain", "phone", "email", "link", "name", "ip", "fx", "business-days"];
     var all = [];
     function priceNum(t) { var p = (t.routes[0] || {}).price || "$9"; return parseFloat(p.replace("$", "")) || 0; }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); }

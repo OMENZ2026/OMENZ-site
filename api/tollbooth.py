@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
   GET  /api/tollbooth/v1/link/check?url=            $0.003  Link Check: unshorten, TLS, domain age
   GET  /api/tollbooth/v1/email/check?email=         $0.002  Email Check: deliverable? disposable, role, spoofable
   GET  /api/tollbooth/v1/phone/check?number=&country=  $0.002  Phone Check: valid? type, formats, warnings (offline)
@@ -161,6 +162,7 @@ import phone_check  # noqa: E402
 import email_check  # noqa: E402
 import link_check  # noqa: E402
 import name_check  # noqa: E402
+import lead_check  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -696,6 +698,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
+_paid("POST", "lead/check", "$0.005",
+      "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
+      {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
+      {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}})
 _paid("GET", "link/check", "$0.003",
       "OMENZ Link Check: where does this link really go, and is it safe to follow, sign in or pay? Follows the redirect chain hop by hop (unshortens bit.ly/tinyurl etc.), then checks the destination: TLS certificate (valid, issuer, days to expiry, hostname match), destination domain age (RDAP), plain http, page status. DANGER (bad/expired cert, new domain < 30 days, redirect loop, private-network target) / CAUTION (shortener, lands on a different site than shown, http, expiring cert, many hops, 4xx/5xx) / UNREACHABLE / OK. Never submits forms, runs scripts or pays. By OMENZ.",
       {"url": "https://bit.ly/3x"},
@@ -2134,6 +2140,13 @@ def name_resolve_route(request: Request, q: str | None = None, name: str | None 
     except Exception as e:
         extra = {"enrichment_error": type(e).__name__}
     return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
+
+
+@app.post(BASE + "/v1/lead/check")
+def lead_check_route(request: Request, body: dict = Body(...)):
+    r = lead_check.check(body)
+    request.state.extra.update({"action": "lead_check", "verdict": r.get("verdict")})
+    return r
 
 
 @app.get(BASE + "/v1/link/check")

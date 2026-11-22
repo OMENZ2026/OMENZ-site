@@ -16,7 +16,7 @@ import time
 import sanctions
 import wallet
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 SLOT_IMPL = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
 SLOT_ADMIN = "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103"
 SLOT_BEACON = "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50"
@@ -70,6 +70,21 @@ def _addr_slot(token, slot):
 def _powers(code):
     c = (code or "").lower()
     return sorted(k for k, sels in POWERS.items() if any(s and ("63" + s) in c for s in sels))
+
+
+def _sourcify(addr):
+    """Public source verification (Sourcify, Base 8453). Returns 'exact'/'partial'/'unverified'/None(unavailable)."""
+    import json as _j
+    import urllib.request as _u
+    try:
+        r = _u.urlopen(_u.Request(f"https://sourcify.dev/server/v2/contract/8453/{addr}", headers={"User-Agent": "OMENZ Token Check"}), timeout=5)
+        d = _j.load(r)
+        m = d.get("match") or d.get("runtimeMatch")
+        return {"exact_match": "exact", "match": "partial", "partial": "partial", "perfect": "exact"}.get(str(m), "partial" if m else "unverified")
+    except _u.HTTPError as e:
+        return "unverified" if e.code == 404 else None
+    except Exception:
+        return None
 
 
 def check(token):
@@ -130,6 +145,16 @@ def check(token):
             s = sanctions.check(who)
             if s.get("listed"):
                 red.append(f"{label} {who} is on the OFAC SDN list ({s.get('entity')})")
+    # 11-22: is the source code public and verified? (unverified = you cannot read what it does)
+    targets = [("token", t)] + ([("implementation", impl)] if impl else [])
+    ver = {label: _sourcify(a) for label, a in targets}
+    facts["source_verified"] = {**ver, "source": "sourcify.dev"}
+    for label, v in ver.items():
+        if v == "unverified":
+            caution.append(f"{label} source code is not verified on Sourcify: nobody can read what it really does"
+                           + " (it may be verified on Basescan instead)")
+        elif v in ("exact", "partial"):
+            passed.append(f"{label} source code verified on Sourcify ({v} match)")
     if t in KNOWN:
         facts["known_stablecoin"] = KNOWN[t]
         caution = [c for c in caution if not c.startswith("active owner")] + [

@@ -5,3 +5,4 @@ httpx>=0.27
 eth-abi>=5
 eth-utils>=4
 phonenumbers==9.0.44
+holidays==0.109

@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/business-days?country=&date=&add=  $0.002  Business Days: holidays, next/N business days
   GET  /api/tollbooth/v1/weather?lat=&lon=&days=    $0.002  Weather: now, 6h/24h, 5-day, agent flags
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
   GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
@@ -169,6 +170,7 @@ import lead_check  # noqa: E402
 import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
+import business_days  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -704,6 +706,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
+_paid("GET", "business-days", "$0.002",
+      "OMENZ Business Days: is this date a working day in a country (and state/province), what holiday it is, the next business day, the date N business days before/after (deadlines, delivery promises, SLA clocks, settlement dates), and upcoming public holidays. 200+ countries with their own weekends. Deterministic, offline (python holidays library). By OMENZ.",
+      {"country": "US", "date": "2026-11-25", "add": "2"},
+      {"properties": {"country": {"type": "string", "description": "ISO code, e.g. US, MX, GB"}, "subdiv": {"type": "string", "description": "state/province, e.g. CA"}, "date": {"type": "string", "description": "YYYY-MM-DD, default today (UTC)"}, "add": {"type": "integer", "description": "business days to add (negative = before)"}}})
 _paid("GET", "weather", "$0.002",
       "OMENZ Weather: forecast for any coordinates on Earth, shaped for agents. Now (temp C/F, wind, humidity, cloud, pressure, condition), next 6h and 24h (high/low, rain total, max wind), up to a 5-day outlook, and yes/no flags to branch on: rain_next_6h, freezing_next_24h, high_wind_next_24h, heat_next_24h. Source: MET Norway (Norwegian Meteorological Institute), cached responsibly. By OMENZ.",
       {"lat": "34.1478", "lon": "-118.1445", "days": "3"},
@@ -2158,6 +2164,15 @@ def name_resolve_route(request: Request, q: str | None = None, name: str | None 
     except Exception as e:
         extra = {"enrichment_error": type(e).__name__}
     return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
+
+
+@app.get(BASE + "/v1/business-days")
+def business_days_route(request: Request, country: str = "US", date: str | None = None, add: str | None = None, subdiv: str | None = None):
+    request.state.extra["action"] = "business_days"
+    r = business_days.check(country, date, add, subdiv)
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/weather")

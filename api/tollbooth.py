@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/name/resolve?name=|address=&expected_address=  $0.002  Name Resolve: ENS/Basename <-> address, MATCH/MISMATCH
   GET  /api/tollbooth/v1/link/check?url=            $0.003  Link Check: unshorten, TLS, domain age
   GET  /api/tollbooth/v1/email/check?email=         $0.002  Email Check: deliverable? disposable, role, spoofable
   GET  /api/tollbooth/v1/phone/check?number=&country=  $0.002  Phone Check: valid? type, formats, warnings (offline)
@@ -160,6 +161,7 @@ import domain_check  # noqa: E402
 import phone_check  # noqa: E402
 import email_check  # noqa: E402
 import link_check  # noqa: E402
+import name_check  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -695,6 +697,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
 
+_paid("GET", "name/resolve", "$0.002",
+      "OMENZ Name Resolve: which wallet does this name really point to, and does it match the address you were given? ENS names (Ethereum) and Basenames (*.base.eth, Base) -> address; address -> forward-verified primary names (ENS + Basename). expected_address -> MATCH / MISMATCH. Also: wallet vs smart contract vs EIP-7702 wallet on Base, OFAC screen of the resolved address, look-alike (non-ASCII) name warning. Resolve right before paying a name. On-chain reads only. By OMENZ.",
+      {"name": "vitalik.eth"},
+      {"properties": {"name": {"type": "string"}, "address": {"type": "string", "description": "reverse lookup instead of name"}, "expected_address": {"type": "string"}}})
 _paid("GET", "link/check", "$0.003",
       "OMENZ Link Check: where does this link really go, and is it safe to follow, sign in or pay? Follows the redirect chain hop by hop (unshortens bit.ly/tinyurl etc.), then checks the destination: TLS certificate (valid, issuer, days to expiry, hostname match), destination domain age (RDAP), plain http, page status. DANGER (bad/expired cert, new domain < 30 days, redirect loop, private-network target) / CAUTION (shortener, lands on a different site than shown, http, expiring cert, many hops, 4xx/5xx) / UNREACHABLE / OK. Never submits forms, runs scripts or pays. By OMENZ.",
       {"url": "https://bit.ly/3x"},
@@ -2122,6 +2128,12 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/name/resolve")
+def name_resolve_route(request: Request, name: str | None = None, address: str | None = None, expected_address: str | None = None):
+    request.state.extra["action"] = "name_resolve"
+    return name_check.check(name, address, expected_address)
 
 
 @app.get(BASE + "/v1/link/check")

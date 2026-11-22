@@ -68,6 +68,21 @@ def authorize(req):
             checks["payee"] = {"verdict": "UNAVAILABLE"}
             review.append("payee check unavailable")
 
+    # 11-22: x402 payout proof (draft x402payto1): does the domain itself vouch for this payTo? MISMATCH = likely hijack.
+    try:
+        import urllib.parse as _up2
+        import payout_proof
+        _h = (_up2.urlparse(url).hostname or "").lower()
+        if _h and pay_to:
+            pp = payout_proof.check(_h, pay_to)
+            checks["payout_proof"] = {k: pp.get(k) for k in ("verdict", "level", "note")}
+            if pp["verdict"] == "MISMATCH":
+                decline.append("payout proof: the seller's domain publishes its payout addresses and this payTo is not one of them (possible hijacked server)")
+            elif pp["verdict"] == "PROVEN":
+                passed.append(f"payout proof: domain vouches for this payTo ({pp.get('level')})")
+    except Exception:
+        checks["payout_proof"] = {"verdict": "UNAVAILABLE"}
+
     # 11-22: seller domain age (RDAP). Brand-new domains are where most payment scams live -> REVIEW, never auto-DECLINE.
     try:
         import datetime as _dt

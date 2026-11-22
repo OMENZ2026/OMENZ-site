@@ -131,6 +131,14 @@ def check(domain):
         caution.append("no DMARC record: spoofed email from this domain is not rejected")
     elif "p=reject" in out["dns"]["dmarc"].lower() or "p=quarantine" in out["dns"]["dmarc"].lower():
         passed.append("DMARC enforced (spoofed mail rejected/quarantined)")
+    try:  # 11-22: x402 payout proofs published by this domain (DNS _x402-payto / .well-known/x402-payto.json)
+        import payout_proof
+        pp = payout_proof.check(d)
+        out["x402_payout_proofs"] = [{k: p[k] for k in ("where", "domain", "address", "signature_valid")} for p in pp.get("proofs", [])]
+        if out["x402_payout_proofs"]:
+            passed.append(f"publishes {len(out['x402_payout_proofs'])} x402 payout proof(s)")
+    except Exception:
+        pass
     verdict = "RED_FLAGS" if red else "CAUTION" if caution else "LOOKS_ESTABLISHED"
     return {**out, "verdict": verdict, "red_flags": red, "caution": caution, "passed": passed,
             "sources": ["rdap.org (registries)", "Cloudflare DNS-over-HTTPS"],

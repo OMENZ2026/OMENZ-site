@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "domain": "www.omenz.org",
+  "payTo": [
+    {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "network": "eip155:8453"}
+  ]
+}

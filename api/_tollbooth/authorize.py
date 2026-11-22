@@ -68,6 +68,27 @@ def authorize(req):
             checks["payee"] = {"verdict": "UNAVAILABLE"}
             review.append("payee check unavailable")
 
+    # 11-22: seller domain age (RDAP). Brand-new domains are where most payment scams live -> REVIEW, never auto-DECLINE.
+    try:
+        import datetime as _dt
+        import urllib.parse as _up
+        import domain_check
+        host = (_up.urlparse(url).hostname or "").lower()
+        base = domain_check._registrable(host) if host else ""
+        rd, _err = domain_check._json(f"https://rdap.org/domain/{base}", timeout=4) if base else (None, None)
+        reg = next((e.get("eventDate") for e in (rd or {}).get("events") or [] if e.get("eventAction") == "registration"), None)
+        if reg:
+            age = (_dt.datetime.now(_dt.timezone.utc) - _dt.datetime.fromisoformat(reg.replace("Z", "+00:00"))).days
+            checks["seller_domain"] = {"domain": base, "registered": reg, "age_days": age}
+            if age < 30:
+                review.append(f"seller domain {base} was registered only {age} days ago")
+            else:
+                passed.append(f"seller domain {age} days old")
+        else:
+            checks["seller_domain"] = {"domain": base, "age_days": None, "note": "no public registration record"}
+    except Exception:
+        checks["seller_domain"] = {"verdict": "UNAVAILABLE"}
+
     if amount is not None:
         try:
             r, _ = market._listing(url)

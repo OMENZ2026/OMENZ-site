@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
   POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
   GET  /api/tollbooth/v1/link/check?url=            $0.003  Link Check: unshorten, TLS, domain age
   GET  /api/tollbooth/v1/email/check?email=         $0.002  Email Check: deliverable? disposable, role, spoofable
@@ -163,6 +164,7 @@ import email_check  # noqa: E402
 import link_check  # noqa: E402
 import name_check  # noqa: E402
 import lead_check  # noqa: E402
+import fx_rates  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -698,6 +700,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
+_paid("GET", "fx/convert", "$0.002",
+      "OMENZ FX Rates: convert an amount between ~30 currencies (USD, EUR, GBP, JPY, MXN, CAD, AUD, CHF, CNY, INR, BRL...) at the European Central Bank's official reference rate, today or any business day in the last 90 days (weekends/holidays use the previous business day, said so). Returns result, rate, inverse rate and the rate date. Deterministic and auditable for invoices, pricing and bookkeeping; not a live trading quote. By OMENZ.",
+      {"amount": "100", "from": "USD", "to": "EUR"},
+      {"properties": {"amount": {"type": "number"}, "from": {"type": "string"}, "to": {"type": "string"}, "date": {"type": "string", "description": "YYYY-MM-DD, optional, last 90 days"}}, "required": ["from", "to"]})
 _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
@@ -2140,6 +2146,16 @@ def name_resolve_route(request: Request, q: str | None = None, name: str | None 
     except Exception as e:
         extra = {"enrichment_error": type(e).__name__}
     return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
+
+
+@app.get(BASE + "/v1/fx/convert")
+def fx_convert_route(request: Request, amount: str | None = None, date: str | None = None,
+                     from_: str = Query("USD", alias="from"), to: str = Query("EUR")):
+    request.state.extra["action"] = "fx_convert"
+    r = fx_rates.convert(amount, from_, to, date)
+    if r.get("error") and "unavailable" in r["error"]:
+        return JSONResponse(r, status_code=503)
+    return r
 
 
 @app.post(BASE + "/v1/lead/check")

@@ -19,7 +19,7 @@ import urllib.request
 DAILY_CAP, VISITOR_CAP = 2000, 300
 MAX_BODY = 8 * 1024
 LIVE = {
-    "GET /token/check", "GET /package/check", "GET /domain/check", "GET /phone/check", "GET /email/check", "GET /link/check", "GET /name/resolve", "POST /lead/check", "POST /secret-scan", "POST /spend-gate", "POST /cost-estimate", "POST /context-diet", "POST /finance/forecast",
+    "GET /token/check", "GET /package/check", "GET /domain/check", "GET /phone/check", "GET /email/check", "GET /link/check", "GET /name/resolve", "POST /lead/check", "GET /fx/convert", "POST /secret-scan", "POST /spend-gate", "POST /cost-estimate", "POST /context-diet", "POST /finance/forecast",
     "POST /contract/build", "POST /contract/accept", "POST /evidence/bundle", "POST /passport/issue", "POST /passport/check",
     "POST /locker/put", "GET /locker/get", "POST /pobox/create", "POST /pobox/drop", "GET /pobox/inbox", "POST /handoff/pack",
     "POST /ledger/create", "POST /ledger/append", "GET /ledger/get", "POST /failure/put", "POST /dedupe",

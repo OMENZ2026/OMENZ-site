@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/phone/check?number=&country=  $0.002  Phone Check: valid? type, formats, warnings (offline)
   GET  /api/tollbooth/v1/domain/check?domain=       $0.003  Domain Check: age, DNS, MX/SPF/DMARC trust
   GET  /api/tollbooth/v1/package/check?ecosystem=&name=&version=  $0.003  Package Check: safe to install? (deps.dev + OSV)
   GET  /api/tollbooth/v1/token/check?token=        $0.005  Token Check (Base): safe to hold/accept? proxy, owner powers, OFAC
@@ -154,6 +155,7 @@ import chain_tools  # noqa: E402
 import token_check  # noqa: E402
 import package_check  # noqa: E402
 import domain_check  # noqa: E402
+import phone_check  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -689,6 +691,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string"}}, "required": ["q"]})
 
+_paid("GET", "phone/check", "$0.002",
+      "OMENZ Phone Check: is this a real, dialable phone number and what kind? VALID / POSSIBLE_BUT_INVALID / INVALID / FICTIONAL (555-01XX), E.164 + international + national formats, country, type (mobile, landline, toll-free, premium-rate, VoIP...), location, original carrier, time zones, can-it-SMS, and warnings before an agent calls or texts (premium-rate cost, VoIP, landline). Fully offline (Google libphonenumber data): nothing leaves OMENZ, nothing stored. By OMENZ.",
+      {"number": "+1 650 253 0000"},
+      {"properties": {"number": {"type": "string"}, "country": {"type": "string", "description": "2-letter ISO code for local formats, e.g. US"}}, "required": ["number"]})
 _paid("GET", "domain/check", "$0.003",
       "OMENZ Domain Check: should your agent trust this domain before paying it or emailing it? Registration age and expiry (RDAP), registrar and registry status, does it resolve, can it receive mail (MX), SPF and DMARC (can others spoof it?). RED_FLAGS if unregistered, not resolving, on hold or registered < 30 days ago; CAUTION if young, expiring, or missing mail/anti-spoofing records; LOOKS_ESTABLISHED otherwise. Subdomains are checked against their registered domain. Public data (RDAP + DNS-over-HTTPS), no keys. By OMENZ.",
       {"domain": "example.com"},
@@ -2104,6 +2110,12 @@ def tx_decode_route(request: Request, tx_hash: str = Query(...)):
 def name_resolve_route(request: Request, q: str = Query(...)):
     request.state.extra["action"] = "name_resolve"
     return chain_tools.name_resolve(q)
+
+
+@app.get(BASE + "/v1/phone/check")
+def phone_check_route(request: Request, number: str = Query(...), country: str | None = None):
+    request.state.extra["action"] = "phone_check"
+    return phone_check.check(number, country)
 
 
 @app.get(BASE + "/v1/domain/check")

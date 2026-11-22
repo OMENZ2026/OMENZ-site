@@ -84,6 +84,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/tx/decode?tx_hash= $0.002  Transaction Decode (Base): plain-English transfers, approvals, x402 payments
   GET  /api/tollbooth/v1/name/resolve?q=     $0.002  Name Resolve: ENS + Basenames <-> address (forward-verified)
   POST /api/tollbooth/v1/seller/acceptance-check $0.05  Seller Payment-Acceptance Check: does your x402 server refuse good money?
+  GET  /api/tollbooth/v1/time/convert?time=&from=&to=  $0.002  Time Zones: convert, DST, business hours
   GET  /api/tollbooth/v1/business-days?country=&date=&add=  $0.002  Business Days: holidays, next/N business days
   GET  /api/tollbooth/v1/weather?lat=&lon=&days=    $0.002  Weather: now, 6h/24h, 5-day, agent flags
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
@@ -171,6 +172,7 @@ import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
 import business_days  # noqa: E402
+import time_convert  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -706,6 +708,10 @@ _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
 
+_paid("GET", "time/convert", "$0.002",
+      "OMENZ Time Zones: what time is it there, and is it a good time to reach them? Convert a time between up to 10 IANA zones (or now anywhere), with UTC offset, DST in effect, abbreviation, weekday and a business-hours check per zone (default 09:00-17:00 Mon-Fri, adjustable), plus all_in_business_hours for scheduling across zones. Flags times that don't exist or happen twice around DST switches. By OMENZ.",
+      {"time": "2026-11-25 14:30", "from": "America/Los_Angeles", "to": "Europe/London,Asia/Tokyo"},
+      {"properties": {"time": {"type": "string", "description": "ISO local time; omit for now"}, "from": {"type": "string"}, "to": {"type": "string", "description": "comma-separated zones"}, "start": {"type": "integer"}, "end": {"type": "integer"}}})
 _paid("GET", "business-days", "$0.002",
       "OMENZ Business Days: is this date a working day in a country (and state/province), what holiday it is, the next business day, the date N business days before/after (deadlines, delivery promises, SLA clocks, settlement dates), and upcoming public holidays. 200+ countries with their own weekends. Deterministic, offline (python holidays library). By OMENZ.",
       {"country": "US", "date": "2026-11-25", "add": "2"},
@@ -2164,6 +2170,16 @@ def name_resolve_route(request: Request, q: str | None = None, name: str | None 
     except Exception as e:
         extra = {"enrichment_error": type(e).__name__}
     return {**extra, **{k: v for k, v in base.items() if v is not None}, "version": "0.2.0"}
+
+
+@app.get(BASE + "/v1/time/convert")
+def time_convert_route(request: Request, time: str | None = None, to: str | None = None, start: str = "9", end: str = "17",
+                       from_: str = Query("UTC", alias="from")):
+    request.state.extra["action"] = "time_convert"
+    r = time_convert.convert(time, from_, to, start, end)
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/business-days")

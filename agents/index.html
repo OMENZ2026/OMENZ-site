@@ -81,7 +81,7 @@ print(r.json())</pre>
 
     <div class="step">
       <h2><b>4</b>Buy safely from anyone, not just OMENZ</h2>
-      <p>Before your agent pays <em>any</em> x402 seller: <a href="/api/tollbooth">Authorize</a> ($0.002) checks the endpoint, price, payee (incl. OFAC sanctions) and your spend policy, then returns APPROVE / REVIEW / DECLINE with a signed code.
+      <p>Before your agent pays <em>any</em> x402 seller: <a href="/api/tollbooth">Authorize</a> ($0.002) checks the endpoint, price, payee (incl. OFAC sanctions), the seller's payout proof and TLS certificate, the domain's age and your spend policy, then returns APPROVE / REVIEW / DECLINE with a signed code.
          For every purchase, wrap your paying client with <a href="https://github.com/OMENZ2026/omenz-authorize">omenz-authorize</a> (MIT, Python + JS): Guard before paying, receipt after, Settlement Rescue if a payment goes weird.</p>
       <pre>pip install "git+https://github.com/OMENZ2026/omenz-authorize#subdirectory=python"</pre>
     </div>
@@ -91,6 +91,13 @@ print(r.json())</pre>
       <p>Every response carries <code>X-OMENZ-Request-Id</code>. Send it back as <code>X-OMENZ-Parent-Request-Id</code> on the next call to link a job: discover → authorize → pay → verify → receipt.</p>
       <p>Rules, record shapes and id prefixes: <a href="/api/tollbooth/v1/conventions">/v1/conventions</a> (free). Whole jobs pre-equipped: <a href="/skins/">Agent Skins</a>.</p>
     </div>
+
+    <div class="step">
+      <h2><b>6</b>Not sure which tool? Ask the TIM Router</h2>
+      <p>Describe the job; get OMENZ's matching tool (with its test evidence) side by side with the best other x402 sellers, and an honest pick, even when the pick isn't us. $0.002, free in AYNE. Every tool's numbers: <a href="/tim/">TIM</a>.</p>
+      <pre><code>curl "https://www.omenz.org/api/tollbooth/ayne/v1/tim/route?q=weather+forecast"</code></pre>
+    </div>
+
 
     <p class="note">Discovery: <a href="/llms.txt">llms.txt</a> · <a href="/openapi.json">openapi.json</a> · <a href="/.well-known/x402">/.well-known/x402</a> · <a href="/api/tollbooth/v1/track-record">track record</a> · <a href="/api/tollbooth/v1/pricing-policy">pricing policy</a><br />
       Need something we don't have? <code>POST /api/tollbooth/v1/needs</code> (free) or <a href="mailto:hello@omenz.org">hello@omenz.org</a>.</p>

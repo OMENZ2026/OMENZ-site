@@ -229,9 +229,20 @@ def vendor(url, method=None):
         flags.append("no readable terms/pricing page found")
     if rel["score"] < 40:
         flags.append(f"low reliability score {rel['score']}")
+    trust = None
+    try:  # 11-22: Domain Check facts for the vendor's registered domain (age, expiry, registry status, mail setup)
+        import domain_check
+        dc = domain_check.check(host)
+        trust = {k: dc.get(k) for k in ("verdict", "registered_domain", "registration", "red_flags", "caution")}
+        age = (dc.get("registration") or {}).get("age_days")
+        if age is not None and age < 30:
+            flags.append(f"vendor domain registered only {age} days ago")
+        flags += [f"domain: {r}" for r in dc.get("red_flags") or [] if "registered only" not in r]
+    except Exception:
+        trust = {"verdict": "UNAVAILABLE"}
     return {"version": VERSION, "url": url, "vendor_host": host, "checked_at": rel["checked_at"], "reliability": rel,
             "domain": {k: sc.get(k) for k in ("status", "final_url", "title", "phone", "notes", "next_action")},
-            "terms": terms, "flags": flags, "verdict": "OK" if not flags else "REVIEW"}
+            "domain_trust": trust, "terms": terms, "flags": flags, "verdict": "OK" if not flags else "REVIEW"}
 
 
 def _pct(sorted_vals, q):

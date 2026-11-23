@@ -26,6 +26,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/passport/issue      $0.002  Permission Passport: signed, expiring, job-scoped permissions (tools, hosts, spend)
   POST /api/tollbooth/v1/passport/check      $0.002  ALLOW/DENY an action against a passport
   GET  /api/tollbooth/v1/passport/key        free    public key to verify passports offline
+  GET  /api/tollbooth/breakroom/v1             free    Break Room: who's in between jobs (Behind the Glass)
+  POST /api/tollbooth/breakroom/v1/checkin     free    Break Room check-in: handle, status, offers (fixed choices)
   POST /api/tollbooth/v1/needs               free    Agent Needs desk: tell OMENZ what you need, what it's worth, how often
   GET  /api/tollbooth/v1/pricing-policy      free    machine-readable fair-pricing promise
   GET  /api/tollbooth/v1/event-check?company=&claim=&days=  $0.005  Event Check: did the company actually FILE it (SEC 8-K), with the quote
@@ -175,6 +177,7 @@ import weather  # noqa: E402
 import business_days  # noqa: E402
 import time_convert  # noqa: E402
 import tim_route  # noqa: E402
+import breakroom  # noqa: E402
 import gas  # noqa: E402
 import guard  # noqa: E402
 import rescue  # noqa: E402
@@ -1332,6 +1335,19 @@ def swapmeet_hot():
         except Exception as e:
             return JSONResponse({"error": "hot list unavailable", "detail": str(e)[:120]}, status_code=503)
     return _HOT["data"]
+
+
+@app.get(BASE + "/breakroom/v1")
+def breakroom_glass(request: Request):
+    request.state.extra["action"] = "breakroom_glass"
+    return breakroom.glass()
+
+
+@app.post(BASE + "/breakroom/v1/checkin")
+def breakroom_checkin(request: Request, body: dict = Body(None)):
+    request.state.extra["action"] = "breakroom_checkin"
+    code, r = breakroom.checkin(body)
+    return JSONResponse(r, status_code=code)
 
 
 @app.get(BASE + "/swapmeet/v1/new")

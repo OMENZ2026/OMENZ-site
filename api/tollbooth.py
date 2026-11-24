@@ -126,6 +126,7 @@ import urllib.request
 
 from fastapi import Body, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tollbooth"))
 import authorize  # noqa: E402
@@ -716,7 +717,7 @@ _paid("GET", "name/resolve", "$0.002",
 _paid("GET", "tim/route", "$0.002",
       "TIM Router (Tools in Metrics): which tool should your agent use for this job, OMENZ's or someone else's? Puts OMENZ's matching tool (with its published test evidence, known-answer checks, uptime and paid history) side by side with the best x402 market options (real 30-day payers, price), and honestly recommends theirs when theirs fits better. OMENZ earns only this routing fee and never sits in your payment. Over-limit options stay visible (discovery is not authorization). By OMENZ.",
       {"q": "weather forecast", "max_price_usd": "0.01"},
-      {"properties": {"q": {"type": "string", "description": "the job, in words"}, "max_price_usd": {"type": "number"}}, "required": ["q"]})
+      {"properties": {"q": {"type": "string", "description": "the job, in words"}, "max_price_usd": {"type": "string", "description": "number, e.g. 0.01"}}, "required": ["q"]})
 _paid("GET", "time/convert", "$0.002",
       "OMENZ Time Zones: what time is it there, and is it a good time to reach them? Convert a time between up to 10 IANA zones (or now anywhere), with UTC offset, DST in effect, abbreviation, weekday and a business-hours check per zone (default 09:00-17:00 Mon-Fri, adjustable), plus all_in_business_hours for scheduling across zones. Flags times that don't exist or happen twice around DST switches. By OMENZ.",
       {"time": "2026-11-25 14:30", "from": "America/Los_Angeles", "to": "Europe/London,Asia/Tokyo"},
@@ -724,11 +725,11 @@ _paid("GET", "time/convert", "$0.002",
 _paid("GET", "business-days", "$0.002",
       "OMENZ Business Days: is this date a working day in a country (and state/province), what holiday it is, the next business day, the date N business days before/after (deadlines, delivery promises, SLA clocks, settlement dates), and upcoming public holidays. 200+ countries with their own weekends. Deterministic, offline (python holidays library). By OMENZ.",
       {"country": "US", "date": "2026-11-25", "add": "2"},
-      {"properties": {"country": {"type": "string", "description": "ISO code, e.g. US, MX, GB"}, "subdiv": {"type": "string", "description": "state/province, e.g. CA"}, "date": {"type": "string", "description": "YYYY-MM-DD, default today (UTC)"}, "add": {"type": "integer", "description": "business days to add (negative = before)"}}})
+      {"properties": {"country": {"type": "string", "description": "ISO code, e.g. US, MX, GB"}, "subdiv": {"type": "string", "description": "state/province, e.g. CA"}, "date": {"type": "string", "description": "YYYY-MM-DD, default today (UTC)"}, "add": {"type": "string", "description": "whole number of business days to add (negative = before)"}}})
 _paid("GET", "weather", "$0.002",
       "OMENZ Weather: forecast for any coordinates on Earth, shaped for agents. Now (temp C/F, wind, humidity, cloud, pressure, condition), next 6h and 24h (high/low, rain total, max wind), up to a 5-day outlook, and yes/no flags to branch on: rain_next_6h, freezing_next_24h, high_wind_next_24h, heat_next_24h. Source: MET Norway (Norwegian Meteorological Institute), cached responsibly. By OMENZ.",
       {"lat": "34.1478", "lon": "-118.1445", "days": "3"},
-      {"properties": {"lat": {"type": "number"}, "lon": {"type": "number"}, "days": {"type": "integer", "description": "1-5, default 3"}}, "required": ["lat", "lon"]})
+      {"properties": {"lat": {"type": "string", "description": "latitude, e.g. 34.1478"}, "lon": {"type": "string", "description": "longitude, e.g. -118.1445"}, "days": {"type": "string", "description": "1-5, default 3"}}, "required": ["lat", "lon"]})
 _paid("GET", "ip/check", "$0.002",
       "OMENZ IP Check: who is behind this IP, and is it a person, a server or an anonymizer? Owner organization, network range and registry country (RDAP), reverse DNS, cloud/CDN membership (AWS, Google Cloud, Cloudflare published ranges), Tor exit node. ANONYMIZER / DATACENTER / NOT_A_KNOWN_DATACENTER with signals, for signup screening, fraud checks, rate limits and log triage. IPv4 + IPv6. Registry country, not a guessed street location. By OMENZ.",
       {"ip": "8.8.8.8"},
@@ -736,11 +737,11 @@ _paid("GET", "ip/check", "$0.002",
 _paid("GET", "fx/convert", "$0.002",
       "OMENZ FX Rates: convert an amount between ~30 currencies (USD, EUR, GBP, JPY, MXN, CAD, AUD, CHF, CNY, INR, BRL...) at the European Central Bank's official reference rate, today or any business day in the last 90 days (weekends/holidays use the previous business day, said so). Returns result, rate, inverse rate and the rate date. Deterministic and auditable for invoices, pricing and bookkeeping; not a live trading quote. By OMENZ.",
       {"amount": "100", "from": "USD", "to": "EUR"},
-      {"properties": {"amount": {"type": "number"}, "from": {"type": "string"}, "to": {"type": "string"}, "date": {"type": "string", "description": "YYYY-MM-DD, optional, last 90 days"}}, "required": ["from", "to"]})
+      {"properties": {"amount": {"type": "string", "description": "number, e.g. 100"}, "from": {"type": "string"}, "to": {"type": "string"}, "date": {"type": "string", "description": "YYYY-MM-DD, optional, last 90 days"}}, "required": ["from", "to"]})
 _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
-      {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}})
+      {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}}, body=True)
 _paid("GET", "link/check", "$0.003",
       "OMENZ Link Check: where does this link really go, and is it safe to follow, sign in or pay? Follows the redirect chain hop by hop (unshortens bit.ly/tinyurl etc.), then checks the destination: TLS certificate (valid, issuer, days to expiry, hostname match), destination domain age (RDAP), plain http, page status. DANGER (bad/expired cert, new domain < 30 days, redirect loop, private-network target) / CAUTION (shortener, lands on a different site than shown, http, expiring cert, many hops, 4xx/5xx) / UNREACHABLE / OK. Never submits forms, runs scripts or pays. By OMENZ.",
       {"url": "https://bit.ly/3x"},
@@ -931,6 +932,28 @@ app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redo
 _mw = None
 
 
+def _input_info(method, path):
+    """(required query/body fields, example input) for a paid route, from its own discovery declaration."""
+    v = ROUTES.get(f"{method} {path}") or {}
+    b = (v.get("extensions") or {}).get("bazaar", {})
+    ex = (b.get("info", {}).get("input", {}) or {})
+    sch = (((b.get("schema") or {}).get("properties") or {}).get("input") or {}).get("properties") or {}
+    key = "queryParams" if method == "GET" else "body"
+    req = (sch.get(key) or {}).get("required") or []
+    return req, ex.get(key), v
+
+
+@app.exception_handler(RequestValidationError)
+async def _bad_input(request: Request, exc):
+    """11-24: an agent sent missing/invalid input (often AFTER paying: errors are never charged). Say exactly what's needed."""
+    path = request.url.path.rstrip("/")
+    req, example, v = _input_info(request.method, path)
+    probs = [{"field": ".".join(str(x) for x in e.get("loc", [])[1:]) or "body", "problem": e.get("msg")} for e in exc.errors()][:10]
+    return JSONResponse({"error": "missing or invalid input", "problems": probs, "required": req, "example_input": example,
+                         "not_charged": True, "what_it_does": (v.get("description") or "")[:300] or None,
+                         "try_free_first": BASE + "/ayne" + path[len(BASE):] if path.startswith(BASE + "/v1/") else None}, status_code=422)
+
+
 @app.exception_handler(405)
 async def _wrong_method(request: Request, exc):
     """Wrong HTTP method: tell the agent the right method, price and an example body instead of a bare 405."""
@@ -1025,6 +1048,16 @@ async def x402_mw(request, call_next):
             resp = JSONResponse({"x402Version": 2, "error": "x402 v1 X-PAYMENT is not accepted here: this server speaks x402 v2. "
                                  "Read the PAYMENT-REQUIRED header of this 402 and resend the payment in a PAYMENT-SIGNATURE header.",
                                  "docs": "https://www.omenz.org/llms.txt"}, status_code=402, headers={"PAYMENT-REQUIRED": pr} if pr else None)
+        if not payer and resp.status_code == 402 and request.method == "GET":
+            # 11-24: our first repeat buyer hit 402 -> paid -> 422 three times. Tell agents BEFORE they pay what input is missing.
+            try:
+                req, example, _v = _input_info("GET", path.rstrip("/"))
+                missing = [k for k in req if not request.query_params.get(k)]
+                if missing:
+                    resp.headers["X-OMENZ-Input-Hint"] = json.dumps({"missing": missing, "example": example}, separators=(",", ":"))[:600]
+                    ev["input_missing"] = missing
+            except Exception:
+                pass
         if payer and resp.status_code == 402:
             ev["pay_error"] = _pay_error(resp)  # why a sent payment was rejected (added 11-20: funded repeat payers were being turned away)
             ev.update(_pay_shape(request))

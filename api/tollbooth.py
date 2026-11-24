@@ -1026,7 +1026,13 @@ async def x402_mw(request, call_next):
             if f"HEAD {_p}" not in ROUTES:  # 11-24: uptime/health checkers use HEAD (2,281 HEAD->405 in 7d)
                 _alias[f"HEAD {_p}"] = {"accepts": _v["accepts"], "description": _v.get("description", ""), "mimeType": "application/json"}
         _HEAD_PAID.update(k for k in _alias if k.startswith("HEAD "))
-        _mw = payment_middleware({**ROUTES, **_alias}, server)
+        # 11-24 CRITICAL: Coinbase's facilitator rejects payment payloads whose resource description is > 500 chars
+        # ("paymentPayload is invalid: must match one of [x402V2PaymentPayload, ...]"). 19 routes were turning away paying
+        # agents (45 rejections in 7 days). The catalog keeps full descriptions; the payment requirement gets a <=480-char copy.
+        def _short(v):
+            d = v.get("description") or ""
+            return {**v, "description": d if len(d) <= 480 else d[:476].rsplit(" ", 1)[0] + " ..."}
+        _mw = payment_middleware({k: _short(v) for k, v in {**ROUTES, **_alias}.items()}, server)
     t0 = time.time()
     request.state.extra = {}
     request.state.ayne = False

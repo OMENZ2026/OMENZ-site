@@ -93,6 +93,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/pay/doctor                $0.002  Payment Doctor: why was my x402 payment refused
   POST /api/tollbooth/v1/pay/ready                 $0.002  Pay Ready: can this wallet pay this seller now
   GET  /api/tollbooth/v1/gas/compare?chains=       $0.002  Gas Compare: cost to move money on 7 chains, cheapest
+  GET  /api/tollbooth/v1/price/check?symbols=      $0.002  Price Check: crypto price cross-checked across 3 sources
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
   GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
   POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
@@ -178,6 +179,7 @@ import lead_check  # noqa: E402
 import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
 import gas_compare  # noqa: E402
+import price_check  # noqa: E402
 import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
@@ -748,6 +750,10 @@ _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
       {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}}, body=True)
+_paid("GET", "price/check", "$0.002",
+      "OMENZ Price Check: a crypto USD price your agent can act on, cross-checked. Up to 5 symbols (ETH, BTC, USDC, SOL...): Coinbase spot + Kraken + Chainlink on-chain feed on Base where one exists, median price, spread between sources and AGREE / CHECK / DISAGREE before you swap, invoice or set a limit. Public sources, no AI. By OMENZ.",
+      {"symbols": "ETH,BTC,USDC"},
+      {"properties": {"symbols": {"type": "string", "description": "comma list of up to 5 ticker symbols"}}, "required": ["symbols"]})
 _paid("GET", "gas/compare", "$0.002",
       "OMENZ Gas Compare: what it costs to move money on 7 chains right now and which is cheapest. Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche: base fee + suggested tip, USD cost of a native transfer and a USDC/ERC-20 transfer, block freshness. One call instead of seven. Public RPCs + Coinbase spot prices. By OMENZ.",
       {"chains": "base,arbitrum,optimism,ethereum"},
@@ -2337,6 +2343,15 @@ def fx_convert_route(request: Request, amount: str | None = None, date: str | No
 def lead_check_route(request: Request, body: dict = Body(...)):
     r = lead_check.check(body)
     request.state.extra.update({"action": "lead_check", "verdict": r.get("verdict")})
+    return r
+
+
+@app.get(BASE + "/v1/price/check")
+def price_check_route(request: Request, symbols: str = Query(...)):
+    r = price_check.check(symbols)
+    request.state.extra.update({"action": "price_check"})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
     return r
 
 

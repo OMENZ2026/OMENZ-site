@@ -94,6 +94,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/pay/ready                 $0.002  Pay Ready: can this wallet pay this seller now
   GET  /api/tollbooth/v1/gas/compare?chains=       $0.002  Gas Compare: cost to move money on 7 chains, cheapest
   GET  /api/tollbooth/v1/price/check?symbols=      $0.002  Price Check: crypto price cross-checked across 3 sources
+  GET  /api/tollbooth/v1/address/screen?address=   $0.002  Address Screen: OFAC sanctions, any chain
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
   GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
   POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
@@ -180,6 +181,7 @@ import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
 import gas_compare  # noqa: E402
 import price_check  # noqa: E402
+import address_screen  # noqa: E402
 import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
@@ -750,6 +752,10 @@ _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
       {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}}, body=True)
+_paid("GET", "address/screen", "$0.002",
+      "OMENZ Address Screen: is this crypto address sanctioned? One GET, any chain: Bitcoin, Ethereum/Base/EVM, TRON, Litecoin, Monero, Solana and more, exact-matched against every digital currency address on the US Treasury OFAC SDN list (refreshed weekly). BLOCK / CLEAR + listed entity, address format, and for EVM what it is on Base. By OMENZ.",
+      {"address": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840"},
+      {"properties": {"address": {"type": "string", "description": "one crypto address, any chain"}}, "required": ["address"]})
 _paid("GET", "price/check", "$0.002",
       "OMENZ Price Check: a crypto USD price your agent can act on, cross-checked. Up to 5 symbols (ETH, BTC, USDC, SOL...): Coinbase spot + Kraken + Chainlink on-chain feed on Base where one exists, median price, spread between sources and AGREE / CHECK / DISAGREE before you swap, invoice or set a limit. Public sources, no AI. By OMENZ.",
       {"symbols": "ETH,BTC,USDC"},
@@ -2343,6 +2349,15 @@ def fx_convert_route(request: Request, amount: str | None = None, date: str | No
 def lead_check_route(request: Request, body: dict = Body(...)):
     r = lead_check.check(body)
     request.state.extra.update({"action": "lead_check", "verdict": r.get("verdict")})
+    return r
+
+
+@app.get(BASE + "/v1/address/screen")
+def address_screen_route(request: Request, address: str = Query(...)):
+    r = address_screen.screen(address)
+    request.state.extra.update({"action": "address_screen", "verdict": r.get("verdict")})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
     return r
 
 

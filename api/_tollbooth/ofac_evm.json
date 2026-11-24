@@ -1,6 +1,6 @@
 {
 "source": "OFAC SDN list (US Treasury), https://www.treasury.gov/ofac/downloads/sdn.csv",
-"fetched_at": "2026-11-20T22:49:40Z",
+"fetched_at": "2026-11-24T18:04:44Z",
 "count": 94,
 "addresses": {
 "0x252a8bd2319d8a555b872990601221b3a2053bce": {

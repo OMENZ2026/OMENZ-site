@@ -1,0 +1,3097 @@
+{
+"source": "OFAC SDN list (US Treasury), https://www.treasury.gov/ofac/downloads/sdn.csv",
+"fetched_at": "2026-11-24T18:04:44Z",
+"count": 514,
+"addresses": {
+"TNiq9AXBp9EjUqhDhrwrfvAA8U3GUQZH81": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"TTiDLWE6fZK8okMJv6ijg42yrH6W2pjSr9": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"TAhwhFv3JpK39Nc2m8W5LPCcoTisutiRfp": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"TJdgB1k6ot3f2nLuZug6D8eD3HavTmzmSK": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"TXGHxdYbGy574z5hBu4LNzq9NzjZQ9bhUf": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"TFQbqaNbmq2xsVor2NbufLkYZvxFC9wC7k": {
+"name": "BANK MARKAZI JOMHOURI ISLAMI IRAN",
+"chains": [
+"TRX"
+]
+},
+"44dZUJ7w1T3fKAvFW8XyXUVoAGSbFvXef2wcbnsjNKGWYorpLJBjth5VKSFhLGkpYKJb2J341tdZHBnbpv72WL7e8zuxfR2": {
+"name": "ISIL KHORASAN",
+"chains": [
+"XMR"
+]
+},
+"45ezvPejNsKYntjhyyeb7fbfzi1sxYQozc5Ffseh8jPGW4JZQQVXykNTfK5uGFiij7Hp3qPv3T5HCR7F3Fnmz2mzE1aKQwo": {
+"name": "ISIL KHORASAN",
+"chains": [
+"XMR"
+]
+},
+"47FVhkRkWgnLs81UBqgY8ui6axAB1627HJjkY2qPnWxMbGfx7387kcY6RzScHgGMQAaH6CBxKXAS4862tS2fhs9BRdmuyav": {
+"name": "ISIL KHORASAN",
+"chains": [
+"XMR"
+]
+},
+"TUoixKFaWVsHxGWgnYyMzpkrT22YqU7VvH": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TBtRqkiFzyuwe8nSAGQghxygAfwAF5eERq": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TTs7KRq39547ruAsxb9brAPuTLy7h3U6H1": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TVttWTHTCU9kULP51m9BaHpmCW8H1BJJNQ": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TCqKhk7MpPnGH3UfygE1TRzUo92a5tuVy6": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TSbGiFzG9xFXUYgGA6Rw": {
+"name": "ISIL KHORASAN",
+"chains": [
+"TRX"
+]
+},
+"TA3941uFAvmVibSkQ6fMJXxmaSNovX86mz": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TA39q3p75XRSWYAEaSF7dANtyksoa3sLge": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TBATDh41qMQ1yeVYecneEvhpfayYmkAQWS": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TBwghbQMsBC5xcUxE7ZpYXhfDMXZAfiFv6": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TBWRDpQsW1ZVPGGaBAwVLNb7iqmVBuM1nj": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TBYRhsZR7Mdn9ezpGVLwZiNVnGm8wZGLAD": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TBZefVsyQpzzxc2WSCLbZBECvxVdzGqdtC": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TC5UNu3LGrjjVCuLNDdVgjm4oL5cQAyFRZ": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TCA7AfTSuDmgYk2VaezfPuZF4Z4X8wxwcQ": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"TDNKsLvsY2iSznyghddXz7ZDRc": {
+"name": "CHEIL CREDIT BANK",
+"chains": [
+"USDT"
+]
+},
+"12aNKp2iDKuhEde2YfPdd4DFGenRUTKupL": {
+"name": "MESRI, Behzad",
+"chains": [
+"XBT"
+]
+},
+"0x252a8bd2319d8a555b872990601221b3a2053bce": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"0x1cab8177ace78b1b6b1c393371f4f2dcae40cbeb": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"0x6fac4d18c912343bf86fa7049364dd4e424ab9c0": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"0xa40cfbfc8534ffc84e20a7d8bbc3729b26a35f6f": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"0x7f03679b56d8772530efa516b58bb83d4829e881": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"0x8ac5381fcd9e7395d14e02986c344aada84b4bc6": {
+"name": "MESRI, Behzad",
+"chains": [
+"ETH"
+]
+},
+"12QtD5BFwRsdNsAZY76UVE1xyCGNTojH9h": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"1Kuf2Rd8mDyAViwBozGTNYnvWL8uYFrkVo": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"13f59kUM5FU8MfTG7DCEugYarDhSD7XCoC": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"1P3ZfGFLezzYGg9k5SVzQmnjyh7nrUmF2y": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"1EpMiZkQVekM5ij12nMiEwttFPcDK9XhX6": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"1JREJdZupiFhE7ZzQPtASuMCvvpXC7wRsC": {
+"name": "YAN, Xiaobing",
+"chains": [
+"XBT"
+]
+},
+"149w62rY42aZBox8fGcmqNsXUzSStKeq8C": {
+"name": "KHORASHADIZADEH, Ali",
+"chains": [
+"XBT"
+]
+},
+"1AjZPMsnmpdK2Rv9KQNfMurTXinscVro9V": {
+"name": "GHORBANIYAN, Mohammad",
+"chains": [
+"XBT"
+]
+},
+"17ezuJoT3XBbdcwFZbkTnrXbup11F4uhiy": {
+"name": "ZHENG, Fujing",
+"chains": [
+"XBT"
+]
+},
+"1DH2xDH7TngrDU6LXciprKCBKNcPA1xX8A": {
+"name": "ZHENG, Fujing",
+"chains": [
+"XBT"
+]
+},
+"33Kja69SQVc8kozpoP7Qw6HFtGxHkiWzTz": {
+"name": "ZHENG, Guanghua",
+"chains": [
+"XBT"
+]
+},
+"3MkUNScqf21EcfWq6T4x2MFgBeSTqhB5t6": {
+"name": "ZHENG, Guanghua",
+"chains": [
+"XBT"
+]
+},
+"18uKfaUjgG52rVeXEi3wxnveww7zZuECtE": {
+"name": "ZHENG, Guanghua",
+"chains": [
+"XBT"
+]
+},
+"LaizKtS5DUhPuP1nTQcc83MS7HwK6vk85z": {
+"name": "ZHENG, Guanghua",
+"chains": [
+"LTC"
+]
+},
+"0x098b716b8aaf21512996dc57eb0615e2383e2f96": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0xa0e1c89ef1a489c9c7de96311ed5ce5d32c20e4b": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0x3cffd56b47b7b41c56258d9c7731abadc360e073": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0x53b6936513e738f44fb50d2b9476730c0ab3bfc1": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0xf7b31119c2682c88d88d455dbb9d5932c65cf1be": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0x3e37627deaa754090fbfbb8bd226c1ce66d255e9": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"0x08723392ed15743cc38513c4925f5e6be5c17243": {
+"name": "LAZARUS GROUP",
+"chains": [
+"ETH"
+]
+},
+"134r8iHv69xdT6p5qVKTsHrcUEuBVZAYak": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"15YK647qtoZQDzNrvY6HJL6QwXduLHfT28": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"1PfwHNxUnkpfkK9MKjMqzR3Xq3KCtq9u17": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"14kqryJUxM3a7aEi117KX9hoLUw592WsMR": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"1F2Gdug9ib9NQMhKMGGJczzMk5SuENoqrp": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"3F2sZ4jbhvDKQdGbHYPC6ZxFXEau2m5Lqj": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"1AXUTu9y3H8w4wYx4BjyFWgRhZKDhmcMrn": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"1Hn9ErTCPRP6j5UDBeuXPGuq5RtRjFJxJQ": {
+"name": "TIAN, Yinyin",
+"chains": [
+"XBT"
+]
+},
+"1EfMVkxQQuZfBdocpJu6RUsCJvenQWbQyE": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"17UVSMegvrzfobKC82dHXpZLtLcqzW9stF": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"39eboeqYNFe2VoLC3mUGx4dh6GNhLB3D2q": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"39fhoB2DohisGBbHvvfmkdPdShT75CNHdX": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3E6rY4dSCDW6y2bzJNwrjvTtdmMQjB6yeh": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3EeR8FbcPbkcGj77D6ttneJxmsr3Nu7KGV": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3HQRveQzPifZorZLDXHernc5zjoZax8U9f": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3JXKQ81JzBqVbB8VHdV9Jtd7auWokkdPgY": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3KHfXU24Bt3YD5Ef4J7uNp2buCuhrxfGen": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3LbDu1rUXHNyiz4i8eb3KwkSSBMf7C583D": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3MN8nYo1tt5hLxMwMbxDkXWd7Xu522hb9P": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"3N6WeZ6i34taX8Ditser6LKWBcXmt2XXL4": {
+"name": "LI, Jiadong",
+"chains": [
+"XBT"
+]
+},
+"1Q9UAQbcDezmyouFrzt94t4dSMxgsUfW1X": {
+"name": "POTEKHIN, Danil",
+"chains": [
+"XBT"
+]
+},
+"1Kys8fqDen8NGFUJ6AFcXfFW5qquuTH4eh": {
+"name": "POTEKHIN, Danil",
+"chains": [
+"XBT"
+]
+},
+"0x7f367cc41522ce07553e823bf3be79a889debe1b": {
+"name": "POTEKHIN, Danil",
+"chains": [
+"ETH"
+]
+},
+"1Q6saNmqKkyFB9mFR68Ck8F7Dp7dTopF2W": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"XBT"
+]
+},
+"1DDA93oZPn7wte2eR1ABwcFoxUFxkKMwCf": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"XBT"
+]
+},
+"0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"ETC",
+"ETH"
+]
+},
+"5be5543ff73456ab9f2d207887e2af87322c651ea1a873c5b25b7ffae456c320": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"XMR"
+]
+},
+"LNwgtMxcKUQ51dw7bQL1yPQjBVZh6QEqsd": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"LTC"
+]
+},
+"t1g7wowvQ8gn2v8jrU1biyJ26sieNqNsBJy": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"ZEC"
+]
+},
+"XnPFsRWTaSgiVauosEwQ6dEitGYXgwznz2": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"DASH"
+]
+},
+"GPwg61XoHqQPNmAucFACuQ5H9sGCDv9TpS": {
+"name": "KARASAVIDI, Dmitrii",
+"chains": [
+"BTG"
+]
+},
+"12udabs2TkX7NXCSj6KpqXfakjE52ZPLhz": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"XBT"
+]
+},
+"1DT3tenf14cxz9WFNxmYrXFbB6TFiVWA9U": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"XBT"
+]
+},
+"0x901bb9583b24d97e995513c6778dc6888ab6870e": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"ETH"
+]
+},
+"0xa7e5d5a720f06526557c513402f2e6b5fa20b008": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"ETH"
+]
+},
+"Leo3j36nn1JcsUQruytQhFUdCdCH5YHMR3": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"LTC"
+]
+},
+"Xs3vzQmNvAxRa3Xo8XzQqUb3BMgb9EogF4": {
+"name": "LIFSHITS, Artem Mikhaylovich",
+"chains": [
+"DASH"
+]
+},
+"1Fz29BQp82pE3vXXcsZoMNQ3KSHfMzfMe3": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1AeSq93WDNdLoEJ92sex7T8xQZoYYm8BtS": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1AoxtfiBQ22DvbhqAN9Ctb8sULMRhrdwTr": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"18Qj1THHuETfYhuRDZycXJbWwDMGw73Poa": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1MnbhWe5wr7Ut45ReyQsm96PwnM9jD7KaH": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1DYFJ6CuBvrxyoQSuBzVsNcetY9tvdsrag": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"15Pt4NwZaUmMUwS2bQbyyncc7mzgWShtv8": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1PhqQpaGCrqSxQ6QDXcv14QCd1U98Zp34E": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"13YBQr2Cp1YY3xqq2qngaPb7ca1o4ugeq6": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1KgudqxMfYaGzqAA7MS4DcsqejtMteqhix": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1FRyL9gmFGbzfYDAB4iY9836DJe3KSnjP9": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1DbShx4r8i2XesthoDBf5EkYWz5dsKEusV": {
+"name": "ANDREYEV, Anton Nikolaeyvich",
+"chains": [
+"XBT"
+]
+},
+"1NE2NiGhhbkFPSEyNWwj7hKGhGDedBtSrQ": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"19D8PHBjZH29uS1uPZ4m3sVyqqfF8UFG9o": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"1EYitrwBYNWuTBcjZFbEUdqHppe2raLpaF": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"1G9CKRHA3mx22DoT1QyNYrh85VSQ19Y1em": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"182NGZbPJXwg2WDrhrPpR7tpiGQkNPF844": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"1NayLEVF3bEEbDtdF2Cwso1VdEtvVNh2qX": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"16PhXY3hNNMTo8kpuJx2emh713KbWpkqci": {
+"name": "SECONDEYE SOLUTION",
+"chains": [
+"XBT"
+]
+},
+"1KSAbh5trMCTZwhiNsuUQvfTtSSTT8zqRk": {
+"name": "RAZA, Mujtaba Ali",
+"chains": [
+"XBT"
+]
+},
+"1BiUFjzH6wsT73U3tfy4aXHCQsYQHzjk5h": {
+"name": "RAZA, Mujtaba Ali",
+"chains": [
+"XBT"
+]
+},
+"LeKvNdNEzgQkzVVnRdV3fAu2DSF1nLsNw6": {
+"name": "RAZA, Mujtaba Ali",
+"chains": [
+"LTC"
+]
+},
+"DFFJhnQNZf8rf67tYnesPu7MuGUpYtzv7Z": {
+"name": "RAZA, Mujtaba Ali",
+"chains": [
+"XVG"
+]
+},
+"t1MMXtBrSp1XG38Lx9cePcNUCJj5vdWfUWL": {
+"name": "ASSOCIATION FOR FREE RESEARCH AND INTERNATIONAL COOPERATION",
+"chains": [
+"ZEC"
+]
+},
+"XyARKoupuArYtToA2S6yMdnoquDCDaBsaT": {
+"name": "ASSOCIATION FOR FREE RESEARCH AND INTERNATIONAL COOPERATION",
+"chains": [
+"DASH"
+]
+},
+"3Gbs4rjcVUtQd8p3CiFUCxPLZwRqurezRZ": {
+"name": "SOUTHFRONT",
+"chains": [
+"XBT"
+]
+},
+"bc1qv7k70u2zynvem59u88ctdlaw7hc735d8xep9rq": {
+"name": "SOUTHFRONT",
+"chains": [
+"XBT"
+]
+},
+"bc1qw4cxpe6sxa5dg6sdwxjph959cw6yztrzl4r54s": {
+"name": "SOUTHFRONT",
+"chains": [
+"XBT"
+]
+},
+"0x9f4cda013e354b8fc285bf4b9a60460cee7f7ea9": {
+"name": "SOUTHFRONT",
+"chains": [
+"ETH"
+]
+},
+"0x3cbded43efdaf0fc77b9c55f6fc9988fcc9b757d": {
+"name": "SOUTHFRONT",
+"chains": [
+"ETH"
+]
+},
+"884Bz8UH63aYsjVdkfWfScRYWZGGNbjFL7pztqvWNSrtYT4reFSwyvkCj9KEGUtheHhhMUj87ciTBFyzoesrMJ4L1FvSoxL": {
+"name": "SOUTHFRONT",
+"chains": [
+"XMR"
+]
+},
+"49HqitRzdnhYjgTEAhgGpCfsjdTeMbUTU6cyR4JV1R7k2Eej9rGT8JpFiYDa4tZM6RZiFrHmMzgSrhHEqpDYKBe5B2ufNsL": {
+"name": "SOUTHFRONT",
+"chains": [
+"XMR"
+]
+},
+"qpf2cphc5dkuclkqur7lhj2yuqq9pk3hmukle77vhq": {
+"name": "SOUTHFRONT",
+"chains": [
+"BCH"
+]
+},
+"qzjv8hrdvz6edu4gkzpnd4w6jc7zf296g5e9kkq4lx": {
+"name": "SOUTHFRONT",
+"chains": [
+"BCH"
+]
+},
+"TLNRT524dzL5FF1nJHDhYEMFpeWjLjRbz1": {
+"name": "AL-JAMAL, Sa'id Ahmad Muhammad",
+"chains": [
+"USDT"
+]
+},
+"THh5woR8qfmDsNknQ3agPYzQSiRtMnKsTh": {
+"name": "AL-JAMAL, Sa'id Ahmad Muhammad",
+"chains": [
+"USDT"
+]
+},
+"TV5ZTpKDszLTF6XcMnPongS33pwBgF91by": {
+"name": "AL-JAMAL, Sa'id Ahmad Muhammad",
+"chains": [
+"USDT"
+]
+},
+"TTAHMdqoom4f2VTWniroPWQHcTRZ4caoH4": {
+"name": "AL-JAMAL, Sa'id Ahmad Muhammad",
+"chains": [
+"USDT"
+]
+},
+"TFFvv7NAWmbcVfA7QN81mMvUC25TWj1WJx": {
+"name": "AL-JAMAL, Sa'id Ahmad Muhammad",
+"chains": [
+"USDT"
+]
+},
+"1JPfVv5cWRLx1js9NWxg46dG2CGbeRz4th": {
+"name": "HEBEI ATUN TRADING CO., LTD.",
+"chains": [
+"XBT"
+]
+},
+"12HQDsicffSBaYdJ6BhnE22sfjTESmmzKx": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1L4ncif9hh9TnUveqWq77HfWWt6CJWtrnb": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"13mnk8SvDGqsQTHbiGiHBXqtaQCUKfcsnP": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1Edue8XZCWNoDBNZgnQkCCivDyr9GEo4x6": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1ECeZBxCVJ8Wm2JSN3Cyc6rge2gnvD3W5K": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1J9oGoAiHeRfeMZeUnJ9W7RpV55CdKtgYE": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1295rkVyNfFpqZpXvKGhDqwhP1jZcNNDMV": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1LiNmTUPSJEd92ZgVJjAV3RT9BzUjvUCkx": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1LrxsRd7zNuxPJcL5rttnoeJFy1y4AffYY": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1KUUJPkyDhamZXgpsyXqNGc3x1QPXtdhgz": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1CF46Rfbp97absrs7zb7dFfZS6qBXUm9EP": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"1Df883c96LVauVsx9FEgnsourD8DELwCUQ": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"bc1qdt3gml5z5n50y5hm04u2yjdphefkm0fl2zdj68": {
+"name": "SUEX OTC, S.R.O.",
+"chains": [
+"XBT"
+]
+},
+"3E7YbpXuhh3CWFks1jmvWoV8y5DvsfzE6n": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"3NRJ8aXdUiZdHaiFX9ePX3DhGHzcEi14Fq": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"3K7PMJyMNVnxqsfpmK9r9nJDtzDw9wNwNV": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"3H3rh85qPaGLy2w6618yZNaH7i8asHv46B": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"3MTrJTFhYK9v1C6pjHtuweZSopfZa4b1wb": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"347QFbejDBdMZFTxpmn6evvvqyXiqZTCd7": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"33xWfziVZesgo83U5izdNCBVTnrtBpSwK7": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"32wdqwX3zCEX3DhAVEcKwXCEGdzgBnx1R9": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"3N9YcPBDky9UsMx1RTk33tL4jDkZfSnsPk": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"bc1q90zrdysy4flyacw7hsury3ajs9yzwtwp6guqpypx94w0d3p58hysvz6pde": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"bc1qw7vfgv3r5vnehafl0y95sclg3uqsj87wxs9ad628yjjcq33cwessr6ndyw": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"bc1q86tl9255vg5wldamfymaaz36uqxzm30gs7fhkljvzdlt9t38s3lqgdwdfq": {
+"name": "CHATEX",
+"chains": [
+"XBT"
+]
+},
+"158treVZBGMBThoaympxccPdZPtqUfYrT9": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"389Sft4nJFkPGhbagk9FN4jXncA9piYTuU": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"39Te8MbphSgs7npDJPj2hbNzhke61NTcnB": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"31p6woV4e55HUfC2aGynFhzQnGoJFW26cD": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"3DNsaQnaUz7wkQny1ZDSmtz6QfbEShxoDD": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"3AjyprBY5yhijiCjUC5NUJutGbwhd3AQdE": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"XBT"
+]
+},
+"0xfec8a60023265364d066a1212fde3930f6ae8da7": {
+"name": "POLYANIN, Yevgeniy Igorevich",
+"chains": [
+"USDT"
+]
+},
+"35QpLWYkvD3ALhjbge5bK2kd7HfHYcDMu3": {
+"name": "VASINSKYI, Yaroslav",
+"chains": [
+"XBT"
+]
+},
+"3NQ1aa9ceirMJ1JvRq3eXefvXj1L639fzX": {
+"name": "VASINSKYI, Yaroslav",
+"chains": [
+"XBT"
+]
+},
+"3BsyZ7qRFSi3NsaoV1Ff724qAgrEpjVUHm": {
+"name": "VASINSKYI, Yaroslav",
+"chains": [
+"XBT"
+]
+},
+"372Wk9NLrMkJzKgqJdatWJy4bYRfxFjgat": {
+"name": "VASINSKYI, Yaroslav",
+"chains": [
+"XBT"
+]
+},
+"3Lpoy53K625zVeE47ZasiG5jGkAxJ27kh1": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"XBT"
+]
+},
+"0x7ff9cfad3877f21d41da833e2f775db0569ee3d9": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0x8dce2aac0de82bdcaf6b4373b79f94331b8e4995": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0xf4377eda661e04b6dda78969796ed31658d602d4": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0xb338962b92cd818d6aef0a32a9ecd01212a71f33": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0x57ec89a0c056163a0314e413320f9b3abe761259": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0xd8500c631dc32fa18645b7436344a99e4825e10e": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"0x7ced75026204ac29c34bea98905d4c949f27361e": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"ETH"
+]
+},
+"3E6ZCKRrsdPc35chA9Eftp1h3DLW18NFNV": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"USDT"
+]
+},
+"TFwjPScaJRCbSWVAywE1S1WgaU": {
+"name": "GARANTEX EUROPE OU",
+"chains": [
+"TRX"
+]
+},
+"3K4rjdh8A5yi6LWvft2rbmyZvqEbPSSSX4": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"17mhyeBX617ABZ1ffThhUTJkHUcMvCkfd5": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"35qwVtMEohWDdBWRiCSR7azoP5cbY8SG1Q": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"35KAdTa2vqnJzitF2xiUzZn1Gmcas2Y465": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"35LScRJ8hzDvvWh9t9UA8bHGnGNVz3YEfa": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"1PJp8diNa89cVHpiT1VPu7EQ8LxYM5HX6v": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"17V7THwHMiDJmDwZK4unhE5HgKFJKx7VCe": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"3PiCnZrBvGfWAKQ9hr4cCpfaDjy64yNSpE": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"14gM1HuLVDELNHaFU22qpabjtiWek4HhV1": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"1GYuu9d5HPikafbys3k5Q3DRJq6debGsoB": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"3GXdtA6kbb4M5aqzZm5qqxcFDFRMW8LqdJ": {
+"name": "HYDRA MARKET",
+"chains": [
+"XBT"
+]
+},
+"3K35dyL85fR9ht7UgzPfd1gLRRXQtNTqE3": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3Q5dGfLKkWqWSwYtbMUyc8xGjN5LrRviK4": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3EPqGUw2q89pwPZ1UF8FJspE2AyojSTjdu": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3LhnVMcBq4gsR7aDaRr9XmUo17CuYBV4FN": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3F6bbvS1krsc1qR8FsbTDfYQyvkMm3QvmR": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3JHMz3mTna1gVCZSPp8NgRFiY7phkv5mA8": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"32DaxSzUhLBHY2WGSWQYiBSHnRsfQZrrRp": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3MTRvM5QrYZHKo8gh5qKcrPK3RLjxcDCZE": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"34pFGsSYbWEritXncW9unZtQQE9dKSvKku": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"38ncxqt932N9CcfNfYuHGZgCyR85hDkWBW": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"3F6bbvS1krsc1qR8FsbTDfYQyvkMm": {
+"name": "BLENDER.IO",
+"chains": [
+"XBT"
+]
+},
+"1H939dom7i4WDLCKyGbXUp3fs9CSTNRzgL": {
+"name": "KHATIBI AGHADA, Ahmad",
+"chains": [
+"XBT"
+]
+},
+"bc1q3y5v2khlyvemcz042wl98dzflywr8ghglqws6s": {
+"name": "KHATIBI AGHADA, Ahmad",
+"chains": [
+"XBT"
+]
+},
+"bc1qx3e2axj3wsfn0ndtvlwmkghmmgm4583nqg8ngk": {
+"name": "KHATIBI AGHADA, Ahmad",
+"chains": [
+"XBT"
+]
+},
+"bc1qsxf77cvwcd6jv6j8d8j3uhh4g0xqw4meswmwuc": {
+"name": "NIKAEEN RAVARI, Amir Hossein",
+"chains": [
+"XBT"
+]
+},
+"bc1q9lvynkfpaw330uhqmunzdz6gmafsvapv7y3zty": {
+"name": "NIKAEEN RAVARI, Amir Hossein",
+"chains": [
+"XBT"
+]
+},
+"bc1qpaly5nm7pfka9v92d6qvl4fc2l9xzee8a6ys3s": {
+"name": "NIKAEEN RAVARI, Amir Hossein",
+"chains": [
+"XBT"
+]
+},
+"bc1ql7dlyh8xz6tpqk92vztrhqh88dmjvcwrmsemrm": {
+"name": "TASK FORCE RUSICH",
+"chains": [
+"XBT"
+]
+},
+"bc1q2lpgjntr348pfvxhfy33ehmdzy3gmx8w4052z6": {
+"name": "TASK FORCE RUSICH",
+"chains": [
+"XBT"
+]
+},
+"0xc2a3829f459b3edd87791c74cd45402ba0a20be3": {
+"name": "TASK FORCE RUSICH",
+"chains": [
+"ETH"
+]
+},
+"0x3ad9db589d201a710ed237c829c7860ba86510fc": {
+"name": "TASK FORCE RUSICH",
+"chains": [
+"ETH"
+]
+},
+"TX5GV4DyfxNB3rPkzZJhmqZ1efVmL4rEqG": {
+"name": "TASK FORCE RUSICH",
+"chains": [
+"USDT"
+]
+},
+"1DbvK8P6imBuLcwh2Vruis4xsUb8YAwJQF": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1G6DuwDKNHiUWqks2Lgu44cesu7ffFbLK7": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"3AQSmMk5n3c6TKEg9B2WyzYAPm33gJJAA4": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"129zKFLoVad9JtxSmDKeJoLCsjhGR7b3vr": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"12YyR9EpvHxBjjKjTWqfKqeyoWnvcraxpW": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1KctQENEX5QkQMpnMC3Zh9yRAzkMBLpPcr": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"3HqA7i3ttECLvgqvq69HNxxUP5BL7Z5YgA": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1G9A8WRjGXdnYY4TNEVRrcaHsMtana4ncF": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1Js6goCey2NaqPQptiLANLQGuk4d6mowjP": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"13RH4JaFhaCxDGPyYE9emjp2aDxdX18uBA": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1FE2cuvkq8n5VGwj5hi8YYQxskwJpovPyV": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1DJoEMvp95yJYWyxAZy8DDBzuvjnrTVrsN": {
+"name": "PEIJNENBURG, Alex Adrianus Martinus",
+"chains": [
+"XBT"
+]
+},
+"1LpYKb3SXZPve9hsH2QEJZFX279wJVGowi": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"15uqdxqNXQwVf5H7yZPz4TmEGeSccCwdor": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"1FjubFHV4mpYjBmvjsEhZssyiiA4TNmnm2": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"1LAh7PQwpd1uGiLHae5C5Xz9QXse3y2phq": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"15yqWQ4sqr7jzCwDtZ3U1KaCa8WMEy7Mm2": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"19GrL5jnUkGmHXVcraB1Etv5rXCANeLWpq": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"39NG2LcGRHXxSr1irpEVnJMw4ydL231sEn": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"3He6EyDaCUgmdr4GXqhxbeTQukaGLCByU2": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"12NpCkhddSNiDkD9rRYUCHsTT9ReMNiJjG": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"32jgFkZsTEjMFaBvxJnYvJEeTNKTmq5b32": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"1Hpj6qm9i7nMF3VkKfBFtjhEDpEjxHWvgv": {
+"name": "GRIMM, Matthew Simon",
+"chains": [
+"XBT"
+]
+},
+"bc1qfg4gfg0y6t6xjnpmlhuwx5k0wlw6nmfzxn2psc": {
+"name": "ZIMENKOV, Jonatan",
+"chains": [
+"XBT"
+]
+},
+"0x39d908dac893cbcb53cc86e0ecc369aa4def1a29": {
+"name": "ZIMENKOV, Jonatan",
+"chains": [
+"ETH"
+]
+},
+"3PKiHs4GY4rFg8dpppNVPXGPqMX6K2cBML": {
+"name": "WANG, Hongfei",
+"chains": [
+"XBT"
+]
+},
+"1986rYHckYbJpGQJy6ornuMyD2N5MTqwDt": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"125W5ek3DT6Zqy5S2iPt4FHQdNMCbZA3FU": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"1Kc6egXevyLEaeTxLFA1Zyw7GuhCN8jQtt": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"12w6v1qAaBc4W8h8C2Cu5SKFaKDSv3erUW": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"1CPJak9ZyddbawMGJPyEhCiJLXXb4sYv8N": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"1DJoVLgn1foJHHngduRPJvRbwpaFEKxvxd": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"15kZobLkD6HZgEECtz4oS2Vz21XHTnNfSg": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"15qyVrZvvVGvB7GWiAZ82TNcZ6QWMKu3kx": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"12YCfVAEzkEZXBYhUTyJJaRkgMXiFxJgcu": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"1MkCnCa9agS5t6V1B15bzusBgYECB4LfWp": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"1NuBZQXJPyYQGfoBib8wWBDpZmbtkJa5Ba": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"14rjAD8ZP5xaL571cMRE98qgxxbg1S8mAN": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"18yWCu6agTxYqAerMxiz9sgHrK3ViezzGa": {
+"name": "WU, Huihui",
+"chains": [
+"XBT"
+]
+},
+"0x4f47bc496083c727c5fbe3ce9cdf2b0f6496270c": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"0xd04e33461fea8302c5e1e13895b60cee8aefda7f": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"0x76ea76ca4eb727f18956ab93445a94c5280412b9": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"0xfb3eff152ea55d1bfa04dbdd509a80fd7b72cdeb": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"0xfda1ec4a6178d4916b001a065422d31ebe5f62ff": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"0x747afb5c7a7fc34b547cd0fdebf9b91759c5a52b": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"ETH"
+]
+},
+"TPDLpXxPcaSsupEZ3yrVksmNkYP5SLeKxu": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"TRX"
+]
+},
+"TGXE9dGWawjfd3xqFSho1h1bRbRv9wUGrF": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"TRX"
+]
+},
+"TNTFhgFoKH4srBMiWbfrVFqP2AThSmdwf1": {
+"name": "SIM, Hyon Sop",
+"chains": [
+"TRX"
+]
+},
+"0x38735f03b30fbc022ddd06abed01f0ca823c6a94": {
+"name": "HANAFIN, John Desmond",
+"chains": [
+"USDT"
+]
+},
+"1D6gG9iKEhPitTcWRJiniuj1jYM2hNeAfJ": {
+"name": "KIM, Sang Man",
+"chains": [
+"XBT"
+]
+},
+"1FCNgfZWpYMeYhy9t18AAkTBu8AsdoAc1Z": {
+"name": "KIM, Sang Man",
+"chains": [
+"XBT"
+]
+},
+"0x97b1043abd9e6fc31681635166d430a458d14f9c": {
+"name": "KIM, Sang Man",
+"chains": [
+"ETH"
+]
+},
+"0xb6f5ec1a0a9cd1526536d3f0426c429529471f40": {
+"name": "KIM, Sang Man",
+"chains": [
+"ETH",
+"USDC",
+"USDT"
+]
+},
+"bc1q4namcagg5wljs0u20z6h2sqgsq4q5lts8rt2rr": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qdpazd6smrkq5hmw6lupq98za2fqtgmq3azv3av": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qwz0l2ceddckwdy5rh6zyrm3x4ha6gn5f2da5zg": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qw8evftpgc8wsmkemd8yl5fg2husza5z802xaym": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qv4krhj2qmpd9qz9xj9nhvj99fq8s9xsw05d485": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qu5vngdtcx8nc9d68pq8nv7pzcjrswsy87s66gk": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qtsl3ufenrv3zgrgm9z8xarcx22x8mfztuartyn": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qtrrfhr0f3ufsrjxfv8a7p3yuqj0spe4cm6vaws": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qte9ret332gwrk6e7vqc87d807npzvdj5savg4h": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qtdupwe722vcc5e0vh94cgwfs0ep4gzwyfsf75q": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"bc1qnykkrlk67f9kdqvzyw2ndu3xmef5z2e52886yl": {
+"name": "WANG, Yunhe",
+"chains": [
+"XBT"
+]
+},
+"0x9c2bc757b66f24d60f016b6237f8cdd414a879fa": {
+"name": "JIMENEZ CASTRO, Mario Alberto",
+"chains": [
+"ETH"
+]
+},
+"bc1qq7p0es3dv5hcynjjf40f2xjjr6qp5py47d2f6n847vduuq9gvnyq7y9ecd": {
+"name": "SINBAD",
+"chains": [
+"XBT"
+]
+},
+"1JHdQHkBZiim1cb4hyUh2PbzEbbg6z2TrF": {
+"name": "SINBAD",
+"chains": [
+"XBT"
+]
+},
+"TVacWx7F5wgMgn49L5frDf9KLgdYy8nPHL": {
+"name": "SHAFIU, Ali",
+"chains": [
+"USDT"
+]
+},
+"0xdcbeffbecce100cce9e4b153c4e15cb885643193": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x5f48c2a71b2cc96e3f0ccae4e39318ff0dc375b2": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x5a7a51bfb49f190e5a6060a5bc6052ac14a3b59f": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0xed6e0a7e4ac94d976eebfb82ccf777a3c6bad921": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x797d7ae72ebddcdea2a346c1834e04d1f8df102b": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x931546d9e66836abf687d2bc64b30407bac8c568": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x43fa21d92141ba9db43052492e0deee5aa5f0a93": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"0x6be0ae71e6c41f2f9d0d1a3b8d0f75e6f6a0b46e": {
+"name": "SEMENOV, Roman",
+"chains": [
+"ETH"
+]
+},
+"1Ljk8RNNabkZ9bfDYQBn98XfFozJhTjqcZ": {
+"name": "ZHDANOVA, Ekaterina Valeryevna",
+"chains": [
+"XBT"
+]
+},
+"3685sEusmTwZBiKJ4cgV73EAhpVD1nbgbe": {
+"name": "ZHDANOVA, Ekaterina Valeryevna",
+"chains": [
+"XBT"
+]
+},
+"39p8qWp1bkBNhi4vPpFTetKPtH7goqNDZf": {
+"name": "ZHDANOVA, Ekaterina Valeryevna",
+"chains": [
+"XBT"
+]
+},
+"TEFph7dZoUN5233cGEzF6XFwRpjPF8fQDS": {
+"name": "GAMBASHIDZE, Ilya Andreevich",
+"chains": [
+"USDT"
+]
+},
+"TMGLqRQ4twjW8wJhVH1mQR7nUThpGHUsN3": {
+"name": "GAMBASHIDZE, Ilya Andreevich",
+"chains": [
+"USDT"
+]
+},
+"3B7S6zrgxQVQUHTU8wstM23tB9afE7ojuX": {
+"name": "SHEN, Xingbiao",
+"chains": [
+"XBT"
+]
+},
+"0x530a64c0ce595026a4a556b703644228179e2d57": {
+"name": "SHEN, Xingbiao",
+"chains": [
+"ETH"
+]
+},
+"TEAqwfMhXLaomXhZ8KeMhx3njGmQEDnsUR": {
+"name": "SHEN, Xingbiao",
+"chains": [
+"USDT"
+]
+},
+"bc1qardcxz845jw83vgfvcmewhuxa0ag9gchjwmcfd": {
+"name": "VALERIAN LABS, INC.",
+"chains": [
+"XBT"
+]
+},
+"0x983a81ca6fb1e441266d2fbcb7d8e530ac2e05a2": {
+"name": "VALERIAN LABS, INC.",
+"chains": [
+"ETH",
+"USDC",
+"USDT"
+]
+},
+"3NNcbBcMZokPB2JC2dxYuZrpgcetvyGeJn": {
+"name": "WANG, Jiantong",
+"chains": [
+"XBT"
+]
+},
+"TMStbg5fgb4uTV7fK1gEYF9hKAzP3siPsG": {
+"name": "WANG, Jiantong",
+"chains": [
+"TRX"
+]
+},
+"38TftW1heYPqvKbiAhT4ttNBqkUPpooXad": {
+"name": "XIA, Fengbing",
+"chains": [
+"XBT"
+]
+},
+"bc1qkfqh5p2qsakseg5gnwen6zh5xf3elmku2xaup29mw3l0wnncy3es880dss": {
+"name": "XIA, Fengbing",
+"chains": [
+"XBT"
+]
+},
+"TTKnV2S1295UrPr7N67Tp9ykNL7xX2Z4Uj": {
+"name": "XIA, Fengbing",
+"chains": [
+"TRX"
+]
+},
+"3NU9zkD8CCVGVmYnNNSN7PbU9sSFQBm5UV": {
+"name": "ZHANG, Wei",
+"chains": [
+"XBT"
+]
+},
+"0x961c5be54a2ffc17cf4cb021d863c42dacd47fc1": {
+"name": "ZHANG, Wei",
+"chains": [
+"ETH"
+]
+},
+"TRBACioxdrdsYEZHvJWiUDZcMdBPpEe5Ub": {
+"name": "ZHANG, Wei",
+"chains": [
+"TRX"
+]
+},
+"1MLPqwaFFUBZePTjpR3nxRoK19Cv9mPCc7": {
+"name": "WANG, Mingming",
+"chains": [
+"XBT"
+]
+},
+"3HePkztPU6UsdENxnyQHFrdZA6eVKeMtvz": {
+"name": "WANG, Mingming",
+"chains": [
+"XBT"
+]
+},
+"TUCsTq7TofTCJRRoHk6RvhMoS2mJLm5Yzq": {
+"name": "WANG, Mingming",
+"chains": [
+"XBT"
+]
+},
+"0xfac583c0cf07ea434052c49115a4682172ab6b4f": {
+"name": "WANG, Mingming",
+"chains": [
+"USDT"
+]
+},
+"19D1iGzDr7FyAdiy3ZZdxMd6ttHj1kj6WW": {
+"name": "BUY CASH MONEY AND MONEY TRANSFER COMPANY",
+"chains": [
+"XBT"
+]
+},
+"3Q8H2ZWMtc4R1M3mkmhnTjCoYKTeCFigDP": {
+"name": "GAZA NOW",
+"chains": [
+"XBT"
+]
+},
+"0xe950dc316b836e4eefb8308bf32bf7c72a1358ff": {
+"name": "GAZA NOW",
+"chains": [
+"ETH"
+]
+},
+"0x21b8d56bda776bbe68655a16895afd96f5534fed": {
+"name": "GAZA NOW",
+"chains": [
+"ETH"
+]
+},
+"TTgcTTNbNuFdbrhvbjMZVrdU5KALyzDaPw": {
+"name": "GAZA NOW",
+"chains": [
+"USDT"
+]
+},
+"TGJVc32ig2u8tQsYMLE7KXHT5NDQroaVNU": {
+"name": "GAZA NOW",
+"chains": [
+"USDT"
+]
+},
+"TXEsK1sEsKjZ1xtHitnyAAoqw3WLdYdRNW": {
+"name": "GAZA NOW",
+"chains": [
+"USDT"
+]
+},
+"TH96tFMn8KGiYSLiwcV3E2UiaJc8jmcbz3": {
+"name": "GAZA NOW",
+"chains": [
+"USDT"
+]
+},
+"0x175d44451403edf28469df03a9280c1197adb92c": {
+"name": "GAZA NOW",
+"chains": [
+"USDT"
+]
+},
+"TC4VsFHJdZ66BdwobZxkudVZBVmQZgCP65": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TQ5mpZPbQMSq2s1vSM3RJgiB1AsTsiTpFZ": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TXEaKf4rT3rMoD3Vuqnuhwr6vLq6BL5t33": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TGUPpmW2bAnMCLe5ih2CFisfCHk4gTFDsx": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TDwN1Eq62bqvVhfGAjdRRJjE46jsi5KNMV": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TM6Kix9wH8cYQ4rLpFifsQ4ddH3rPX3f8p": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TDprk9jeYPVm6khkBp1u7fwuyJcEJFrPWD": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"TVn4q7L4fKEPbygi7UHq1CKfZxtbeuMV5q": {
+"name": "ANSARALLAH",
+"chains": [
+"USDT"
+]
+},
+"18gaXypKj9M23S2zT9qZfL9iPbLFM372Q5": {
+"name": "SUNGATOV, Artur Ravilevich",
+"chains": [
+"XBT"
+]
+},
+"bc1q5jqgm7nvrhaw2rh2vk0dk8e4gg5g373g0vz07r": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"32pTjxTNi7snk8sodrgfmdKao3DEn1nVJM": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"15cRqR3TXS1JehBGWERuxFE8NhWZzfoeeU": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"1A7SKE2dQtezLktCY8peLsdAtkqxV9r1dC": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"bc1q8ew45w2agdffrnwp6adt2gqrc9n4mkev9ns29c": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"bc1qagp0gy58v8hqvw4p2wsphcxg067rrppp45hexr": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"bc1qn6segn8km4nfdp9vueu6msfjsaxaqgun9h60n9": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"bc1qx9upga7f09tsetqf78wa3qrmcjar58mkwz6ng6": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"XBT"
+]
+},
+"0xf3701f445b6bdafedbca97d1e477357839e4120d": {
+"name": "KONDRATIEV, Ivan Gennadievich",
+"chains": [
+"ETH"
+]
+},
+"TWBAPzpPiZarfVsY2BLXeaLhNHurn4wkWG": {
+"name": "AL-LAW, Tawfiq Muhammad Sa'id",
+"chains": [
+"USDT"
+]
+},
+"13fhnkmpBBWXUQucJd6efWvXdEj78DKavk": {
+"name": "OKO DESIGN BUREAU",
+"chains": [
+"XBT"
+]
+},
+"0x19f8f2b0915daa12a3f5c9cf01df9e24d53794f7": {
+"name": "OKO DESIGN BUREAU",
+"chains": [
+"ETH"
+]
+},
+"TFdTr9C3BqQrzKBXqSxJfAZFTh8UwBAfSg": {
+"name": "OKO DESIGN BUREAU",
+"chains": [
+"TRX"
+]
+},
+"bc1qvhnfknw852ephxyc5hm4q520zmvf9maphetc9z": {
+"name": "KHOROSHEV, Dmitry Yuryevich",
+"chains": [
+"XBT"
+]
+},
+"TLM3zA3EWycoDX4ZX4gKze7sgfbdkntTum": {
+"name": "OBSHCHESTVO S OGRANICHENNOI OTVETSTVENNOSTYU KONSTRUKTORSKOE BYURO VOSTOK",
+"chains": [
+"USDT"
+]
+},
+"13JtX4h7G5ZuNK5mFudKGq9DHLvvMFuNuz": {
+"name": "CRYPTEX",
+"chains": [
+"XBT"
+]
+},
+"0x0931ca4d13bb4ba75d9b7132ab690265d749a5e7": {
+"name": "CRYPTEX",
+"chains": [
+"ETH"
+]
+},
+"M8yFL6SFC6TreATegTyuSYkDfDRbisdpT3": {
+"name": "CRYPTEX",
+"chains": [
+"LTC"
+]
+},
+"TTUDyVhhpCC1xJoPmWzdjLAzeoPwbSABdr": {
+"name": "CRYPTEX",
+"chains": [
+"TRX"
+]
+},
+"3NEcQKZ8RwL2eDNhmMPpZ4td9vPsQh9JwM": {
+"name": "HUANG, Xiaojun",
+"chains": [
+"XBT"
+]
+},
+"0x1999ef52700c34de7ec2b68a28aafb37db0c5ade": {
+"name": "MAGOMEDOV, Khadzhi Murat Dalgatovich",
+"chains": [
+"ETH"
+]
+},
+"TDdbRFoBTEmE3qiR69Y6rKRSG1hoF65QaE": {
+"name": "CHIRKINYAN, Elena",
+"chains": [
+"USDT"
+]
+},
+"1M5N4sJ1NHb4fviLVZA5MZLKhLZqU4CPZz": {
+"name": "ZSERVERS",
+"chains": [
+"XBT"
+]
+},
+"1Gekw8ACSs37oXcc5XQHvoux3iKoVFtpF4": {
+"name": "ZSERVERS",
+"chains": [
+"XBT"
+]
+},
+"bc1q4yzd2rjmshm8ucrwy6dzj5rna20j0zlf8hf8vz": {
+"name": "ZSERVERS",
+"chains": [
+"XBT"
+]
+},
+"3FfRvC3kSo2SxiQe5e7SSuNdegwgq8iusL": {
+"name": "MISHIN, Alexander Igorevich",
+"chains": [
+"XBT"
+]
+},
+"bc1q3q2lz3cmt4u2f49ugxz5q34xrs0m2z4w2gmkp5": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qj2ffj6pepc80sfqpx2k2pd3q278q72dpqv2ens": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qjwr3rgww7a8ut7a4x8jqh3vswcue3xvp6dm7qe": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qvxlwpgcw260sc97a0u6dm0cjxv027clhd67fvx": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qwtswqzvaxl6lyw3keqqzwt8z937psta3wg9sjy": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qyqvyupkpl6tm60zdecef925y220ssjuagpxsm0": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1q45cxufu7x6s5v9adzm9t38k80gwawse75xffwe": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"bc1qmzmx8res2fgzd2wttyvf2ajqqqtcnxxrgkqc2t": {
+"name": "PARSARAD, Behrouz",
+"chains": [
+"XBT"
+]
+},
+"0xd5ed34b52ac4ab84d8fa8a231a3218bbf01ed510": {
+"name": "FUNNULL TECHNOLOGY INC",
+"chains": [
+"ETH"
+]
+},
+"TNmRfnSUXZoWWzxcDDbf95eGQYXt1mJDt8": {
+"name": "FUNNULL TECHNOLOGY INC",
+"chains": [
+"TRX"
+]
+},
+"18dLDAWi8LmrHbEq3QzDJb9SLxCf4uimXB": {
+"name": "VOLOSOVIK, Aleksandr Aleksandrovich",
+"chains": [
+"XBT"
+]
+},
+"TU4tDFRvcKhAZ1jdihojmBWZqvJhQCnJ4F": {
+"name": "AEZA GROUP LLC",
+"chains": [
+"TRX"
+]
+},
+"TEcuHDQthTmULe8fFLUccBPpjfXaTmJuuD": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TL1k1U6SHohxBqb68kCodxHc9y2LXoDSep": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TNZxGWCwvsHr6JxQxzoeDXV597Yf7Zb7nV": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TC8axQvzJEVR3NKN6mZnJtGy7537GEmh38": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TAYhjpL8pPs8T84FSM329nffQpc6jD8GBM": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TMuCgBejD5RsNANZdjGtaM3YyKGNgDoy7N": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"TGckaiamj5NzaYx6Qp6Zu7kahuHArzUo99": {
+"name": "GRINEX",
+"chains": [
+"TRX"
+]
+},
+"0x12de548f79a50d2bd05481c8515c1ef5183666a9": {
+"name": "OLD VECTOR LLC",
+"chains": [
+"ETH"
+]
+},
+"TCFD8N3vM5b4Gr5f1kkajQsodRVNyyAq1d": {
+"name": "OLD VECTOR LLC",
+"chains": [
+"TRX"
+]
+},
+"1HmqvgSXUVES1jn4TQPzk9dxo1NE8wim2T": {
+"name": "ANDREYEV, Vitaliy Sergeyevich",
+"chains": [
+"XBT"
+]
+},
+"TDFtJtyLPgN3oWUoHh23oJox3T5V5nR11K": {
+"name": "SAYYED, Sadiq Abbas Habib",
+"chains": [
+"TRX"
+]
+},
+"0xdb2720ebad55399117ddb4c4a4afd9a4ccada8fe": {
+"name": "DERAKHSHAN, Alireza",
+"chains": [
+"ETH"
+]
+},
+"TSxAAo67VTDgKT537EVXxdogkJtk9c6ojz": {
+"name": "DERAKHSHAN, Alireza",
+"chains": [
+"TRX"
+]
+},
+"0xe3d35f68383732649669aa990832e017340dbca5": {
+"name": "ALIVAND, Arash Estaki",
+"chains": [
+"ETH"
+]
+},
+"0x532b77b33a040587e9fd1800088225f99b8b0e8a": {
+"name": "ALIVAND, Arash Estaki",
+"chains": [
+"ETH"
+]
+},
+"TYDUutYN4YLKUPeT7TG27Yyqw6kNVLq9QZ": {
+"name": "ALIVAND, Arash Estaki",
+"chains": [
+"TRX"
+]
+},
+"TRakpsE1mZjCUMNPyozR4BW2ZtJsF7ZWFN": {
+"name": "ALIVAND, Arash Estaki",
+"chains": [
+"TRX"
+]
+},
+"TQ5H49Wz3K57zNHmuXVp6uLzFwitxviABs": {
+"name": "ALIVAND, Arash Estaki",
+"chains": [
+"TRX"
+]
+},
+"bc1qeth6n6ryxexvkx34wnx3nuynun4474h3j0gkhw": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"bc1q2we5eqjj8je6lz9xwjattpc3pn4jejc5h0s70f": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"bc1qnujzvts45qka3cr2eqqw8ur3q6g6s0ze2wlk5m": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"bc1qw4fxztd5u3sl7vrcqwk2a8v5zh5dllvckx3tlt": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"3EynPFpoGTPxU9m5bPaEDEUxUanzh7vgQP": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"3FoD1f6Tfnq3s8MYHgJqFPWv9cUrtUdBSv": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"3MKXKqPXf6VxTLkVSXuDKzaTiZZaz5AmiK": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"386sPhHBbLidzPnoxUH74jiiYkHYtobefQ": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"35irs2AU6pVgenYbWvMRz22avDBLC9XMkd": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"36ia8qAE1k1PKQePdXENCm1YKLXxZyVnnc": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"374RguZDMNW5Zh5ouW3KhKDcrerKusmsuk": {
+"name": "CHEN, Zhi",
+"chains": [
+"XBT"
+]
+},
+"TAoLw5yD5XUoHWeBZRSZ1ExK9HMv2CiPvP": {
+"name": "WEDDING, Ryan James",
+"chains": [
+"TRX"
+]
+},
+"TVNyvx2astt2AB1Us67ENjfMZeEXZeiuu6": {
+"name": "WEDDING, Ryan James",
+"chains": [
+"TRX"
+]
+},
+"TPJ1JNX98MJpHueBJeF5SVSg85z8mYg1P1": {
+"name": "WEDDING, Ryan James",
+"chains": [
+"TRX"
+]
+},
+"37fKFZQGMqdBkjSUub1jCDWGgSHwv9VxfZ": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"XBT"
+]
+},
+"1JPqJ8sxLBvdHBqMqSFBmUkoh2vAuCUNvs": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"XBT"
+]
+},
+"0x5d5b5dafecbf31bdb08bfd3edad4f2694372d0ef": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"ETH"
+]
+},
+"0xc103b7dc095c904b92081eef0c1640081ec01c10": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"ETH"
+]
+},
+"0xe1e4c5e5ed8f03ae61b581e2def126025f2b9401": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"ETH"
+]
+},
+"TCu5onCzXuqxjvVzdB2tR4FLuF66d4yRqf": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"TRX"
+]
+},
+"TBcLqqqyZjNj1ptuXFgj5H768NhNU5nDyn": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"TRX"
+]
+},
+"42RLPACwZPx3vYYmxSueqsogfynBDqXK298EDsNoyoHi": {
+"name": "SOKOLOVSKI, Rolan",
+"chains": [
+"SOL"
+]
+},
+"TCA9vmjsYw9MtPKEwRBtGhKFRfr4CLxJAv": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TGsNFrgWfbGN2gX25Wcf8oTejtxtQkvmEx": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TASWbk6X1wiTku5TMmMQYqYFvshVEtfJy8": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TTS9o5KkpGgH8cK9LofLmMAPYb5zfQvSNa": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TCzq6m2zxnQkrZrf8cqYcK6bbXQYAfWYKC": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TLvuvpfBKdxddxSsJefeiGCe9eVY8HUroE": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"TNuA5CQ6LB4jTHoNrjEeQZJmcmhQuHMbQ7": {
+"name": "ZEDCEX EXCHANGE LTD",
+"chains": [
+"TRX"
+]
+},
+"0xb637f84b66876ebf609c2a4208905f9ddac9d075": {
+"name": "YUN, Song Guk",
+"chains": [
+"ETH"
+]
+},
+"0x95584c303fcd48af5c6b9873015f2ad0ca84eae3": {
+"name": "YUN, Song Guk",
+"chains": [
+"ETH"
+]
+},
+"bc1qyy5pt5cx3zth8xlj92lq5y87dh8xv3nwgs4ncq": {
+"name": "HOANG, Minh Quang",
+"chains": [
+"XBT"
+]
+},
+"0xcb74874f1e06fcf80a306e06e5379a44b488ba2d": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"ETH"
+]
+},
+"0x0330070fd38ec3bb94f58fa55d40368271e9e54a": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"ETH"
+]
+},
+"0x9be599d7867f5e1a2d7ec6db9710df2b98a15573": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"ETH"
+]
+},
+"TNrX2FwrHKoo4XACGkmSzqeK4pdnKYn6Z7": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"TRX"
+]
+},
+"TEEYCuGDyeNkuDj4u6GQRXxXo3Nh29r2vP": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"TRX"
+]
+},
+"TZB4NrX7k9ZsV6PRc1GigAztLL8WHpLvwP": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"TRX"
+]
+},
+"TDe2UNAvuUnTbbDo7518eMe3TXN5qJW8Ft": {
+"name": "AMNOKGANG TECHNOLOGY DEVELOPMENT COMPANY",
+"chains": [
+"TRX"
+]
+},
+"bc1qf6zxs4lkp9umh6hf087mh70w0ymcyt8cunp58r": {
+"name": "BLAGH, Keyvan Fayyaz Gareh",
+"chains": [
+"XBT"
+]
+},
+"bc1qr2pwmvkpq5tc5um2g9uh34yyu6wepwx89rts70": {
+"name": "BLAGH, Keyvan Fayyaz Gareh",
+"chains": [
+"XBT"
+]
+},
+"bc1q4ktvxxhhvf8qhs9qkdsm9arcxfmmeex6rl7n50": {
+"name": "BLAGH, Keyvan Fayyaz Gareh",
+"chains": [
+"XBT"
+]
+},
+"0x4060cbf80734193f521a3cc6fd4e985df2825279": {
+"name": "BLAGH, Keyvan Fayyaz Gareh",
+"chains": [
+"ETH"
+]
+},
+"0x56de1527136f76a809e5b14ded6103eecd072ba7": {
+"name": "BLAGH, Keyvan Fayyaz Gareh",
+"chains": [
+"ETH"
+]
+},
+"1GXeCkFQq7SYo6B7wdLAPkkri6NFTFB7No": {
+"name": "GHAL'EH-KUHI, Mojtaba",
+"chains": [
+"XBT"
+]
+},
+"0x1b8579cf6ab12ea6b74ac5fa41f3829a3cb61e6e": {
+"name": "GHAL'EH-KUHI, Mojtaba",
+"chains": [
+"ETH"
+]
+},
+"1JGPiQGK78xTxAVoxA1MjK3Z15M84Rj6BL": {
+"name": "KAHZADIAN, Arman",
+"chains": [
+"XBT"
+]
+},
+"0xeb507efa9ee692a4c774ad1de9f3cb26fc459da3": {
+"name": "KAHZADIAN, Arman",
+"chains": [
+"ETH"
+]
+},
+"0xef85a6fafa5942a964dc618e94e230881d29ce2a": {
+"name": "KAHZADIAN, Arman",
+"chains": [
+"ETH"
+]
+},
+"0x038989cbb1710c72b9920dc4fa529158f463e72c": {
+"name": "OJEDA AVILES, Armando de Jesus",
+"chains": [
+"ETH"
+]
+},
+"0x14779cec0b117d5194c750c55ea1f42086631964": {
+"name": "OJEDA AVILES, Armando de Jesus",
+"chains": [
+"ETH"
+]
+},
+"0x32da24ca413f3e7b53145d4737e172c3bdf81e3e": {
+"name": "OJEDA AVILES, Armando de Jesus",
+"chains": [
+"ETH"
+]
+},
+"0xf2235d55b2950a0b1317469d72d07ae65b2e27cb": {
+"name": "OJEDA AVILES, Armando de Jesus",
+"chains": [
+"ETH"
+]
+},
+"0x4f428c11dc82388fa5136d636e613ad923eb700b": {
+"name": "OJEDA AVILES, Armando de Jesus",
+"chains": [
+"ETH"
+]
+},
+"0xac4cc4b68ea24bbfaac8fd127b67ed445accce22": {
+"name": "ALARCON PALOMARES, Rodrigo",
+"chains": [
+"ETH"
+]
+},
+"TBXMiRqUp1XH1zLazWu8cWitMAScv4HsYq": {
+"name": "ABDERRAHMANE, Miloud",
+"chains": [
+"TRX"
+]
+},
+"TDFj8tYzfLDkwEMo4MJ2DfrbpMztuCCnan": {
+"name": "ABDERRAHMANE, Miloud",
+"chains": [
+"TRX"
+]
+},
+"bc1qdnr88f4d2yqunnc4mjsguezm6g3mlwe44z5dw8": {
+"name": "FIRST VPN SERVICE",
+"chains": [
+"XBT"
+]
+},
+"bc1qr4ankqmvmrhce3ydvzse86dfx5s3zhehfr9tg9": {
+"name": "FIRST VPN SERVICE",
+"chains": [
+"XBT"
+]
+},
+"0x2711d73d559f62f4f855ee21f38378f528e07985": {
+"name": "FIRST VPN SERVICE",
+"chains": [
+"ETH"
+]
+},
+"ltc1qr8ntsedq8tv0svmxqhzvdcdl5k7kntdmnhwep7": {
+"name": "FIRST VPN SERVICE",
+"chains": [
+"LTC"
+]
+},
+"TUuaxBAWfA5nmsqNfycxYrzEvz4a5GJMGY": {
+"name": "FIRST VPN SERVICE",
+"chains": [
+"TRX"
+]
+},
+"1MTndG4K51RRMvkzyvguaHnQpiMLnxFGzM": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"XBT"
+]
+},
+"1DfyWkiXVVqWfcSduj23qTDis9kb2qvRDa": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"XBT"
+]
+},
+"0x1d19b52b54e7ef5ea1a4b40b616165e798eac9f8": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"ETH"
+]
+},
+"0x2c7dcd774b33e10367f7d6385479e04f97d179dc": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"ETH"
+]
+},
+"LcP1DumXkNJbBtSYD3XxAfsJ2nZR5hLdpM": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"LTC"
+]
+},
+"LbPAqHvemZBv3pvAqiAtDnZ3U1t6EziaL1": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"LTC"
+]
+},
+"t1LHesgnkapziGQCJtrfZWYXhyjfTVo1dvh": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"ZEC"
+]
+},
+"XcuGqRfrR85zyDrzVr1gSL5RNjwwpbu2KS": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"DASH"
+]
+},
+"XowUeMFa1FkEUnAHL78E5oqpezMfSB6xP1": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"DASH"
+]
+},
+"TTLRNgLpz5H5tLPuNU4FViUs7zmmAtyvzW": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"TRX"
+]
+},
+"TBFW9gF4oDX5cG44gS7AoxQeujScmm3z6h": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"TRX"
+]
+},
+"DHzAVdEoL3PjGeLWNdEJwwMA1CeQ9J9Cpo": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"DOGE"
+]
+},
+"DTqpKQ96rqkTvHcohQQd9BksmgRjasHgGo": {
+"name": "RASHEVSKYI, Dmytro",
+"chains": [
+"DOGE"
+]
+},
+"TJjRAn9kLiyh8h6gjBjaYjkfDkskgZfyW9": {
+"name": "CANELON AGUIRRE, Anibal Alexander",
+"chains": [
+"TRX"
+]
+},
+"TPyE2oSoaysrXfLzwf9wetBVr9JudLwjtD": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TVgUsVzA7mpFExP4zS7HHbtKti6UuBDuwZ": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TLoG3vbjDgqmTD5bM7w9rMgA6ysaNReuRy": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TAhHpxPRwo1Bmm1A9m51uZ31tcB7EPq7SY": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TScXZTbDjjZ6a6jiC7dZjgCqfNo4vm7atV": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TGr2i8ZQiiMRjP3mWyQUH2MQBfKu8GJNqm": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"THJUJFyTnrBWb1ijWav7qfRBrjUuKgP49Z": {
+"name": "AL-JEBOURI, Zaid Issam Ahmed",
+"chains": [
+"TRX"
+]
+},
+"TCifMAMwst3oEJx8GaNfqZw75dkFUa8vjG": {
+"name": "MARTINEZ ARMENTA, Carlos Javier",
+"chains": [
+"TRX"
+]
+},
+"TWJmTGhquvdp1jhBmgeGxBBwefteGZUQYW": {
+"name": "MEJIA CASTILLO, Alejandro",
+"chains": [
+"TRX"
+]
+},
+"THwbVuBBb26abe5TrAsYUpYz9mhWnBppdz": {
+"name": "GALEANO BAZURTO, Jose Dario",
+"chains": [
+"TRX"
+]
+},
+"TCUmMCHQEbFFdGvfdg2LeS64QfzUKP2AgW": {
+"name": "CARDENAS ARZOLA, Eric Gabriel",
+"chains": [
+"TRX"
+]
+},
+"1G1V1b9s9uPsFCNL15ibZk44xsVygKsP2u": {
+"name": "CRYPTO HOME DMCC",
+"chains": [
+"XBT"
+]
+},
+"0xbb69e01921b17cd22080968bcc96ba6115da6062": {
+"name": "CRYPTO HOME DMCC",
+"chains": [
+"ETH"
+]
+},
+"bnb136ns6lfw4zs5hg4n85vdthaad7hq5m4gtkgf23": {
+"name": "CRYPTO HOME DMCC",
+"chains": [
+"BNB"
+]
+},
+"TTVJuXWCusAURrpNShiypauagEH1N4CrxV": {
+"name": "CRYPTO HOME DMCC",
+"chains": [
+"TRX"
+]
+},
+"TDxZ1XTZCmqkJJW2eJT362z6omRchJyGBX": {
+"name": "MARTINEZ PIRONA, Oscar Leonardo",
+"chains": [
+"TRX"
+]
+},
+"TBEmt7kPSwAv6NJTYKNdBVW524bUfPwJpJ": {
+"name": "HERNANDEZ GUERRERO, Anthony Wuiliam",
+"chains": [
+"TRX"
+]
+},
+"15Zt2mKuQ5Qy6DEXfDcbtsEVneoGQQXrS4": {
+"name": "KAYVANPOUR, Siavash",
+"chains": [
+"XBT"
+]
+},
+"1BUXxhcwzFukm9CUxnhag85sSXDkMRbXse": {
+"name": "KAYVANPOUR, Siavash",
+"chains": [
+"XBT"
+]
+},
+"0x8d79c73daae8630c88de372ba8f57592fa987607": {
+"name": "KAYVANPOUR, Siavash",
+"chains": [
+"ETH"
+]
+},
+"TPgxjjB6AJeMSQFngbUM6dMMxPHa9GEtYa": {
+"name": "KAYVANPOUR, Siavash",
+"chains": [
+"TRX"
+]
+},
+"bc1qjzk63wwatq2f638psymq3qapn00aqgksyx56l3t8eg7zuuccwasq498khf": {
+"name": "SHPS SHELBIT",
+"chains": [
+"XBT"
+]
+},
+"bc1qz654h5qcqzalv6ltpxsk4ksdcc3e20wkedqntgnarv3a0t2e2p7scr48pl": {
+"name": "SHPS SHELBIT",
+"chains": [
+"XBT"
+]
+},
+"0xe05f529f5284d75624eba386cb716928c3b54a2a": {
+"name": "SHPS SHELBIT",
+"chains": [
+"ETH"
+]
+},
+"0x6b69e2a7545c166417a80c61a77562052bffa9c5": {
+"name": "SHPS SHELBIT",
+"chains": [
+"ETH"
+]
+},
+"TXN3hVukebhyYR31YPCYd7aJAvmUeXu1ab": {
+"name": "SHPS SHELBIT",
+"chains": [
+"TRX"
+]
+},
+"6wjqWWra8ombzaw6VHrG5xpQ972jCYF6bbHiFCbWmr4U": {
+"name": "SHPS SHELBIT",
+"chains": [
+"SOL"
+]
+},
+"TW5tokvhEfrb77z98Rc8HqbkzQJ6sxYtGX": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TBKpozurdWLrbKkxtDqkveeq1dSB8Axj3V": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TWqcMjV7Wq2RHe2CSiKQHpkn6A7B2AWUPe": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TG83Fk56S2mycAUMYHZyZp9wMg6DCf4bUn": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TYkE8VwX1SGHM3Q2CA29nka5U2F2khKAj5": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TEECjwHqVG8sDmM3VtscjuCaRe5p351MU7": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TDU61o35UEe5hdB3R16c116DrPSV4kiyKz": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TKRNCETxbiMmyyMraCkgdXKdLr1ZkmKxV5": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TTWRf2MD6zJ26bS4uKCNrcp84aAr7AmTjm": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TYvjt4ZKfsipHjA52nzgjUjDBF622SLCih": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TXHX2NUvcgft4zs6MkkUtdNVERPTavHDWN": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TWPma8xH48AEN93x2krdukV9e1j6sPsBeS": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TK3n8pGHvDTcK53mpfeDAMzdwjb22qvFU3": {
+"name": "XINBI GUARANTEE",
+"chains": [
+"TRX"
+]
+},
+"TJCBpxZ3yC7C7oegSRZMFxBcscmUVeSA36": {
+"name": "TSORIS, Almpertos",
+"chains": [
+"USDT"
+]
+},
+"TVwLtgUXyDhmcSoQ9x2z9QSua41f8mDFvU": {
+"name": "VARELA VILLAR, Alexandre",
+"chains": [
+"TRX"
+]
+},
+"0x12ea80238c7d805d003ce793594e92d84a6f4e8d": {
+"name": "BOYKOV, Ilya Aleksandrovich",
+"chains": [
+"ETH"
+]
+},
+"0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510": {
+"name": "BOYKOV, Ilya Aleksandrovich",
+"chains": [
+"ETH"
+]
+},
+"TQKoDq5aCrWAciiNtete5pDYVN38i4qFN1": {
+"name": "BOYKOV, Ilya Aleksandrovich",
+"chains": [
+"TRX"
+]
+},
+"TXmrnVgsqCMJncYHTXchuJ5z111BXSj4g3": {
+"name": "BOYKOV, Ilya Aleksandrovich",
+"chains": [
+"TRX"
+]
+},
+"0xe4c9a7f68b1eba4508f54f07f7378847318dd1a3": {
+"name": "KIM, Ki Hyok",
+"chains": [
+"ETH"
+]
+},
+"TCV4qdpTxoMyqkn7sSPeRrXmhH5JFxMvmT": {
+"name": "OBERTAS, Vitold Viktorovich",
+"chains": [
+"TRX"
+]
+},
+"TQCBdU4K92oxLAkzwexZpqVZJhmPbtLYMm": {
+"name": "OBERTAS, Vitold Viktorovich",
+"chains": [
+"TRX"
+]
+},
+"TFksjBcHPYqgAax2USheQuaT1ydRKyZRdg": {
+"name": "OBERTAS, Vitold Viktorovich",
+"chains": [
+"TRX"
+]
+},
+"TJHZswisiMgjioAVpmpMSWXCeQGCPjcTMK": {
+"name": "DIVERSE TRADE INC",
+"chains": [
+"TRX"
+]
+},
+"TCreRMzGspdHNEkqkasejS6xTzqXNkYJJZ": {
+"name": "CCC INC",
+"chains": [
+"TRX"
+]
+},
+"TW5NEaaoPHXC1rt5PaYgG474gQ49oiZ2F5": {
+"name": "2397639 ONTARIO LTD",
+"chains": [
+"TRX"
+]
+},
+"TLyRLCNwBhaXkYak1bTFUYTj72crbgN5Vy": {
+"name": "1380079 BC LTD",
+"chains": [
+"TRX"
+]
+},
+"THauYJJEaFGLpEknoKnYmXmT5TCeQGKjDE": {
+"name": "1380079 BC LTD",
+"chains": [
+"TRX"
+]
+},
+"TJT3JZKJWVHVkKRKSmWmg5UYHhAqBM7mfP": {
+"name": "1380079 BC LTD",
+"chains": [
+"TRX"
+]
+}
+},
+"note": "Every digital currency address OFAC lists (all chains). 0x keys lowercased; others exact. Not legal advice."
+}

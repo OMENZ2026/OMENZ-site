@@ -930,6 +930,7 @@ server.validate_extensions = _validate_extensions_money_only
 swapmeet.OMENZ_PRICES = {"https://www.omenz.org" + k.split(" ", 1)[1]: float(str(v["accepts"]["price"]).lstrip("$")) for k, v in ROUTES.items()}
 app = FastAPI(title="OMENZ x402 tollbooth", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 _mw = None
+_HEAD_PAID = set()
 
 
 def _input_info(method, path):
@@ -1022,12 +1023,21 @@ async def x402_mw(request, call_next):
             _m, _p = _k.split(" ", 1)
             if _m == "POST" and f"GET {_p}" not in ROUTES:
                 _alias[f"GET {_p}"] = {"accepts": _v["accepts"], "description": _v.get("description", ""), "mimeType": "application/json"}
+            if f"HEAD {_p}" not in ROUTES:  # 11-24: uptime/health checkers use HEAD (2,281 HEAD->405 in 7d)
+                _alias[f"HEAD {_p}"] = {"accepts": _v["accepts"], "description": _v.get("description", ""), "mimeType": "application/json"}
+        _HEAD_PAID.update(k for k in _alias if k.startswith("HEAD "))
         _mw = payment_middleware({**ROUTES, **_alias}, server)
     t0 = time.time()
     request.state.extra = {}
     request.state.ayne = False
     if request.url.path.startswith(BASE + "/ayne"):
         return await _ayne(request, call_next, t0)
+    if request.method == "HEAD" and request.url.path.rstrip("/") not in PRICE_OF:  # never for paid paths (no init dependency)
+        # 11-24: HEAD on free routes (status, catalog...) = GET without a body, so uptime checkers see 200 not 405
+        request.scope["method"] = "GET"
+        r = await call_next(request)
+        from starlette.responses import Response as _R
+        return _R(status_code=r.status_code, headers={k: v for k, v in r.headers.items() if k.lower() != "content-length"})
     resp = await _mw(request, call_next)
     path = request.url.path
     rid = None

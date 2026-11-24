@@ -85,8 +85,10 @@ def _tool(route):
 
 def rollup(force=False, routes=None):
     rec = _kv("GET", EARNED_KEY) or {"days": {}, "rolled_at": 0}
-    if not force and time.time() - rec.get("rolled_at", 0) < 3600:
-        return {"rolled": False, "reason": "rolled up less than an hour ago", "days_recorded": len(rec["days"])}
+    # 11-24 cost fix: this URL is public and scanners hit it; each rollup reads ~2 days of events (~60k billed rows).
+    # The daily cron is the only caller that matters, so roll at most once per 20 hours.
+    if not force and time.time() - rec.get("rolled_at", 0) < 20 * 3600:
+        return {"rolled": False, "reason": "rolled up within the last 20 hours (daily job)", "days_recorded": len(rec["days"])}
     start = time.strftime("%Y-%m-%dT00:00:00Z", time.gmtime(time.time() - 2 * 86400))
     days = {}
     for e in _events(start):

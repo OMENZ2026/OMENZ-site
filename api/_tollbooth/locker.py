@@ -38,16 +38,25 @@ def _kv(method, key, body=None):
         raise LockerError(503, "locker storage not configured")
     url = f"https://api.apify.com/v2/key-value-stores/{STORE}/records/{key}"
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method,
-                                 headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=8) as r:
-            raw = r.read()
-            return json.loads(raw) if raw and method == "GET" else None
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None
-        raise LockerError(502, f"storage error {e.code}")
+    for attempt in (0, 1):  # 11-24: one retry on transient storage errors (a payapi verification hit a one-off 502)
+        req = urllib.request.Request(url, data=data, method=method,
+                                     headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=8) as r:
+                raw = r.read()
+                return json.loads(raw) if raw and method == "GET" else None
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            if attempt == 0 and (e.code == 429 or e.code >= 500):
+                import time as _t
+                _t.sleep(0.6)
+                continue
+            raise LockerError(502, f"storage error {e.code}")
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == 0:
+                continue
+            raise LockerError(502, "storage unreachable")
 
 
 def _aes(access_key, locker_id):

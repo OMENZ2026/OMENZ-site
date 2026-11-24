@@ -718,8 +718,8 @@ _paid("POST", "sale/record", "$0.002",
        "required": ["url"]}, body=True)
 
 _paid("GET", "tx/decode", "$0.002",
-      "Transaction Decode (Base): what did this transaction actually do, in plain English. Status, confirmations, function called, every token transfer (symbol + amount), approvals (UNLIMITED approvals flagged), NFT moves, fee, time, and whether it was an x402 payment (EIP-3009 transferWithAuthorization). For agents checking a payment, a refund, or what a contract just did with their money. Public chain data, never needs a key. By OMENZ.",
-      {"tx_hash": "0x..."}, {"properties": {"tx_hash": {"type": "string"}}, "required": ["tx_hash"]})
+      "Transaction Decode (Base by default; chain= ethereum, arbitrum, optimism, polygon, bsc, avalanche): what did this transaction actually do, in plain English. Status, confirmations, function called, every token transfer (symbol + amount), approvals (UNLIMITED approvals flagged), NFT moves, fee, time, and whether it was an x402 payment (EIP-3009 transferWithAuthorization). For agents checking a payment, a refund, or what a contract just did with their money. Public chain data, never needs a key. By OMENZ.",
+      {"tx_hash": "0x..."}, {"properties": {"tx_hash": {"type": "string"}, "chain": {"type": "string", "description": "base (default), ethereum, arbitrum, optimism, polygon, bsc, avalanche"}}, "required": ["tx_hash"]})
 _paid("GET", "name/resolve", "$0.002",
       "Name Resolve: ENS (name.eth) and Basenames (name.base.eth) to address, or an address to its primary ENS name, forward-verified so a spoofed reverse record is flagged. For agents about to pay or trust 'vitalik.eth' or 'shop.base.eth'. Public chain data. By OMENZ. v0.2: expected_address -> MATCH/MISMATCH, Basename reverse too, wallet/contract/EIP-7702 on Base, OFAC screen, look-alike (non-ASCII) warning.",
       {"q": "vitalik.eth"}, {"properties": {"q": {"type": "string", "description": "name or 0x address"}, "expected_address": {"type": "string", "description": "the address you were told to pay: returns verdict MATCH or MISMATCH"}}, "required": ["q"]})
@@ -2265,9 +2265,9 @@ def sale_record_route(request: Request, body: dict = Body(...)):
 
 
 @app.get(BASE + "/v1/tx/decode")
-def tx_decode_route(request: Request, tx_hash: str = Query(...)):
+def tx_decode_route(request: Request, tx_hash: str = Query(...), chain: str | None = None):
     request.state.extra["action"] = "tx_decode"
-    return chain_tools.tx_decode(tx_hash)
+    return chain_tools.tx_decode(tx_hash, chain)
 
 
 @app.get(BASE + "/v1/name/resolve")

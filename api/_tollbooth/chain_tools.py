@@ -55,22 +55,23 @@ def _a(topic):
     return to_checksum_address("0x" + topic[-40:])
 
 
-def _token(addr, cache):
+def _token(addr, cache, rpcs=None):
+    rpcs = rpcs or BASE_RPCS
     a = addr.lower()
-    if a in KNOWN_TOKENS:
+    if a in KNOWN_TOKENS and rpcs is BASE_RPCS:
         return KNOWN_TOKENS[a]
     if a in cache:
         return cache[a]
     sym, dec = None, None
     try:
-        raw = _rpc(BASE_RPCS, "eth_call", [{"to": a, "data": "0x95d89b41"}, "latest"])
+        raw = _rpc(rpcs, "eth_call", [{"to": a, "data": "0x95d89b41"}, "latest"])
         b = bytes.fromhex(raw[2:])
         if len(b) >= 96:
             n = int.from_bytes(b[32:64], "big")
             sym = b[64:64 + n].decode("utf-8", "ignore") or None
         elif len(b) == 32:
             sym = b.rstrip(b"\0").decode("utf-8", "ignore") or None
-        dec = int(_rpc(BASE_RPCS, "eth_call", [{"to": a, "data": "0x313ce567"}, "latest"]), 16)
+        dec = int(_rpc(rpcs, "eth_call", [{"to": a, "data": "0x313ce567"}, "latest"]), 16)
     except Exception:
         pass
     cache[a] = (sym, dec)
@@ -81,19 +82,27 @@ def _amt(raw, dec):
     return raw / 10 ** dec if dec is not None else None
 
 
-def tx_decode(tx_hash):
+def tx_decode(tx_hash, chain=None):
+    """11-24: chain= adds ethereum/arbitrum/optimism/polygon/bsc/avalanche (market: raw tx receipts by hash = 271 payers on
+    Ethereum alone). Default base, unchanged for existing callers."""
     tx_hash = str(tx_hash or "").strip()
+    chain = str(chain or "base").strip().lower()
+    import gas_compare
+    if chain not in gas_compare.CHAINS:
+        return {"status": "BAD_INPUT", "reason": f"chain must be one of {', '.join(gas_compare.CHAINS)}"}
+    rpcs = BASE_RPCS if chain == "base" else gas_compare.CHAINS[chain][1]
+    native = gas_compare.CHAINS[chain][2]
     if not TXH.match(tx_hash):
-        return {"status": "BAD_INPUT", "reason": "tx_hash must be 0x + 64 hex (a Base transaction)"}
+        return {"status": "BAD_INPUT", "reason": "tx_hash must be 0x + 64 hex"}
     try:
-        tx = _rpc(BASE_RPCS, "eth_getTransactionByHash", [tx_hash])
+        tx = _rpc(rpcs, "eth_getTransactionByHash", [tx_hash])
         if tx is None:
-            return {"status": "NOT_FOUND", "tx_hash": tx_hash, "reason": "no such transaction on Base"}
-        rc = _rpc(BASE_RPCS, "eth_getTransactionReceipt", [tx_hash])
-        head = int(_rpc(BASE_RPCS, "eth_blockNumber", []), 16)
+            return {"status": "NOT_FOUND", "tx_hash": tx_hash, "chain": chain, "reason": f"no such transaction on {chain}"}
+        rc = _rpc(rpcs, "eth_getTransactionReceipt", [tx_hash])
+        head = int(_rpc(rpcs, "eth_blockNumber", []), 16)
     except ChainError as e:
         return {"status": "UNAVAILABLE", "reason": str(e)}
-    out = {"version": VERSION, "network": "base", "tx_hash": tx_hash, "from": to_checksum_address(tx["from"]),
+    out = {"version": VERSION, "network": chain, "native": native, "tx_hash": tx_hash, "from": to_checksum_address(tx["from"]),
            "to": to_checksum_address(tx["to"]) if tx.get("to") else None, "eth_value": int(tx["value"], 16) / 1e18}
     data = tx.get("input") or "0x"
     sel = data[2:10]
@@ -102,9 +111,11 @@ def tx_decode(tx_hash):
         return {**out, "status": "PENDING", "summary": "sent, not in a block yet"}
     blk = int(rc["blockNumber"], 16)
     out.update({"block": blk, "confirmations": head - blk + 1, "status": "SUCCESS" if rc.get("status") == "0x1" else "REVERTED",
-                "gas_used": int(rc["gasUsed"], 16), "fee_eth": int(rc["gasUsed"], 16) * int(rc.get("effectiveGasPrice") or "0x0", 16) / 1e18})
+                "gas_used": int(rc["gasUsed"], 16), "fee_native": int(rc["gasUsed"], 16) * int(rc.get("effectiveGasPrice") or "0x0", 16) / 1e18})
+    if native == "ETH":
+        out["fee_eth"] = out["fee_native"]
     try:
-        b = _rpc(BASE_RPCS, "eth_getBlockByNumber", [rc["blockNumber"], False])
+        b = _rpc(rpcs, "eth_getBlockByNumber", [rc["blockNumber"], False])
         out["time"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(b["timestamp"], 16)))
     except ChainError:
         pass
@@ -115,14 +126,14 @@ def tx_decode(tx_hash):
             continue
         tok = lg["address"].lower()
         if t[0] == T_TRANSFER and len(t) == 3:
-            sym, dec = _token(tok, cache)
+            sym, dec = _token(tok, cache, rpcs)
             raw = int(lg["data"], 16) if lg.get("data") not in (None, "0x") else 0
             transfers.append({"token": sym or tok, "token_address": to_checksum_address(tok), "from": _a(t[1]), "to": _a(t[2]),
                               "amount": _amt(raw, dec)})
         elif t[0] == T_TRANSFER and len(t) == 4:
             transfers.append({"token": "NFT", "token_address": to_checksum_address(tok), "from": _a(t[1]), "to": _a(t[2]), "token_id": int(t[3], 16)})
         elif t[0] == T_APPROVAL and len(t) == 3:
-            sym, dec = _token(tok, cache)
+            sym, dec = _token(tok, cache, rpcs)
             raw = int(lg["data"], 16) if lg.get("data") not in (None, "0x") else 0
             approvals.append({"token": sym or tok, "owner": _a(t[1]), "spender": _a(t[2]),
                               "amount": "UNLIMITED" if raw >= UNLIMITED else _amt(raw, dec)})
@@ -151,7 +162,7 @@ def tx_decode(tx_hash):
     if is_x402:
         parts.insert(0, "x402-style payment:")
     if out["eth_value"]:
-        parts.append(f"{out['eth_value']} ETH sent")
+        parts.append(f"{out['eth_value']} {out['native']} sent")
     out["summary"] = " ".join(parts) or f"{out['function']} with no token movement"
     out["flags"] = flags
     return out

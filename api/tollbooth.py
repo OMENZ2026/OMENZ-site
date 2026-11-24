@@ -1014,7 +1014,15 @@ def _log(ev):
 async def x402_mw(request, call_next):
     global _mw
     if _mw is None:
-        _mw = payment_middleware(ROUTES, server)
+        # 11-24: directories/validators probe POST-only tools with GET (28k 405s/week; those tools showed 'unknown' health).
+        # Middleware-only GET aliases answer with the same 402 + price, so probes see a live paywalled tool. Not added to ROUTES,
+        # so listings/openapi don't show duplicates. A GET that pays still hits no handler -> 405 -> never settled (errors not charged).
+        _alias = {}
+        for _k, _v in ROUTES.items():
+            _m, _p = _k.split(" ", 1)
+            if _m == "POST" and f"GET {_p}" not in ROUTES:
+                _alias[f"GET {_p}"] = {"accepts": _v["accepts"], "description": _v.get("description", ""), "mimeType": "application/json"}
+        _mw = payment_middleware({**ROUTES, **_alias}, server)
     t0 = time.time()
     request.state.extra = {}
     request.state.ayne = False
@@ -1048,6 +1056,12 @@ async def x402_mw(request, call_next):
             resp = JSONResponse({"x402Version": 2, "error": "x402 v1 X-PAYMENT is not accepted here: this server speaks x402 v2. "
                                  "Read the PAYMENT-REQUIRED header of this 402 and resend the payment in a PAYMENT-SIGNATURE header.",
                                  "docs": "https://www.omenz.org/llms.txt"}, status_code=402, headers={"PAYMENT-REQUIRED": pr} if pr else None)
+        if resp.status_code == 402 and request.method == "GET" and f"POST {path.rstrip('/')}" in ROUTES and f"GET {path.rstrip('/')}" not in ROUTES:
+            try:
+                _r, _ex, _v = _input_info("POST", path.rstrip("/"))
+                resp.headers["X-OMENZ-Method-Hint"] = json.dumps({"use_method": "POST", "example_body": _ex}, separators=(",", ":"))[:600]
+            except Exception:
+                resp.headers["X-OMENZ-Method-Hint"] = '{"use_method":"POST"}'
         if not payer and resp.status_code == 402 and request.method == "GET":
             # 11-24: our first repeat buyer hit 402 -> paid -> 422 three times. Tell agents BEFORE they pay what input is missing.
             try:

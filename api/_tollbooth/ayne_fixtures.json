@@ -1848,39 +1848,57 @@
 "sample_response": {
 "version": "0.1.0",
 "schema": "omenz.x402-market-report.v0",
-"index_generated_at": "2026-11-14T14:38:20Z",
-"endpoints": 34912,
-"sellers": 3230,
-"sellers_with_calls_30d": 3228,
-"endpoints_with_calls_30d": 34786,
-"calls_30d": 1268724,
+"index_generated_at": "2026-11-24T00:21:45Z",
+"endpoints": 40262,
+"sellers": 3273,
+"sellers_with_calls_30d": 3273,
+"endpoints_with_calls_30d": 40175,
+"calls_30d": 3676450,
 "price_usd": {
 "p10": 0.001,
-"p25": 0.0025,
+"p25": 0.002,
 "median": 0.005,
-"p75": 0.02,
+"p75": 0.01,
 "p90": 0.05
 },
 "concentration": {
-"top10_sellers_share_of_calls": 0.742,
-"top50_sellers_share_of_calls": 0.902
+"top10_sellers_share_of_calls": 0.884,
+"top50_sellers_share_of_calls": 0.96
 },
 "networks": {
-"eip155:8453": 31599,
-"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": 8526,
-"eip155:137": 6692,
-"eip155:42161": 4202,
-"eip155:143": 2599,
-"eip155:10": 2150,
-"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k": 1294,
-"eip155:196": 899
+"eip155:8453": 38125,
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": 8924,
+"eip155:137": 6010,
+"eip155:42161": 4161,
+"eip155:10": 1721,
+"eip155:143": 1118,
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k": 954,
+"eip155:56": 945
 },
 "top_sellers": [
 {
 "host": "console.ax1.vc",
 "endpoints": 1,
-"calls_30d": 412532,
-"payers_30d": 710,
+"calls_30d": 1833375,
+"payers_30d": 5233,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "www.api-xpay.com",
+"endpoints": 14,
+"calls_30d": 653446,
+"payers_30d": 113,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "ax1-new.vercel.app",
+"endpoints": 1,
+"calls_30d": 219202,
+"payers_30d": 1673,
 "networks": [
 "eip155:8453"
 ]
@@ -1888,25 +1906,224 @@
 {
 "host": "agent.pocket.network",
 "endpoints": 120,
-"calls_30d": 125545,
-"payers_30d": 45,
+"calls_30d": 123876,
+"payers_30d": 50,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "x402.clashofcoins.com",
+"endpoints": 2,
+"calls_30d": 111047,
+"payers_30d": 758,
 "networks": [
 "eip155:8453"
 ]
 },
 {
 "host": "blockrun.ai",
-"endpoints": 130,
-"calls_30d": 93343,
-"payers_30d": 292,
+"endpoints": 168,
+"calls_30d": 84604,
+"payers_30d": 323,
 "networks": [
 "eip155:8453"
+]
+},
+{
+"host": "win.oneshotagent.com",
+"endpoints": 134,
+"calls_30d": 70630,
+"payers_30d": 76,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "stableenrich.dev",
+"endpoints": 14,
+"calls_30d": 62049,
+"payers_30d": 118,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "api.zerion.io",
+"endpoints": 11,
+"calls_30d": 57743,
+"payers_30d": 9,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "stormstation247.com",
+"endpoints": 9,
+"calls_30d": 33534,
+"payers_30d": 5,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "x402.sniperx.fun",
+"endpoints": 8,
+"calls_30d": 32582,
+"payers_30d": 8,
+"networks": [
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "api.agents-trust.com",
+"endpoints": 1,
+"calls_30d": 30059,
+"payers_30d": 54,
+"networks": [
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "keyring-agent.blockchhub.link",
+"endpoints": 3,
+"calls_30d": 26331,
+"payers_30d": 5967,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "ladyfortunalx402.vercel.app",
+"endpoints": 1,
+"calls_30d": 21229,
+"payers_30d": 4,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "api.kadec0.xyz",
+"endpoints": 54,
+"calls_30d": 19556,
+"payers_30d": 16,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "glim.sh",
+"endpoints": 27,
+"calls_30d": 16530,
+"payers_30d": 23,
+"networks": [
+"eip155:143",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "api.onesource.io",
+"endpoints": 70,
+"calls_30d": 14286,
+"payers_30d": 637,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "agent402.tools",
+"endpoints": 745,
+"calls_30d": 13384,
+"payers_30d": 22,
+"networks": [
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k",
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=",
+"eip155:10",
+"eip155:1329"
+]
+},
+{
+"host": "api.exa.ai",
+"endpoints": 2,
+"calls_30d": 13092,
+"payers_30d": 148,
+"networks": [
+"eip155:480",
+"eip155:5042",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "api.strale.io",
+"endpoints": 128,
+"calls_30d": 8227,
+"payers_30d": 3,
+"networks": [
+"base",
+"eip155:8453"
+]
+},
+{
+"host": "x402.apidirect.io",
+"endpoints": 142,
+"calls_30d": 8195,
+"payers_30d": 9,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "x402.twit.sh",
+"endpoints": 15,
+"calls_30d": 8160,
+"payers_30d": 28,
+"networks": [
+"eip155:8453"
+]
+},
+{
+"host": "x402.orthogonal.com",
+"endpoints": 313,
+"calls_30d": 5921,
+"payers_30d": 10,
+"networks": [
+"eip155:143",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "agent-data-tools.revmesh2074.workers.dev",
+"endpoints": 725,
+"calls_30d": 5192,
+"payers_30d": 108,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+]
+},
+{
+"host": "x402engine.app",
+"endpoints": 22,
+"calls_30d": 4817,
+"payers_30d": 27,
+"networks": [
+"eip155:4326",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ]
 }
 ],
 "source": "Coinbase CDP x402 Bazaar discovery index, compiled weekly by OMENZ; usage = listed 30-day calls/unique payers.",
-"limits": "Listed usage, not verified settlement; wash trading is not removed here. Pair with on-chain checks (wallet/spend, market/payee).",
-"note": "AYNE sample: top 3 sellers shown; the paid report has 25"
+"limits": "Listed usage, not verified settlement; wash trading is not removed here. Pair with on-chain checks (wallet/spend, market/payee)."
 }
 },
 "GET /api/tollbooth/v1/market/sellers": {

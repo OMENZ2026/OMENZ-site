@@ -90,6 +90,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/time/convert?time=&from=&to=  $0.002  Time Zones: convert, DST, business hours
   GET  /api/tollbooth/v1/business-days?country=&date=&add=  $0.002  Business Days: holidays, next/N business days
   GET  /api/tollbooth/v1/weather?lat=&lon=&days=    $0.002  Weather: now, 6h/24h, 5-day, agent flags
+  POST /api/tollbooth/v1/pay/doctor                $0.002  Payment Doctor: why was my x402 payment refused
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
   GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
   POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
@@ -172,6 +173,7 @@ import email_check  # noqa: E402
 import link_check  # noqa: E402
 import name_check  # noqa: E402
 import lead_check  # noqa: E402
+import pay_doctor  # noqa: E402
 import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
@@ -742,6 +744,10 @@ _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
       {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}}, body=True)
+_paid("POST", "pay/doctor", "$0.002",
+      "OMENZ Payment Doctor: why was my x402 payment refused, whose side is it on, and how do I fix it? Send the 402's PAYMENT-REQUIRED header, the payment you sent and/or the error text (or just the URL). Checks format, version, amount, payTo, asset, time window and known facilitator errors, incl. the >500-char description rejection. CAUSE_FOUND / NO_PROBLEM_FOUND, fix per cause. Stores nothing. By OMENZ.",
+      {"error": "Facilitator verify failed (400): insufficient_funds"},
+      {"properties": {"payment_required": {"type": "string", "description": "PAYMENT-REQUIRED header (base64) or its JSON"}, "payment": {"type": "string", "description": "PAYMENT-SIGNATURE you sent (base64) or its JSON"}, "error": {"type": "string"}, "url": {"type": "string", "description": "public https URL that answered 402"}, "method": {"type": "string"}}}, body=True)
 _paid("GET", "link/check", "$0.003",
       "OMENZ Link Check: where does this link really go, and is it safe to follow, sign in or pay? Follows the redirect chain hop by hop (unshortens bit.ly/tinyurl etc.), then checks the destination: TLS certificate (valid, issuer, days to expiry, hostname match), destination domain age (RDAP), plain http, page status. DANGER (bad/expired cert, new domain < 30 days, redirect loop, private-network target) / CAUTION (shortener, lands on a different site than shown, http, expiring cert, many hops, 4xx/5xx) / UNREACHABLE / OK. Never submits forms, runs scripts or pays. By OMENZ.",
       {"url": "https://bit.ly/3x"},
@@ -2319,6 +2325,13 @@ def fx_convert_route(request: Request, amount: str | None = None, date: str | No
 def lead_check_route(request: Request, body: dict = Body(...)):
     r = lead_check.check(body)
     request.state.extra.update({"action": "lead_check", "verdict": r.get("verdict")})
+    return r
+
+
+@app.post(BASE + "/v1/pay/doctor")
+def pay_doctor_route(request: Request, body: dict = Body(...)):
+    r = pay_doctor.diagnose(body)
+    request.state.extra.update({"action": "pay_doctor", "verdict": r.get("verdict")})
     return r
 
 

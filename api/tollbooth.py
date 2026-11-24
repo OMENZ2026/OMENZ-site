@@ -92,6 +92,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/weather?lat=&lon=&days=    $0.002  Weather: now, 6h/24h, 5-day, agent flags
   POST /api/tollbooth/v1/pay/doctor                $0.002  Payment Doctor: why was my x402 payment refused
   POST /api/tollbooth/v1/pay/ready                 $0.002  Pay Ready: can this wallet pay this seller now
+  GET  /api/tollbooth/v1/gas/compare?chains=       $0.002  Gas Compare: cost to move money on 7 chains, cheapest
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
   GET  /api/tollbooth/v1/fx/convert?amount=&from=&to=&date=  $0.002  FX Rates: ECB reference rates, ~30 currencies
   POST /api/tollbooth/v1/lead/check {email,phone,website}  $0.005  Lead Check: email+phone+domain bundle
@@ -176,6 +177,7 @@ import name_check  # noqa: E402
 import lead_check  # noqa: E402
 import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
+import gas_compare  # noqa: E402
 import fx_rates  # noqa: E402
 import ip_check  # noqa: E402
 import weather  # noqa: E402
@@ -746,6 +748,10 @@ _paid("POST", "lead/check", "$0.005",
       "OMENZ Lead Check: is this lead real enough to spend time on? One call runs Email Check + Phone Check + Domain Check (cheaper than all three) plus cross-checks: does the email domain match the company website, brand-new website, fictional/premium/VoIP phone, disposable email. FAKE_OR_UNUSABLE / WEAK / GOOD_LEAD with reasons. Send any of email, phone (+country), website. Public DNS/RDAP + offline phone data, no SMTP probe, nothing stored. By OMENZ.",
       {"email": "hello@omenz.org", "phone": "+1 650 253 0000", "website": "omenz.org"},
       {"properties": {"email": {"type": "string"}, "phone": {"type": "string"}, "country": {"type": "string"}, "website": {"type": "string"}}}, body=True)
+_paid("GET", "gas/compare", "$0.002",
+      "OMENZ Gas Compare: what it costs to move money on 7 chains right now and which is cheapest. Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche: base fee + suggested tip, USD cost of a native transfer and a USDC/ERC-20 transfer, block freshness. One call instead of seven. Public RPCs + Coinbase spot prices. By OMENZ.",
+      {"chains": "base,arbitrum,optimism,ethereum"},
+      {"properties": {"chains": {"type": "string", "description": "comma list; default all 7: ethereum,base,arbitrum,optimism,polygon,bsc,avalanche"}}})
 _paid("POST", "pay/ready", "$0.002",
       "OMENZ Pay Ready: can THIS wallet pay THIS x402 seller right now? Send wallet + the seller's url (or its 402). Checks a Base option exists, the wallet holds enough of that exact asset, the asset supports gasless EIP-3009 (what x402 exact needs), plain vs smart-contract wallet, payee on OFAC list. READY / CAUTION / NOT_READY with the fix. Never signs or pays. By OMENZ.",
       {"wallet": "0x1bd3AaA92243e3d4352bdcE07050aeC6fcF5e840", "url": "https://www.omenz.org/api/tollbooth/v1/weather?lat=1&lon=1"},
@@ -2331,6 +2337,15 @@ def fx_convert_route(request: Request, amount: str | None = None, date: str | No
 def lead_check_route(request: Request, body: dict = Body(...)):
     r = lead_check.check(body)
     request.state.extra.update({"action": "lead_check", "verdict": r.get("verdict")})
+    return r
+
+
+@app.get(BASE + "/v1/gas/compare")
+def gas_compare_route(request: Request, chains: str | None = None):
+    r = gas_compare.compare(chains)
+    request.state.extra.update({"action": "gas_compare", "cheapest": r.get("cheapest_for_token_transfer")})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
     return r
 
 

@@ -6,7 +6,7 @@
 },
 "sample_response": {
 "url": "https://example.com",
-"checked_at": "2026-11-14T06:58:37",
+"checked_at": "2026-11-24T06:20:34",
 "checker_version": "0.1.0",
 "score": 40,
 "findings": [
@@ -46,8 +46,8 @@
 "requests": 2,
 "working_variant": null,
 "next_action": "needs_browser",
-"seconds": 0.39,
-"checked_at": "2026-11-14T14:58:37Z"
+"seconds": 0.33,
+"checked_at": "2026-11-24T14:20:35Z"
 }
 },
 "GET /api/tollbooth/v1/changed": {
@@ -67,8 +67,8 @@
 "reason": "page needs a browser (JavaScript shell; only 171 characters readable), so change can't be judged",
 "fingerprint": null,
 "requests": 4,
-"seconds": 0.47,
-"checked_at": "2026-11-14T14:58:38Z"
+"seconds": 0.39,
+"checked_at": "2026-11-24T14:20:35Z"
 }
 },
 "GET /api/tollbooth/v1/local-facts": {
@@ -231,7 +231,7 @@
 "url": "https://api.example.com/x402/endpoint",
 "method": "GET",
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:38Z",
+"checked_at": "2026-11-24T14:20:35Z",
 "paid": false,
 "verdict": "down",
 "reason": "dns_failed"
@@ -247,7 +247,7 @@
 "url": "https://api.example.com/x402/endpoint",
 "method": "GET",
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:38Z",
+"checked_at": "2026-11-24T14:20:35Z",
 "paid": false,
 "status": "error",
 "reason": "dns_failed",
@@ -270,7 +270,7 @@
 "url": "https://api.example.com/x402/endpoint",
 "method": "GET",
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:39Z",
+"checked_at": "2026-11-24T14:20:35Z",
 "paid": false,
 "http_status": null,
 "latency_ms": null,
@@ -327,7 +327,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:39Z",
+"checked_at": "2026-11-24T14:20:35Z",
 "stored": false,
 "decision": "ALLOW",
 "amount_usd": 0.1,
@@ -415,22 +415,29 @@
 "sample_response": {
 "url": "https://exa.ai/pricing",
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:59:39Z",
+"checked_at": "2026-11-24T14:20:35Z",
 "final_url": "https://exa.ai/pricing",
-"material_lines": 11,
+"material_lines": 26,
 "last_updated_stated": null,
-"fingerprint": "tc1.eNp1VU1vGzcQvetXzMGHNpBkyagRIDdZchIDdqvEVtPmxt0daQlzyS0_LCm_Pm-4u7KapoBscMnhfLx58zi6PSharO9o7XWp7W60VseJCpO_XZp8cLQ2ygbaOk-LO3pk5cua5Majjkx3tuIDveeIzVhzPghyoPOBiu-ojrEN7y4v-aCmSl8a04RpPETaBMYVDdfaYOWo0qF0L-yzk9a7KpUxjLHKWY2JX5RJKmpnsVu6plVeh_yR4KpUgbFUO7YR0SP7rSrzjq0ocllbXSpDlStTA5PshwpGXUx8aI3zCELb5FGGn45urSqQ1jf2jjxH3BB7t6V_EnvNIbv1HJKJgXASUts6H7k6ZT4dfZXLKxUVfX718DNTuphfjWezGZzahCRRXKNj01WS…",
-"digest": "60016c922923b5a4",
+"fingerprint": "tc1.eNq9V01vGzcQvetXzMFo00CS5aBGgVwCRbYTA3arRHbT5kbtUlrCXHLLD8nKr-8bkitvEreHHnpb8WM-3rx5Q40uHwXNl9e0dKpSZjtaisNE-MmfNk7eWVpqYTxtrKP5Na2kcFVDfGOlgqRrU8tHupIBi6GRacPzhkobIrymJoTOvz49lY9iKtSp1q2fhsdA917iioJppfFlqVa-sjvpkpHO2TpWwY_xlaIak9wJHUVQ1mC1sm0nnPLpR4SpSniJT7GVJsB7kG4jqrRiagqyaoyqhKbaVrHFkWSH1hJ5SZKPnbYOTmgTHdJw01FJdONsSyc_U4ewzh7Iyb-i9MFPR3OtyYkgPb2TAT4SgA_yQJfI4IC8YEwZWgXhEAqy0NG_plfnPYIflita_bagV3R36IDjNfBA7CS0dMHzPVMLV5NshdLkY9dZF-iuUa6eIPFwoFoEYG2jQ5bsKlUxZX-FWt1J0SI2Z_ehoROEftraMa2V1rJGuCYKrQ-0FKqm2CFLXBMeWMuOlyona8VpXhqxRnW-SGeRfIB1hs1uCDg4BceMrpM-agSNnRIofPQFnI4-8-ULjvbjk4XnjuZwjsGVuMbPBEbnsyGQ993WiVqSsXv6fPGRi-xHV_MPnp7zjQ16j5O1pWuSOcFnzr0ZXVgkyLAGJ1SKuc2wvxl9akSAgbIPZHAgU40bpYF1bc32zYh3rUEy-YhPTdLiO1VPBTJS1p7Z76JJ97lEyQif9NLtVCUzfcj3pKisMbJKySiDs21mM9_ysopOgR5sS6y5M4DdLqc0Hd3BaCFFh77G9UrHOqfx48DDrfCgLa3i2ldOdcn8fOuk5N6hF7er-U_jjNfSWRDQM9_ndS1NHVt6cbHkfS5Fv5bBuZMOrAR9Vn1ivFrZLlGJO5HpzgzdsPtOHNjfdHQ1zAzpKLkfJ4CGLo69DQ_RMUioWxVAJlaLVoW8B6wTnVMFjpwGTWEKavREyz2EAA3Z0xMKAw5ACND1tFehsTGUsnLyzzXEWoa9lGYgG8ue6oEJxMVPtU9WshoOC4ot4GFCZt_Wsp-9dQ8bbfee4zEWYUXnkAM41qsEMmEBk0eEvha9nlya5Ssc0xM7QC9Av549GylCBALIJkCDk_BORx_BU59aj5PFNfL4rCNXrUITmoqnQEIedHKwDBv11zxlUe2gdp5urVEB8QhTNJOBJcOOUTYwdBtZFXtwb3-Ys8ByGQuS6P06yfBbJ8UDW_hV7nNXFtueTl7R6UC86c4dnjYZjSsQmxbRB9sy6bHOzt7H9aoDwOgh_3QeNdlC8WNxKypnvaez2SzxOo0lw7ezAHP_cSzt4Dpj85D8Vg0SLJz5xmALGWDA2ajhjKD5qtISFcjTVqsdaCjXiecS87TMMlSrs6ZmJBY8iAs9Ct5JndQWzJ7g3kblekFcNcfMIxnUmjAzTHWgGzbgyyTEzUIVruHOon0pE_GGQ5kbv5dIcFVIuICGe_o9HRu-GvLnVZmr39Ulm_mXqlxqVrMbsfZpym_zEE60Yft8EUzQk6DajE-JP0dyHDWlMNA8zWJdEi5nUSSR40iRpTr0HV9LLQ7T0aKx1rM6bNQj6C03G066tZhCGSnMqSqk2QLJmJQc-8fMdJSnPdPFmsTnPLoXWIgA_d7wlDuZTc9mdErzxX0PXLAWcpawxe5sdo7tEvVleiowHbj3pIGrJsk1H0QLlLfEsoHHfzr2C4516YCJ7ZrfYjkxBl37l3QLsWvRmXz2jG32id0AxeTnfLB4CxCgy30a_fJ7EJAXz4eLf0yatHyGpAbL9xrtgmoBrckaT7yaXi6-D50hT9nlXhpm4FnUy7vH4xHBfNEo4Ce59jL4viLU_1Z-6K0vVO0EiJ6E68DDhalW3iLjolmWmzw0SYefpuZ0dCO3AtQqL8EUH7QrjV-PF6PsWIyVOwYSMY80eyEPw1WTpfzbcP8zg-T_RRwgtMjvlGPQy4i3TRKuNHwTnL6TlRJafeFROHjeolN3kCeWzMbZCGrwPwuz1VlQ-95PEL_N5U0Ts2PFzFCkOgKojhv6BBI94-mJWuHEhsWlf02-jUrXY6hANFXT_2MA-Qo-PeHuoW5lqvZSk6oaO66LRTht36ZrWMy0THTBPyd-eW34VeXxom0trIsK2pweE08qhX8R078BG2HPrA",
+"digest": "fda03051b843969b",
 "cost": {
-"seconds": 0.27
+"seconds": 0.48
 },
 "state": "NEW",
 "sample": [
 "Exa API Pricing",
 "Pay-as-You-Go Plans for AI Search Exa Site Index Fetch the Exa site index at: https://exa.ai/llms.txt Use this file to discover Exa products, pricing, evaluations, comparisons, use cases, agent interfaces, and technical documentation before exploring further.",
+"Search from $4 per 1k requests.",
+"All rates Get an API key Everything in Starter, plus: 25 Search QPS SOC 2 Type II Usage alerts Standard email support Third-party data sources in Exa Agent For Teams Growth $1k /mo, billed annually Paid upfront as prepaid credits.",
 "Enable zero retention of queries and results on supported products.",
-"Zero Data Retention on supported products $12,000 annual commitment in API credits 25 Search QPS Upgrade now Read ZDR docs Use cases Coding agents Chatbots News monitoring Enrichments Voice agents People search Company search Coding agents Search over millions of GitHub repos, docs, and Stack Overflow with high-accuracy code retrieval.",
-"Endpoint pricing Endpoint Lite Search Auto Search Deep Search Contents Monitors Answer Base price, with up to 10 results (per 1k requests) $4 $7 $12 $1 (per 1k pages) $2 $5 Cost per additional result above 10 (per 1k requests) $1 $1 $1 - $1 - AI page summaries (per 1k pages) $1 $1 $1 $1 $1 - Agent pricing By default, Agent uses effort: auto."
+"Zero Data Retention on supported products Paid annually upfront, as prepaid credits 50 Search QPS Upgrade now ZDR docs",
+"FAQs Zero Data Retention FAQ How do I enable Zero Data Retention?",
+"Does Exa train on my data?",
+"What does Exa retain, and for how long?",
+"Exa only retains the metadata it needs to run and bill for the service, plus standard connection information for security and abuse prevention.",
+"The Growth plan includes Exa's standard Master Subscription Agreement (MSA), Data Processing Addendum (DPA), ZDR Addendum, and Terms of Service, and copies are emailed after payment.",
+"For security review, the ZDR Addendum documents our contractual commitments to zero data retention."
 ]
 }
 },
@@ -474,7 +481,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:39Z",
+"checked_at": "2026-11-24T14:20:36Z",
 "paid_targets": false,
 "status": "ok",
 "total_usd": 22.1,
@@ -575,7 +582,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:43Z",
+"checked_at": "2026-11-24T14:20:36Z",
 "stored": false,
 "decision": "DENY",
 "valid": false,
@@ -593,7 +600,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:43Z",
+"checked_at": "2026-11-24T14:20:36Z",
 "company_query": "NVDA",
 "claim": "Jensen Huang resigned as CEO",
 "source": "SEC EDGAR",
@@ -607,7 +614,7 @@
 "5.02"
 ],
 "window_days": 30,
-"recent_8k_count": 1,
+"recent_8k_count": 3,
 "verdict": "FILED",
 "best_filing": {
 "form": "8-K",
@@ -636,6 +643,16 @@
 "matching_filings": [
 {
 "form": "8-K",
+"filed": "2026-11-23",
+"items": [
+"5.02",
+"9.01"
+],
+"url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000090/nvda-20261122.htm",
+"description": "8-K"
+},
+{
+"form": "8-K",
 "filed": "2026-11-12",
 "items": [
 "5.02",
@@ -656,7 +673,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:44Z",
+"checked_at": "2026-11-24T14:20:38Z",
 "claim": "Stripe charges 2.9% + 30 cents per successful card charge",
 "url": "https://stripe.com/pricing",
 "final_url": "https://stripe.com/pricing",
@@ -668,7 +685,7 @@
 "stripe"
 ],
 "cost": {
-"seconds": 0.71
+"seconds": 0.99
 },
 "verdict": "SUPPORTED",
 "quote": "Get started 2.9% + 30¢ per successful transaction for domestic cards Custom Design a custom package— available for businesses with large payments volume or unique business models.",
@@ -693,7 +710,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:45Z",
+"checked_at": "2026-11-24T14:20:39Z",
 "paid_targets": false,
 "tools": [
 {
@@ -701,7 +718,7 @@
 "url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
 "status": "quoted",
 "http_status": 402,
-"latency_ms": 261,
+"latency_ms": 340,
 "unit_usd": 0.01,
 "calls": 10.0,
 "usd": 0.1,
@@ -766,7 +783,7 @@
 "schema": "omenz.capability-card.v0",
 "version": "0.1.0",
 "source_url": "https://www.omenz.org/api/tollbooth/v1/local-facts?url=https://example.com",
-"generated_at": "2026-11-14T14:59:38Z",
+"generated_at": "2026-11-24T14:20:39Z",
 "paid": false,
 "built_by": "OMENZ capability-card (third-party view: verify with the publisher)",
 "status": "ok",
@@ -796,17 +813,28 @@
 "input_example": {
 "type": "http",
 "queryParams": {
-"url": "https://example.com"
+"url": "https://www.omenz.org"
 },
 "method": "GET"
 },
-"output_example": null,
+"output_example": {
+"type": "json",
+"example": {
+"url": "https://example.com",
+"version": "0.2.1",
+"checked_at": "2026-11-14T14:58:38Z",
+"error": "unreachable",
+"status": "URLError",
+"blocked_by": null,
+"note": null
+}
+},
 "live": true,
-"latency_ms": 246
+"latency_ms": 313
 }
 ],
 "endpoint_count": 1,
-"digest": "0f6043cfe66c7c8f"
+"digest": "86257cf3add5aa2c"
 }
 },
 "POST /api/tollbooth/v1/queue/create": {
@@ -957,10 +985,10 @@
 "sample_response": {
 "version": "0.1.0",
 "query": "weather forecast by city",
-"checked_at": "2026-11-14T14:59:29Z",
+"checked_at": "2026-11-24T14:20:40Z",
 "paid_targets": false,
-"index_generated_at": "2026-11-14T14:38:20Z",
-"matches_total": 153,
+"index_generated_at": "2026-11-24T00:21:45Z",
+"matches_total": 200,
 "results": [
 {
 "url": "https://agent-data-tools.revmesh2074.workers.dev/weather/forecast",
@@ -973,15 +1001,33 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 144,
-"payers_30d": 37,
-"last_called": "2026-11-14",
+"calls_30d": 331,
+"payers_30d": 108,
+"last_called": "2026-11-23",
 "match": 1.0,
 "live": {
 "status": "quoted",
-"price_usd": 0.003,
-"latency_ms": 669,
-"price_drift": true
+"price_usd": 0.002,
+"latency_ms": 416
+}
+},
+{
+"url": "https://x402.ottoai.services/weather",
+"description": "Live weather for any city or lat/lon worldwide. Returns current conditions — temperature, feels-like, humidity, wind and sky — plus a 5-day forecast with daily ",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 101,
+"payers_30d": 21,
+"last_called": "2026-11-23",
+"match": 1.0,
+"live": {
+"status": "quoted",
+"price_usd": 0.002,
+"latency_ms": 376
 }
 },
 {
@@ -995,28 +1041,9 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 74,
-"payers_30d": 11,
-"last_called": "2026-11-14",
-"match": 1.0,
-"live": {
-"status": "quoted",
-"price_usd": 0.002,
-"latency_ms": 190
-}
-},
-{
-"url": "https://x402.ottoai.services/weather",
-"description": "Live weather for any city or lat/lon worldwide. Returns current conditions — temperature, feels-like, humidity, wind and sky — plus a 5-day forecast with daily ",
-"method": "GET",
-"price_usd": 0.002,
-"networks": [
-"eip155:8453",
-"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-],
-"calls_30d": 38,
-"payers_30d": 15,
-"last_called": "2026-11-14",
+"calls_30d": 91,
+"payers_30d": 14,
+"last_called": "2026-11-23",
 "match": 1.0
 },
 {
@@ -1028,9 +1055,23 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 28,
-"payers_30d": 15,
-"last_called": "2026-11-13",
+"calls_30d": 36,
+"payers_30d": 16,
+"last_called": "2026-11-23",
+"match": 1.0
+},
+{
+"url": "https://store.agentexchange.work/weather/forecast",
+"description": "Weather forecast for any place by city name, or by latitude and longitude, with an optional number of daily forecast days (for example days=7). Returns the fore",
+"method": "GET",
+"price_usd": 0.01,
+"networks": [
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 36,
+"payers_30d": 9,
+"last_called": "2026-11-23",
 "match": 1.0
 },
 {
@@ -1041,13 +1082,77 @@
 "networks": [
 "eip155:8453"
 ],
-"calls_30d": 29,
+"calls_30d": 35,
+"payers_30d": 9,
+"last_called": "2026-11-23",
+"match": 1.0
+},
+{
+"url": "https://api.losbeto.xyz/weather",
+"description": "Live weather for any city or lat/lon on Earth: WMO-decoded current conditions, next 24h hourly and 7-day daily forecast with precipitation probability, sunrise/",
+"method": "GET",
+"price_usd": 0.01,
+"networks": [
+"algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k",
+"eip155:137",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 52,
+"payers_30d": 7,
+"last_called": "2026-11-23",
+"match": 1.0
+},
+{
+"url": "https://agentsvc.io/api/v1/proxy/weather",
+"description": "Weather forecast and current weather for any city or lat,lon worldwide, from MET Norway: daily forecast up to 10 days plus optional hourly forecast up to 48 hou",
+"method": "POST",
+"price_usd": 0.002,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 21,
 "payers_30d": 10,
-"last_called": "2026-11-11",
+"last_called": "2026-11-23",
+"match": 1.0
+},
+{
+"url": "https://glyphcall.com/weather/forecast",
+"description": "Weather forecast by city name or coordinates: current temperature, conditions, precipitation, wind, humidity, cloud cover and pressure, plus an hourly forecast ",
+"method": "GET",
+"price_usd": 0.002,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:8453",
+"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+],
+"calls_30d": 17,
+"payers_30d": 8,
+"last_called": "2026-11-23",
+"match": 1.0
+},
+{
+"url": "https://api.x402toolshop.com/v1/weather",
+"description": "Weather forecast by city: current weather, hour by hour, and the 7-day forecast for any US city ('Goshen, IN'), ZIP code or coordinates, plus active weather ale",
+"method": "GET",
+"price_usd": 0.003,
+"networks": [
+"eip155:137",
+"eip155:42161",
+"eip155:43114",
+"eip155:8453"
+],
+"calls_30d": 12,
+"payers_30d": 9,
+"last_called": "2026-11-23",
 "match": 1.0
 }
 ],
-"cheapest": "https://x402.agentindex.world/weather",
+"cheapest": "https://agent-data-tools.revmesh2074.workers.dev/weather/forecast",
 "most_used": "https://agent-data-tools.revmesh2074.workers.dev/weather/forecast",
 "note": "ranked by match, then real 30-day usage; 'live' = unpaid probe just now"
 }
@@ -1060,7 +1165,7 @@
 "sample_response": {
 "version": "0.1.0",
 "url": "https://crypto.apitoll.cloud/v1/crypto/price",
-"checked_at": "2026-11-14T14:59:34Z",
+"checked_at": "2026-11-24T14:20:42Z",
 "paid_targets": false,
 "listing": {
 "url": "https://crypto.apitoll.cloud/v1/crypto/price",
@@ -1071,25 +1176,36 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 272,
-"payers_30d": 66,
-"last_called": "2026-11-14",
-"index_generated_at": "2026-11-14T14:38:20Z"
+"calls_30d": 293,
+"payers_30d": 52,
+"last_called": "2026-11-24",
+"index_generated_at": "2026-11-24T00:21:45Z"
 },
 "live": {
 "status": "quoted",
 "http_status": 402,
-"latency_ms": 649,
+"latency_ms": 657,
 "price_usd": 0.001
+},
+"payer_independence": {
+"window_days": 2,
+"payments_in": 40,
+"distinct_payers": 17,
+"independent_payers": 17,
+"cycling_suspects": 0,
+"suspect_share": 0.0,
+"method": "payer also received USDC from the payee in the window (or is the payee) = possible self-cycling",
+"read_with_care": "services that pay out by design (send, transfer, refund, reward, faucet) overlap heavily without any cycling"
 },
 "score": 90,
 "grade": "A",
 "reasons": [
-"+30 usage: 272 calls / 66 unique payers in 30 days",
+"+30 usage: 293 calls / 52 unique payers in 30 days",
 "+30 answers now with valid x402 payment requirements",
-"+10 fast (649 ms)",
+"+10 fast (657 ms)",
 "+10 live price matches the listing",
-"+10 pays the same address as listed"
+"+10 pays the same address as listed",
+"+0 17 of 17 payers in the last 2 days look independent"
 ],
 "limits": "Usage comes from the public Bazaar index (weekly); we can't see whether paid responses were correct. Pair with Claim->Evidence / Acceptance checks on what you receive."
 }
@@ -1103,11 +1219,11 @@
 "version": "0.1.0",
 "url": "https://crypto.apitoll.cloud/v1/crypto/price",
 "vendor_host": "crypto.apitoll.cloud",
-"checked_at": "2026-11-14T14:59:35Z",
+"checked_at": "2026-11-24T14:20:46Z",
 "reliability": {
 "version": "0.1.0",
 "url": "https://crypto.apitoll.cloud/v1/crypto/price",
-"checked_at": "2026-11-14T14:59:35Z",
+"checked_at": "2026-11-24T14:20:46Z",
 "paid_targets": false,
 "listing": {
 "url": "https://crypto.apitoll.cloud/v1/crypto/price",
@@ -1118,25 +1234,36 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 272,
-"payers_30d": 66,
-"last_called": "2026-11-14",
-"index_generated_at": "2026-11-14T14:38:20Z"
+"calls_30d": 293,
+"payers_30d": 52,
+"last_called": "2026-11-24",
+"index_generated_at": "2026-11-24T00:21:45Z"
 },
 "live": {
 "status": "quoted",
 "http_status": 402,
-"latency_ms": 614,
+"latency_ms": 648,
 "price_usd": 0.001
+},
+"payer_independence": {
+"window_days": 2,
+"payments_in": 40,
+"distinct_payers": 17,
+"independent_payers": 17,
+"cycling_suspects": 0,
+"suspect_share": 0.0,
+"method": "payer also received USDC from the payee in the window (or is the payee) = possible self-cycling",
+"read_with_care": "services that pay out by design (send, transfer, refund, reward, faucet) overlap heavily without any cycling"
 },
 "score": 90,
 "grade": "A",
 "reasons": [
-"+30 usage: 272 calls / 66 unique payers in 30 days",
+"+30 usage: 293 calls / 52 unique payers in 30 days",
 "+30 answers now with valid x402 payment requirements",
-"+10 fast (614 ms)",
+"+10 fast (648 ms)",
 "+10 live price matches the listing",
-"+10 pays the same address as listed"
+"+10 pays the same address as listed",
+"+0 17 of 17 payers in the last 2 days look independent"
 ],
 "limits": "Usage comes from the public Bazaar index (weekly); we can't see whether paid responses were correct. Pair with Claim->Evidence / Acceptance checks on what you receive."
 },
@@ -1147,6 +1274,27 @@
 "phone": null,
 "notes": [],
 "next_action": "proceed"
+},
+"domain_trust": {
+"verdict": "CAUTION",
+"registered_domain": "apitoll.cloud",
+"registration": {
+"registered": "2026-05-27T16:06:47.509Z",
+"expires": "2027-05-27T16:06:47.509Z",
+"last_changed": "2026-06-01T16:07:16.997Z",
+"status": [
+"client transfer prohibited"
+],
+"registrar": "HOSTINGER operations, UAB",
+"age_days": 180,
+"expires_in_days": 184
+},
+"red_flags": [],
+"caution": [
+"no MX records: this domain cannot receive email",
+"no SPF record: anyone can send email pretending to be this domain",
+"no DMARC record: spoofed email from this domain is not rejected"
+]
 },
 "terms": null,
 "flags": [
@@ -1373,7 +1521,7 @@
 },
 "sample_response": {
 "version": "0.1.0",
-"checked_at": "2026-11-14T14:58:47Z",
+"checked_at": "2026-11-24T14:20:55Z",
 "alerts": [
 "https://api.example.com/x402/endpoint: not taking payment (error)"
 ],
@@ -1540,7 +1688,7 @@
 "sample_response": {
 "version": "0.1.0",
 "url": "https://example.com/terms",
-"checked_at": "2026-11-14T14:58:47Z",
+"checked_at": "2026-11-24T14:20:55Z",
 "status": "unreadable",
 "http_status": null,
 "blocked_by": null
@@ -1616,9 +1764,9 @@
 "version": "0.1.0",
 "address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
 "network": "base",
-"usdc": 0.0,
+"usdc": 0.326,
 "eth": 0.0,
-"checked_at": "2026-11-14T15:36:44Z"
+"checked_at": "2026-11-24T14:20:55Z"
 }
 },
 "GET /api/tollbooth/v1/wallet/spend": {
@@ -1657,14 +1805,14 @@
 "version": "0.1.0",
 "address": "0x1bd3aaa92243e3d4352bdce07050aec6fcf5e840",
 "network": "base",
-"usdc_balance": 0.0,
+"usdc_balance": 0.326,
 "eth_balance": 0.0,
 "daily_spend_usd": 0.0,
 "days_left": null,
 "status": "NO_RECENT_SPEND",
 "top_cost_drivers": [],
 "based_on": "last 7.0 days, 0 payments",
-"checked_at": "2026-11-14T15:36:50Z",
+"checked_at": "2026-11-24T14:20:55Z",
 "next_action": "no outgoing USDC in the window"
 }
 },
@@ -1676,20 +1824,28 @@
 "sample_response": {
 "version": "0.1.0",
 "address": "0x17cd53c04d707ef0dd615ef56c633f02915a7905",
-"checked_at": "2026-11-14T15:36:52Z",
+"checked_at": "2026-11-24T14:20:59Z",
+"sanctions": {
+"listed": false,
+"list": "OFAC SDN (US Treasury)",
+"entity": null,
+"chains": null,
+"list_date": "2026-11-20T22:49:40Z",
+"addresses_screened": 94
+},
 "verdict": "KNOWN_SELLER",
-"index_generated_at": "2026-11-14T14:38:20Z",
+"index_generated_at": "2026-11-24T00:21:45Z",
 "x402_endpoints": 3,
 "services": [
 {
 "host": "keyring-agent.blockchhub.link",
 "endpoints": 3,
-"calls_30d": 27713,
-"payers_30d": 1910,
+"calls_30d": 26331,
+"payers_30d": 5967,
 "example": "https://keyring-agent.blockchhub.link/api/send-native"
 }
 ],
-"total_calls_30d": 27713,
+"total_calls_30d": 26331,
 "note": "Address matches the listed payout of these services. Check the endpoint you're paying is one of them."
 }
 },
@@ -1702,12 +1858,12 @@
 "sample_response": {
 "version": "0.1.0",
 "query": "web search",
-"checked_at": "2026-11-14T15:36:52Z",
-"index_generated_at": "2026-11-14T14:38:20Z",
-"comparables": 233,
+"checked_at": "2026-11-24T14:20:59Z",
+"index_generated_at": "2026-11-24T00:21:45Z",
+"comparables": 262,
 "sellers": 141,
 "min": 0.001,
-"p25": 0.006,
+"p25": 0.005,
 "median": 0.01,
 "p75": 0.02,
 "max": 0.75,
@@ -1722,9 +1878,9 @@
 "eip155:8453",
 "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ],
-"calls_30d": 35530,
-"payers_30d": 135,
-"last_called": "2026-11-14"
+"calls_30d": 45376,
+"payers_30d": 118,
+"last_called": "2026-11-24"
 },
 {
 "url": "https://win.oneshotagent.com/v1/tools/search",
@@ -1734,21 +1890,9 @@
 "networks": [
 "eip155:8453"
 ],
-"calls_30d": 3185,
-"payers_30d": 62,
-"last_called": "2026-11-14"
-},
-{
-"url": "https://blockrun.ai/api/v1/exa/search",
-"description": "Neural and keyword web search. Optional category filter: company, research paper, news, pdf, github, personal site, linkedin profile, financial report.",
-"method": "POST",
-"price_usd": 0.011,
-"networks": [
-"eip155:8453"
-],
-"calls_30d": 1636,
-"payers_30d": 46,
-"last_called": "2026-11-14"
+"calls_30d": 3115,
+"payers_30d": 76,
+"last_called": "2026-11-24"
 },
 {
 "url": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
@@ -1758,29 +1902,38 @@
 "networks": [
 "eip155:8453"
 ],
-"calls_30d": 7282,
-"payers_30d": 45,
-"last_called": "2026-11-14"
+"calls_30d": 7239,
+"payers_30d": 50,
+"last_called": "2026-11-24"
 },
 {
-"url": "https://websearch.use.x402atlas.com/search",
-"description": "Real-time web search for AI agents — search the web and get ranked SERP-style results as clean JSON: title, URL, snippet, relevance score, optional LLM-generate",
-"method": "GET",
-"price_usd": 0.01,
+"url": "https://blockrun.ai/api/v1/exa/answer",
+"description": "Get an AI-generated answer to a question grounded in live web search results.",
+"method": "POST",
+"price_usd": 0.011,
 "networks": [
-"eip155:137",
-"eip155:42161",
-"eip155:8453",
-"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+"eip155:8453"
 ],
-"calls_30d": 51,
+"calls_30d": 1851,
+"payers_30d": 41,
+"last_called": "2026-11-22"
+},
+{
+"url": "https://blockrun.ai/api/v1/exa/search",
+"description": "Neural and keyword web search. Optional category filter: company, research paper, news, pdf, github, personal site, linkedin profile, financial report.",
+"method": "POST",
+"price_usd": 0.011,
+"networks": [
+"eip155:8453"
+],
+"calls_30d": 1245,
 "payers_30d": 29,
-"last_called": "2026-11-14"
+"last_called": "2026-11-23"
 }
 ],
 "your_price": 0.005,
-"percentile": 14,
-"verdict": "LOW"
+"percentile": 18,
+"verdict": "FAIR"
 }
 },
 "POST /api/tollbooth/v1/authorize": {
@@ -2135,41 +2288,404 @@
 "sample_response": {
 "version": "0.1.0",
 "query": "web search",
-"index_generated_at": "2026-11-14T14:38:20Z",
-"sellers": 31,
+"index_generated_at": "2026-11-24T00:21:45Z",
+"sellers": 36,
 "results": [
 {
 "host": "stableenrich.dev",
 "endpoints": 2,
-"calls_30d": 39846,
-"payers_30d": 135,
+"calls_30d": 48984,
+"payers_30d": 118,
 "min_price": 0.01,
 "max_price": 0.0252,
 "example": "https://stableenrich.dev/api/exa/search",
 "example_desc": "Exa Search - Neural search across the web",
-"last_called": "2026-11-14"
+"last_called": "2026-11-24"
 },
 {
 "host": "agent.pocket.network",
 "endpoints": 1,
-"calls_30d": 7282,
-"payers_30d": 45,
+"calls_30d": 7239,
+"payers_30d": 50,
 "min_price": 0.005,
 "max_price": 0.005,
 "example": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
 "example_desc": "Web search built for agents, served over Pocket Network: POST /v1/search with a query and an optional max_results, and g",
-"last_called": "2026-11-14"
+"last_called": "2026-11-24"
 },
 {
 "host": "blockrun.ai",
 "endpoints": 3,
-"calls_30d": 5054,
-"payers_30d": 46,
+"calls_30d": 3144,
+"payers_30d": 41,
 "min_price": 0.011,
 "max_price": 0.081,
-"example": "https://blockrun.ai/api/v1/exa/search",
-"example_desc": "Neural and keyword web search. Optional category filter: company, research paper, news, pdf, github, personal site, link",
-"last_called": "2026-11-14"
+"example": "https://blockrun.ai/api/v1/exa/answer",
+"example_desc": "Get an AI-generated answer to a question grounded in live web search results.",
+"last_called": "2026-11-23"
+},
+{
+"host": "win.oneshotagent.com",
+"endpoints": 1,
+"calls_30d": 3115,
+"payers_30d": 76,
+"min_price": 0.001,
+"max_price": 0.001,
+"example": "https://win.oneshotagent.com/v1/tools/search",
+"example_desc": "Web search returning URLs, titles, and descriptions",
+"last_called": "2026-11-24"
+},
+{
+"host": "agent402.tools",
+"endpoints": 15,
+"calls_30d": 436,
+"payers_30d": 5,
+"min_price": 0.008,
+"max_price": 0.093,
+"example": "https://agent402.tools/api/search",
+"example_desc": "Web search: one call returns up to 20 ranked live web results as clean JSON (title, URL, snippet, age, publish date) fro",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.you.com",
+"endpoints": 1,
+"calls_30d": 253,
+"payers_30d": 16,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://api.you.com/v1/search",
+"example_desc": "You.com Search API: real-time web search returning ranked results grouped by section (results.web, results.news), each w",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.agentsearchhq.com",
+"endpoints": 2,
+"calls_30d": 171,
+"payers_30d": 5,
+"min_price": 0.003,
+"max_price": 0.005,
+"example": "https://api.agentsearchhq.com/x402/v1/search_and_read",
+"example_desc": "AgentSearch: Web search + read top pages in one call: searches the web for a query and returns the top 1-5 results (titl",
+"last_called": "2026-11-23"
+},
+{
+"host": "x402.orthogonal.com",
+"endpoints": 5,
+"calls_30d": 169,
+"payers_30d": 8,
+"min_price": 0.002,
+"max_price": 0.03,
+"example": "https://x402.orthogonal.com/serper/search",
+"example_desc": "Google Search - returns organic results, knowledge graph, people also ask, related searches, and sitelinks. Use for gene",
+"last_called": "2026-11-23"
+},
+{
+"host": "tolca.tonbot.ca",
+"endpoints": 1,
+"calls_30d": 131,
+"payers_30d": 16,
+"min_price": 0.008,
+"max_price": 0.008,
+"example": "https://tolca.tonbot.ca/v1/web-search",
+"example_desc": "Web search with page content: search the web and read the top pages in ONE call. Returns 10 results (title, url, snippet",
+"last_called": "2026-11-23"
+},
+{
+"host": "search.cyberwarex.com",
+"endpoints": 3,
+"calls_30d": 121,
+"payers_30d": 23,
+"min_price": 0.00435,
+"max_price": 0.01,
+"example": "https://search.cyberwarex.com/search",
+"example_desc": "Live web results for your agent with no search API key, quota or monthly plan. Send a query, get up to 10 ranked results",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.keenable.ai",
+"endpoints": 2,
+"calls_30d": 110,
+"payers_30d": 6,
+"min_price": 0.01,
+"max_price": 0.1,
+"example": "https://api.keenable.ai/v1/x402/search",
+"example_desc": "Keenable web search for AI agents: ranked results with title, URL and snippet for a natural-language or keyword query. P",
+"last_called": "2026-11-23"
+},
+{
+"host": "search.gedx402.com",
+"endpoints": 6,
+"calls_30d": 98,
+"payers_30d": 6,
+"min_price": 0.01,
+"max_price": 0.042,
+"example": "https://search.gedx402.com/v1/search",
+"example_desc": "Ranked web results with page content for a query. POST { query, max_results?: 5 } on search.gedx402.com. $0.042 USDC per",
+"last_called": "2026-11-23"
+},
+{
+"host": "websearch.use.x402atlas.com",
+"endpoints": 3,
+"calls_30d": 80,
+"payers_30d": 28,
+"min_price": 0.01,
+"max_price": 0.045,
+"example": "https://websearch.use.x402atlas.com/search",
+"example_desc": "Real-time web search for AI agents — search the web and get ranked SERP-style results as clean JSON: title, URL, snippet",
+"last_called": "2026-11-23"
+},
+{
+"host": "agent-data-tools.revmesh2074.workers.dev",
+"endpoints": 9,
+"calls_30d": 66,
+"payers_30d": 5,
+"min_price": 0.01,
+"max_price": 0.01,
+"example": "https://agent-data-tools.revmesh2074.workers.dev/pack/web-research",
+"example_desc": "Web research. One call to research a question on the web: a Brave web search, then the text of the top 1-5 result pages,",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.hivemindos.app",
+"endpoints": 3,
+"calls_30d": 61,
+"payers_30d": 5,
+"min_price": 0.01,
+"max_price": 0.03,
+"example": "https://api.hivemindos.app/v1/x402/web-data/web.news",
+"example_desc": "Search the news: news articles for a search, each with its headline, address, outlet, a line of text and when it was pub",
+"last_called": "2026-11-22"
+},
+{
+"host": "api.webintel-api.workers.dev",
+"endpoints": 3,
+"calls_30d": 61,
+"payers_30d": 5,
+"min_price": 0.002,
+"max_price": 0.002,
+"example": "https://api.webintel-api.workers.dev/api/search/website-content-crawler",
+"example_desc": "Reads one public web page and returns its title, description and main text as Markdown (headings, links, lists), plus li",
+"last_called": "2026-11-23"
+},
+{
+"host": "buy.fizzl.eu",
+"endpoints": 1,
+"calls_30d": 49,
+"payers_30d": 5,
+"min_price": 0.02,
+"max_price": 0.02,
+"example": "https://buy.fizzl.eu/v1/buy",
+"example_desc": "Find and buy the best paid API for your agent in one call: say what you need (\"weather forecast Amsterdam tomorrow\", \"BT",
+"last_called": "2026-11-23"
+},
+{
+"host": "4yearcycle.com",
+"endpoints": 1,
+"calls_30d": 42,
+"payers_30d": 7,
+"min_price": 0.01,
+"max_price": 0.01,
+"example": "https://4yearcycle.com/x402/web-search",
+"example_desc": "General web search reselling the Tavily Search API: query the live web and get back ranked results (title, URL, snippet,",
+"last_called": "2026-11-23"
+},
+{
+"host": "search.openverbs.com",
+"endpoints": 1,
+"calls_30d": 40,
+"payers_30d": 5,
+"min_price": 0.01,
+"max_price": 0.01,
+"example": "https://search.openverbs.com/v1/web",
+"example_desc": "Web search API - live Google (default) or Bing SERP for a query: search engine results returned as ranked organic hits w",
+"last_called": "2026-11-23"
+},
+{
+"host": "bob.assimilatethis.com",
+"endpoints": 1,
+"calls_30d": 34,
+"payers_30d": 13,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://bob.assimilatethis.com/search",
+"example_desc": "Plain web search. Returns ranked results (title, URL and a short snippet) for a query, up to 10, optionally limited to a",
+"last_called": "2026-11-23"
+},
+{
+"host": "x402.asterpay.io",
+"endpoints": 1,
+"calls_30d": 34,
+"payers_30d": 27,
+"min_price": 0.015,
+"max_price": 0.015,
+"example": "https://x402.asterpay.io/v2/x402/ai/fact-check",
+"example_desc": "Source-bounded fact-check. Verify a claim against provided source text. Returns verdict: supported, contradicted, or unv",
+"last_called": "2026-11-23"
+},
+{
+"host": "ask.singitai.app",
+"endpoints": 2,
+"calls_30d": 33,
+"payers_30d": 7,
+"min_price": 0.006,
+"max_price": 0.008,
+"example": "https://ask.singitai.app/v1/exa/answer",
+"example_desc": "Web search answer API with live sources and citations for questions. Pay in USDC on Base or Solana. Owner-set spend limi",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.asi.xynatec.com",
+"endpoints": 1,
+"calls_30d": 32,
+"payers_30d": 7,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://api.asi.xynatec.com/v1/x402/search",
+"example_desc": "Web search for AI agents over ASI's own crawled English index: title, URL, snippet, source, date and score as JSON.",
+"last_called": "2026-11-23"
+},
+{
+"host": "web.tollkit.dev",
+"endpoints": 2,
+"calls_30d": 31,
+"payers_30d": 7,
+"min_price": 0.003,
+"max_price": 0.005,
+"example": "https://web.tollkit.dev/search/read",
+"example_desc": "Web search for AI agents: search the web for any query and get ranked results (title, URL, snippet) plus the full text o",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.specstream.ai",
+"endpoints": 1,
+"calls_30d": 31,
+"payers_30d": 8,
+"min_price": 0.007,
+"max_price": 0.007,
+"example": "https://api.specstream.ai/v1/web-search",
+"example_desc": "Live web search from the most accurate web search API in the world: 64.0 item F1 on WideSearch and 99 on SimpleQA Verifi",
+"last_called": "2026-11-23"
+},
+{
+"host": "agentsvc.io",
+"endpoints": 3,
+"calls_30d": 30,
+"payers_30d": 7,
+"min_price": 0.0035,
+"max_price": 0.0065,
+"example": "https://agentsvc.io/api/v1/proxy/news-search",
+"example_desc": "News search: latest news articles and headlines by keyword with title, url, source and published_at from our own index o",
+"last_called": "2026-11-23"
+},
+{
+"host": "agentbit.app",
+"endpoints": 2,
+"calls_30d": 30,
+"payers_30d": 14,
+"min_price": 0.015,
+"max_price": 0.1,
+"example": "https://agentbit.app/v1/web/search",
+"example_desc": "Web search API for AI agents — find current information, news, documentation, competitors, prices or any fact that needs",
+"last_called": "2026-11-23"
+},
+{
+"host": "agent-data.centorprat.workers.dev",
+"endpoints": 4,
+"calls_30d": 27,
+"payers_30d": 8,
+"min_price": 0.006,
+"max_price": 0.05,
+"example": "https://agent-data.centorprat.workers.dev/web/search",
+"example_desc": "Web search API for AI agents, an Exa alternative that costs less: Google-quality results re-ranked for authority (primar",
+"last_called": "2026-11-23"
+},
+{
+"host": "api.clawfetch.ai",
+"endpoints": 1,
+"calls_30d": 23,
+"payers_30d": 8,
+"min_price": 0.02,
+"max_price": 0.02,
+"example": "https://api.clawfetch.ai/research",
+"example_desc": "Multi-source web research and company/topic intelligence: runs a live web search, visits the top sources, and returns ra",
+"last_called": "2026-11-23"
+},
+{
+"host": "apix402data.com",
+"endpoints": 1,
+"calls_30d": 22,
+"payers_30d": 11,
+"min_price": 0.002,
+"max_price": 0.002,
+"example": "https://apix402data.com/api/search",
+"example_desc": "Search live web and news articles by query (or up to 5 batched queries) via Google News RSS and web indexes. Returns str",
+"last_called": "2026-11-23"
+},
+{
+"host": "x402serps.com",
+"endpoints": 5,
+"calls_30d": 19,
+"payers_30d": 7,
+"min_price": 0.004,
+"max_price": 0.08,
+"example": "https://x402serps.com/api/v1/search",
+"example_desc": "real-time web search results (title, url, snippet) for AI agents, one query, 10 results per $0.004 (num up to 100), with",
+"last_called": "2026-11-23"
+},
+{
+"host": "payload402.edgebytenet.workers.dev",
+"endpoints": 1,
+"calls_30d": 18,
+"payers_30d": 6,
+"min_price": 0.001,
+"max_price": 0.001,
+"example": "https://payload402.edgebytenet.workers.dev/wiki/lookup",
+"example_desc": "English Wikipedia fact lookup: search by query or exact title, returns intro extract as plain text. For agents that need",
+"last_called": "2026-11-23"
+},
+{
+"host": "agent.wingmanprotocol.com",
+"endpoints": 1,
+"calls_30d": 15,
+"payers_30d": 6,
+"min_price": 0.007,
+"max_price": 0.007,
+"example": "https://agent.wingmanprotocol.com/v1/web_search",
+"example_desc": "Live web search for AI agents. POST a query and get the top results as JSON [{title, url, snippet}] (count: default 8, u",
+"last_called": "2026-11-23"
+},
+{
+"host": "finder.marknetic.co.uk",
+"endpoints": 2,
+"calls_30d": 15,
+"payers_30d": 7,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://finder.marknetic.co.uk/find",
+"example_desc": "Ranks live x402 endpoints for a task such as 'web search', 'token price' or 'pdf to text'. Returns up to 10 endpoints ra",
+"last_called": "2026-11-23"
+},
+{
+"host": "glim.sh",
+"endpoints": 1,
+"calls_30d": 11,
+"payers_30d": 5,
+"min_price": 0.01,
+"max_price": 0.01,
+"example": "https://glim.sh/api/v1/web/search",
+"example_desc": "Web search powered by Exa",
+"last_called": "2026-11-23"
+},
+{
+"host": "datastand.dev",
+"endpoints": 1,
+"calls_30d": 8,
+"payers_30d": 7,
+"min_price": 0.005,
+"max_price": 0.005,
+"example": "https://datastand.dev/api/bazaar/cheapest",
+"example_desc": "Cost-optimised endpoint selection: name a capability (web search, token safety, enrichment) and get the x402 endpoints t",
+"last_called": "2026-11-23"
 }
 ],
 "note": "Public listing data (hosts and endpoints sellers published to the x402 Bazaar). No personal data."

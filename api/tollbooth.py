@@ -98,6 +98,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/usdc/route-check?from=&to=&amount=  $0.005  USDC Route Check: CCTP Standard/Fast vs Across/Relay, cheapest + fastest
   GET  /api/tollbooth/v1/usdc/native-check?chain=&token=  $0.002  USDC Native Check: Circle native USDC vs bridged (USDC.e/USDbC)
   GET  /api/tollbooth/v1/work/history?agent=       $0.002  Work History: an agent's signed work record, verified vs reported vs test
+  GET  /api/tollbooth/v1/sec/facts?ticker=        $0.008  SEC Facts: a US public company's key reported figures from its SEC filings
   GET  /api/tollbooth/v1/address/screen?address=   $0.002  Address Screen: OFAC sanctions, any chain
   GET  /api/tollbooth/v1/agent/trust?address=      $0.005  Agent Trust: know-your-agent score with reasons
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
@@ -186,6 +187,7 @@ import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
 import gas_compare  # noqa: E402
 import price_check  # noqa: E402
+import sec_facts  # noqa: E402
 import usdc_route  # noqa: E402
 import doc_read  # noqa: E402
 import address_screen  # noqa: E402
@@ -786,6 +788,10 @@ _paid("GET", "usdc/native-check", "$0.002",
       {"chain": "base", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"},
       {"properties": {"chain": {"type": "string", "description": "ethereum, base, arbitrum, optimism, polygon, avalanche, solana"},
                       "token": {"type": "string", "description": "token contract (0x...) or Solana mint address"}}, "required": ["chain", "token"]})
+_paid("GET", "sec/facts", "$0.008",
+      "OMENZ SEC Facts: a US public company's key numbers from its own SEC filings (EDGAR XBRL). One ticker: name, CIK, industry; latest fiscal year + quarter revenue, net income, diluted EPS, assets, liabilities, cash, shares, operating cash flow, each with period, form, filed date, XBRL tag; computed YoY growth, net margin, debt-to-assets; last 10 filings. Filing-date data: not a price quote, not advice. No AI. By OMENZ.",
+      {"ticker": "AAPL"},
+      {"properties": {"ticker": {"type": "string", "description": "US-listed ticker (AAPL, BRK.B) or numeric SEC CIK"}}, "required": ["ticker"]})
 _paid("GET", "work/history", "$0.002",
       "OMENZ Work History: an agent's portable, signed work record across OMENZ tools (queues, contracts, checkpoints). Every event is labeled verified (OMENZ ran the acceptance tests), reported (the worker/owner said so) or test (sandbox). Completion rates from verified and reported separately, sample-size and self-dealing warnings, distinct counterparties. No record = NO_HISTORY (unknown, not bad). Ids hashed. By OMENZ.",
       {"agent": "worker-7"},
@@ -2457,6 +2463,15 @@ def usdc_route_check_route(request: Request, to: str | None = None, amount: str 
 def usdc_native_check_route(request: Request, chain: str | None = None, token: str | None = None):
     r = usdc_route.native({"chain": chain, "token": token})
     request.state.extra.update({"action": "usdc_native_check", "verdict": r.get("verdict")})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/sec/facts")
+def sec_facts_route(request: Request, ticker: str = Query(...)):
+    r = sec_facts.check(ticker)
+    request.state.extra.update({"action": "sec_facts", "status": r.get("status")})
     if r.get("error"):
         return JSONResponse(r, status_code=422)
     return r

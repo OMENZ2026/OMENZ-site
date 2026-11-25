@@ -3576,5 +3576,291 @@
 "signed_manifest": "(Ed25519 token)",
 "next": "Send refund_request_token (and this packet) to the seller, their PO Box or the marketplace you bought through."
 }
+},
+"GET /api/tollbooth/v1/sec/facts": {
+"status": 200,
+"example_input": {
+"ticker": "AAPL"
+},
+"sample_response": {
+"service": "OMENZ SEC Facts",
+"version": "0.1.0",
+"checked_at": "2026-11-25T05:40:26Z",
+"query": "AAPL",
+"source": "SEC EDGAR (XBRL companyfacts + submissions), public US government data; no exchange or vendor data",
+"notice": "Not a price quote and not investment advice: these are figures the company reported in its SEC filings, plus simple arithmetic OMENZ computed from them.",
+"source_urls": {
+"submissions": "https://data.sec.gov/submissions/CIK0000320193.json",
+"companyfacts": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json"
+},
+"company": {
+"name": "Apple Inc.",
+"cik": "0000320193",
+"tickers": [
+"AAPL"
+],
+"exchanges": [
+"Nasdaq"
+],
+"sic": "3571",
+"industry": "Electronic Computers",
+"fiscal_year_end_mmdd": "0925",
+"state_of_incorporation": "CA",
+"filer_category": "Large accelerated filer",
+"entity_type": "operating"
+},
+"latest_filings": [
+{
+"form": "4",
+"filed": "2026-11-19",
+"report_date": "2026-11-17",
+"accession": "0001140361-26-044952",
+"description": "FORM 4",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126044952/xslF345X06/form4.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126044952/0001140361-26-044952-index.htm"
+},
+{
+"form": "4",
+"filed": "2026-11-18",
+"report_date": "2026-11-16",
+"accession": "0001140361-26-044773",
+"description": "FORM 4",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126044773/xslF345X06/form4.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126044773/0001140361-26-044773-index.htm"
+},
+{
+"form": "144",
+"filed": "2026-11-16",
+"report_date": null,
+"accession": "0001921094-26-001188",
+"description": null,
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000192109426001188/xsl144X01/primary_doc.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000192109426001188/0001921094-26-001188-index.htm"
+},
+{
+"form": "4",
+"filed": "2026-11-12",
+"report_date": "2026-11-10",
+"accession": "0001140361-26-043484",
+"description": "FORM 4",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126043484/xslF345X06/form4.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126043484/0001140361-26-043484-index.htm"
+},
+{
+"form": "25-NSE",
+"filed": "2026-11-09",
+"report_date": null,
+"accession": "0001354457-26-001062",
+"description": null,
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000135445726001062/xslF25X02/primary_doc.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000135445726001062/0001354457-26-001062-index.htm"
+},
+{
+"form": "8-K",
+"filed": "2026-11-09",
+"report_date": "2026-11-05",
+"accession": "0001140361-26-042798",
+"description": null,
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/ef20085077_8k.htm",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/0001140361-26-042798-index.htm"
+},
+{
+"form": "424B2",
+"filed": "2026-11-06",
+"report_date": null,
+"accession": "0001140361-26-042505",
+"description": "424B2",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042505/ny20084621x2_424b2.htm",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042505/0001140361-26-042505-index.htm"
+},
+{
+"form": "FWP",
+"filed": "2026-11-06",
+"report_date": null,
+"accession": "0001140361-26-042173",
+"description": "FWP",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042173/ny20084621x3_fwp.htm",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042173/0001140361-26-042173-index.htm"
+},
+{
+"form": "4",
+"filed": "2026-11-05",
+"report_date": "2026-11-03",
+"accession": "0001140361-26-042149",
+"description": "FORM 4",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042149/xslF345X06/form4.xml",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042149/0001140361-26-042149-index.htm"
+},
+{
+"form": "424B2",
+"filed": "2026-11-05",
+"report_date": null,
+"accession": "0001140361-26-042046",
+"description": "424B2",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042046/ny20084621x1_424b2.htm",
+"index_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042046/0001140361-26-042046-index.htm"
+}
+],
+"key_filings": {
+"10-K": {
+"filed": "2026-11-03",
+"report_date": "2026-09-26",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm"
+},
+"10-Q": {
+"filed": "2026-07-31",
+"report_date": "2026-06-27",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm"
+},
+"8-K": {
+"filed": "2026-11-09",
+"report_date": "2026-11-05",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/ef20085077_8k.htm"
+},
+"DEF 14A": {
+"filed": "2026-01-08",
+"report_date": "2026-02-24",
+"url": "https://www.sec.gov/Archives/edgar/data/320193/000130817926000008/aapl014016-def14a.htm"
+}
+},
+"status": "OK",
+"latest_fiscal_year": {
+"period_end": "2026-09-26",
+"figures": {
+"revenue": {
+"value": 478834000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+"period_start": "2025-09-28",
+"period_days": 363,
+"basis": "fiscal_year"
+},
+"net_income": {
+"value": 132175000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:NetIncomeLoss",
+"period_start": "2025-09-28",
+"period_days": 363,
+"basis": "fiscal_year"
+},
+"eps_diluted": {
+"value": 8.98,
+"unit": "USD/shares",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:EarningsPerShareDiluted",
+"period_start": "2025-09-28",
+"period_days": 363,
+"basis": "fiscal_year"
+},
+"total_assets": {
+"value": 404548000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:Assets",
+"basis": "as_of_date"
+},
+"total_liabilities": {
+"value": 292455000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:Liabilities",
+"basis": "as_of_date"
+},
+"cash": {
+"value": 36305000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+"basis": "as_of_date"
+},
+"shares_outstanding": {
+"value": 14532182000,
+"unit": "shares",
+"period_end": "2026-10-23",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "dei:EntityCommonStockSharesOutstanding",
+"basis": "as_of_date"
+},
+"operating_cash_flow": {
+"value": 145097000000,
+"unit": "USD",
+"period_end": "2026-09-26",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+"period_start": "2025-09-28",
+"period_days": 363,
+"basis": "fiscal_year"
+}
+},
+"not_reported": null,
+"skipped_stale": null
+},
+"latest_quarter": {
+"note": "latest quarterly XBRL figures (period ending 2026-06-27) are older than the latest annual report; omitted so they are not mistaken for current numbers"
+},
+"computed": {
+"label": "COMPUTED by OMENZ from the reported figures in this response; not numbers the company reported",
+"revenue_growth_yoy_annual": {
+"value": 0.150598,
+"percent": 15.06,
+"formula": "(revenue - revenue same period prior year) / |prior|",
+"current_period_end": "2026-09-26",
+"prior": {
+"value": 416161000000,
+"period_start": "2024-09-29",
+"period_end": "2025-09-27",
+"form": "10-K",
+"filed": "2026-11-03",
+"accession": "0000320193-26-000026",
+"xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+}
+},
+"net_margin_annual": {
+"value": 0.276,
+"percent": 27.6,
+"formula": "net_income / revenue (same period)",
+"period_end": "2026-09-26"
+},
+"debt_to_assets_annual": {
+"value": 0.7229,
+"formula": "total_liabilities / total_assets (ALL liabilities, not only interest-bearing debt)",
+"as_of": "2026-09-26"
+},
+"revenue_growth_yoy_quarter": null,
+"net_margin_quarter": null,
+"debt_to_assets_quarter": null
+},
+"freshness": {
+"latest_filing_date": "2026-11-19",
+"financials_last_filed": "2026-11-03",
+"note": "Filing-date data, not real-time. Figures are as of each period_end and became public on each 'filed' date; 10-Qs land up to 40-45 days and 10-Ks up to 60-90 days after period end. Results may be cached up to 15 minutes.",
+"warnings": null
+},
+"elapsed_ms": 495
+}
 }
 }

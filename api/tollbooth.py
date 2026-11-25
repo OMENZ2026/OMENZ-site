@@ -1595,6 +1595,19 @@ def claim_evidence_route(request: Request, body: dict = Body(...)):
     request.state.extra.update({"action": "claim_evidence", "ce_verdict": r.get("verdict")})
     if r.get("verdict") == "ERROR":
         return JSONResponse(r, status_code=422)
+    # 11-25 (reconcile matrix: claim + source -> evidence RECEIPT): portable proof another agent can verify offline
+    try:
+        import hashlib as _hl
+        import contracts as _ct
+        rec = {"schema": "omenz.evidence-receipt.v0", "claim": body["claim"][:600], "source_url": body["url"],
+               "verdict": r.get("verdict"), "quote": r.get("quote") or r.get("evidence") or r.get("best_match"),
+               "final_url": r.get("final_url"),
+               "checked_at": r.get("checked_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "issuer": "omenz.org"}
+        rec["receipt_id"] = "er_" + _hl.sha256(_ct._canon(rec).encode()).hexdigest()[:20]
+        r["receipt"] = {"record": rec, "token": _ct._sign(rec),
+                        "verify": "Ed25519 over the token body; public key: GET /v1/passport/key (free). Proves what OMENZ found at that time, not that the claim is true forever."}
+    except Exception as _e:
+        r["receipt_error"] = type(_e).__name__
     return r
 
 

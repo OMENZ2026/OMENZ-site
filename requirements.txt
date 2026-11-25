@@ -7,3 +7,4 @@ eth-utils>=4
 phonenumbers==9.0.44
 holidays==0.109
 tzdata==2026.2
+pypdf==7.1.1

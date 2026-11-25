@@ -94,6 +94,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/pay/ready                 $0.002  Pay Ready: can this wallet pay this seller now
   GET  /api/tollbooth/v1/gas/compare?chains=       $0.002  Gas Compare: cost to move money on 7 chains, cheapest
   GET  /api/tollbooth/v1/price/check?symbols=      $0.002  Price Check: crypto price cross-checked across 3 sources
+  POST /api/tollbooth/v1/doc/read {url}|{content_base64,filename}  $0.004  Doc Read: PDF/txt/md/html -> text per page (50 pages, no OCR)
   GET  /api/tollbooth/v1/address/screen?address=   $0.002  Address Screen: OFAC sanctions, any chain
   GET  /api/tollbooth/v1/agent/trust?address=      $0.005  Agent Trust: know-your-agent score with reasons
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
@@ -182,6 +183,7 @@ import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
 import gas_compare  # noqa: E402
 import price_check  # noqa: E402
+import doc_read  # noqa: E402
 import address_screen  # noqa: E402
 import agent_trust  # noqa: E402
 import fx_rates  # noqa: E402
@@ -768,6 +770,12 @@ _paid("GET", "price/check", "$0.002",
       "OMENZ Price Check: a crypto USD price your agent can act on, cross-checked. Up to 5 symbols (ETH, BTC, USDC, SOL...): Coinbase spot + Kraken + Chainlink on-chain feed on Base where one exists, median price, spread between sources and AGREE / CHECK / DISAGREE before you swap, invoice or set a limit. Public sources, no AI. By OMENZ.",
       {"symbols": "ETH,BTC,USDC"},
       {"properties": {"symbols": {"type": "string", "description": "comma list of up to 5 ticker symbols"}}, "required": ["symbols"]})
+_paid("POST", "doc/read", "$0.004",
+      "OMENZ Doc Read: turn a public PDF (or .txt/.md/.html) into clean text your agent can use. Send {url} (https) or {content_base64, filename}. Priced per document, no account: first 50 pages, text per page, title/author/dates, language guess, word count, links, tables hint. Native text only, no OCR: scanned/image-only PDFs come back flagged needs_ocr. Max 10 MB, 200k chars. Deterministic, stores nothing. By OMENZ.",
+      {"url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf"},
+      {"properties": {"url": {"type": "string", "description": "public https URL of a PDF or text/markdown/html document"},
+                      "content_base64": {"type": "string", "description": "the document bytes, base64 (instead of url)"},
+                      "filename": {"type": "string", "description": "with content_base64: name incl. extension (.pdf .txt .md .html)"}}}, body=True)
 _paid("GET", "gas/compare", "$0.002",
       "OMENZ Gas Compare: what it costs to move money on 7 chains right now and which is cheapest. Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche: base fee + suggested tip, USD cost of a native transfer and a USDC/ERC-20 transfer, block freshness. One call instead of seven. Public RPCs + Coinbase spot prices. By OMENZ.",
       {"chains": "base,arbitrum,optimism,ethereum"},
@@ -2383,6 +2391,15 @@ def address_screen_route(request: Request, address: str = Query(...)):
 def price_check_route(request: Request, symbols: str = Query(...)):
     r = price_check.check(symbols)
     request.state.extra.update({"action": "price_check"})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.post(BASE + "/v1/doc/read")
+def doc_read_route(request: Request, body: dict = Body(...)):
+    r = doc_read.read(body)
+    request.state.extra.update({"action": "doc_read", "format": r.get("format"), "pages": r.get("page_count")})
     if r.get("error"):
         return JSONResponse(r, status_code=422)
     return r

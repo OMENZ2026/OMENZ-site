@@ -479,6 +479,8 @@ WQ = {
             {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "price_usd": 0.02, "eta_minutes": 10}),
     "award": ("$0.002", "Agent Workforce: owner awards a bidding job to one bidder; the award becomes that worker's lease.",
               {"queue_id": "wq_...", "item_id": "wi_...", "worker_id": "agent-7"}),
+    "rejoin": ("$0.002", "Agent Workforce: a worker back after a lost lease (crash, quota, outage) sends its checkpoint/result: late work is kept as provenance, never thrown away; RESUME / REJOINED (lease back, from newest checkpoint) / STAND_DOWN (replacement has it, your work attached) / ALREADY_DONE (no double completion).",
+               {"queue_id": "wq_...", "worker_id": "agent-7", "item_id": "wi_...", "checkpoint": {"step": 3}}),
 }
 for _a, (_p, _d, _i) in WQ.items():
     _paid("POST", "queue/" + _a, _p, _d + " Header X-Queue-Key. By OMENZ.", _i, {"properties": {k: {} for k in _i}}, body=True)
@@ -1637,6 +1639,7 @@ def queue_post(action: str, request: Request, body: dict = Body(default={}), x_q
         "resolve": lambda: workforce.resolve(q, k, b.get("item_id"), b.get("action", "requeue"), b.get("note")),
         "bid": lambda: workforce.bid(q, k, b.get("worker_id"), b.get("item_id"), b.get("price_usd"), b.get("eta_minutes"), b.get("note")),
         "award": lambda: workforce.award(q, k, b.get("item_id"), b.get("worker_id")),
+        "rejoin": lambda: workforce.rejoin(q, k, b.get("worker_id"), b.get("item_id"), b.get("checkpoint"), b.get("result")),
     }
     if action not in calls:
         return JSONResponse({"error": "unknown queue action"}, status_code=404)

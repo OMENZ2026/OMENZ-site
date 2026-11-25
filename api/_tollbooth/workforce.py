@@ -83,7 +83,7 @@ def _item(q, item_id):
 def _public(i):
     return {k: i.get(k) for k in ("id", "title", "state", "priority", "holder", "lease_until", "attempts", "max_attempts",
                                   "not_before", "repeat_every_minutes", "payload", "checkpoint", "result", "bids", "jacket_id",
-                                  "escalation", "history", "created")}
+                                  "escalation", "history", "created", "late_contributions")}
 
 
 def create(name=None, supervisor_box_id=None, lease_seconds=900, heartbeat_grace_s=300):
@@ -167,7 +167,7 @@ def claim(qid, key, worker_id, jacket_key=None):
 def _held(q, item_id, worker_id):
     i = _item(q, item_id)
     if i["state"] != "leased" or i.get("holder") != worker_id:
-        raise LockerError(409, f"item is {i['state']} and held by {i.get('holder') or 'nobody'}, not {worker_id}")
+        raise LockerError(409, f"item is {i['state']} and held by {i.get('holder') or 'nobody'}, not {worker_id}. Back after a lost lease? POST /v1/queue/rejoin with your checkpoint/result: nothing you did is thrown away")
     return i
 
 
@@ -280,6 +280,58 @@ def award(qid, key, item_id, worker_id):
     _event(i, "awarded", "owner", to=worker_id)
     _save(qid, q)
     return {"item_id": item_id, "state": "leased", "holder": worker_id, "lease_until": i["lease_until"]}
+
+
+def rejoin(qid, key, worker_id, item_id, checkpoint=None, result=None):
+    """11-25 (founder lifecycle: DETECT -> CHECKPOINT -> REROUTE -> CONTINUE -> PRESERVE PROVENANCE -> ORIGINAL WORKER RETURNS
+    -> RECONCILE -> REJOIN). A worker whose lease expired comes back: its late work is never thrown away (kept as
+    provenance on the item), and it is told fairly what happens now. No double completion, no lost progress."""
+    q = _load(qid, key, "worker")
+    i = _item(q, item_id)
+    worker_id = str(worker_id)[:80]
+    for blob in (checkpoint, result):
+        if blob is not None and secret_scan.scan(blob)["verdict"] == "BLOCK":
+            raise LockerError(422, "late work contains secrets; store it in a Locker and pass the locker_id")
+    late = {}
+    if checkpoint is not None:
+        late["checkpoint"] = checkpoint if isinstance(checkpoint, (str, dict)) else str(checkpoint)
+    if result is not None:
+        late["result"] = result if isinstance(result, (str, dict, list)) else str(result)
+    was = [h for h in i.get("history", []) if h.get("event") in ("claimed", "lease_expired", "awarded") and h.get("by") == worker_id]
+    if late:
+        i.setdefault("late_contributions", []).append({"by": worker_id, "at": _now(), **late})
+        i["late_contributions"] = i["late_contributions"][-10:]
+        _event(i, "late_contribution", worker_id, kind=",".join(late))
+    st, holder = i["state"], i.get("holder")
+    w = q["roster"].setdefault(worker_id, {})
+    w.update({"last_seen": _now(), "available": True})
+    if st == "leased" and holder == worker_id:
+        decision, why = "RESUME", "you still hold the lease: carry on (heartbeat to extend it)"
+        i["lease_until"] = _now() + q["lease_seconds"]
+        if "checkpoint" in late:
+            i["checkpoint"] = late["checkpoint"]
+    elif st == "queued":
+        i.update({"state": "leased", "holder": worker_id, "lease_until": _now() + q["lease_seconds"]})
+        if "checkpoint" in late:
+            i["checkpoint"] = late["checkpoint"]
+        decision, why = "REJOINED", "nobody picked it up while you were gone: the lease is yours again, starting from the newest checkpoint"
+        _event(i, "rejoined", worker_id)
+        w["current"] = item_id
+    elif st == "leased":
+        decision, why = "STAND_DOWN", f"{holder} took over while you were gone; your late work is attached for them (late_contributions). Claim your next job."
+        _event(i, "stand_down", worker_id, current_holder=holder)
+    elif st == "done":
+        decision, why = "ALREADY_DONE", "the job was completed by another worker; your late result is kept as provenance only (no double completion)"
+        _event(i, "late_after_done", worker_id)
+    else:
+        decision, why = "NEEDS_OWNER", f"the job is {st}; the owner decides (POST /v1/queue/resolve). Your late work is attached."
+    _save(qid, q)
+    return {"item_id": item_id, "decision": decision, "why": why, "state": i["state"], "current_holder": i.get("holder"),
+            "your_late_work_kept": bool(late), "you_previously_held_it": bool(was),
+            "checkpoint": i.get("checkpoint") if decision in ("RESUME", "REJOINED") else None,
+            "next": {"RESUME": "POST /v1/queue/heartbeat or complete", "REJOINED": "continue from checkpoint, then POST /v1/queue/complete",
+                     "STAND_DOWN": "POST /v1/queue/claim for the next job", "ALREADY_DONE": "POST /v1/queue/claim for the next job",
+                     "NEEDS_OWNER": "wait for the owner, or claim another job"}[decision]}
 
 
 def status(qid, key, item_id=None):

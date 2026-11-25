@@ -95,6 +95,8 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   GET  /api/tollbooth/v1/gas/compare?chains=       $0.002  Gas Compare: cost to move money on 7 chains, cheapest
   GET  /api/tollbooth/v1/price/check?symbols=      $0.002  Price Check: crypto price cross-checked across 3 sources
   POST /api/tollbooth/v1/doc/read {url}|{content_base64,filename}  $0.004  Doc Read: PDF/txt/md/html -> text per page (50 pages, no OCR)
+  GET  /api/tollbooth/v1/usdc/route-check?from=&to=&amount=  $0.005  USDC Route Check: CCTP Standard/Fast vs Across/Relay, cheapest + fastest
+  GET  /api/tollbooth/v1/usdc/native-check?chain=&token=  $0.002  USDC Native Check: Circle native USDC vs bridged (USDC.e/USDbC)
   GET  /api/tollbooth/v1/address/screen?address=   $0.002  Address Screen: OFAC sanctions, any chain
   GET  /api/tollbooth/v1/agent/trust?address=      $0.005  Agent Trust: know-your-agent score with reasons
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
@@ -183,6 +185,7 @@ import pay_doctor  # noqa: E402
 import pay_ready  # noqa: E402
 import gas_compare  # noqa: E402
 import price_check  # noqa: E402
+import usdc_route  # noqa: E402
 import doc_read  # noqa: E402
 import address_screen  # noqa: E402
 import agent_trust  # noqa: E402
@@ -770,6 +773,17 @@ _paid("GET", "price/check", "$0.002",
       "OMENZ Price Check: a crypto USD price your agent can act on, cross-checked. Up to 5 symbols (ETH, BTC, USDC, SOL...): Coinbase spot + Kraken + Chainlink on-chain feed on Base where one exists, median price, spread between sources and AGREE / CHECK / DISAGREE before you swap, invoice or set a limit. Public sources, no AI. By OMENZ.",
       {"symbols": "ETH,BTC,USDC"},
       {"properties": {"symbols": {"type": "string", "description": "comma list of up to 5 ticker symbols"}}, "required": ["symbols"]})
+_paid("GET", "usdc/route-check", "$0.005",
+      'OMENZ USDC Route Check: cheapest and fastest way to move USDC between Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche, Solana right now. Circle CCTP V2 Standard vs Fast fee for your amount + live Fast allowance + Circle attestation times, Across + Relay live quotes (best effort), native USDC address on both chains and bridged look-alikes to avoid. Never signs or moves funds. By OMENZ.',
+      {"from": "base", "to": "arbitrum", "amount": "100"},
+      {"properties": {"from": {"type": "string", "description": "source chain: ethereum, base, arbitrum, optimism, polygon, avalanche, solana"},
+                      "to": {"type": "string", "description": "destination chain (same list)"},
+                      "amount": {"type": "string", "description": "USDC amount, e.g. 100 (default 100)"}}, "required": ["from", "to"]})
+_paid("GET", "usdc/native-check", "$0.002",
+      "OMENZ USDC Native Check: is this token Circle's native USDC on this chain, a bridged look-alike (USDC.e, USDbC, Wormhole USDCet) or unknown? Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche, Solana. NATIVE_USDC / BRIDGED_USDC / UNKNOWN with the right native address and CCTP support. Check before you accept, pay or bridge. Offline, instant, nothing stored. By OMENZ.",
+      {"chain": "base", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"},
+      {"properties": {"chain": {"type": "string", "description": "ethereum, base, arbitrum, optimism, polygon, avalanche, solana"},
+                      "token": {"type": "string", "description": "token contract (0x...) or Solana mint address"}}, "required": ["chain", "token"]})
 _paid("POST", "doc/read", "$0.004",
       "OMENZ Doc Read: turn a public PDF (or .txt/.md/.html) into clean text your agent can use. Send {url} (https) or {content_base64, filename}. Priced per document, no account: first 50 pages, text per page, title/author/dates, language guess, word count, links, tables hint. Native text only, no OCR: scanned/image-only PDFs come back flagged needs_ocr. Max 10 MB, 200k chars. Deterministic, stores nothing. By OMENZ.",
       {"url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf"},
@@ -2391,6 +2405,25 @@ def address_screen_route(request: Request, address: str = Query(...)):
 def price_check_route(request: Request, symbols: str = Query(...)):
     r = price_check.check(symbols)
     request.state.extra.update({"action": "price_check"})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/usdc/route-check")
+def usdc_route_check_route(request: Request, to: str | None = None, amount: str | None = None,
+                           from_: str | None = Query(None, alias="from")):
+    r = usdc_route.check({"from": from_, "to": to, "amount": amount})
+    request.state.extra.update({"action": "usdc_route_check", "cheapest": (r.get("cheapest_now") or {}).get("route")})
+    if r.get("error"):
+        return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/usdc/native-check")
+def usdc_native_check_route(request: Request, chain: str | None = None, token: str | None = None):
+    r = usdc_route.native({"chain": chain, "token": token})
+    request.state.extra.update({"action": "usdc_native_check", "verdict": r.get("verdict")})
     if r.get("error"):
         return JSONResponse(r, status_code=422)
     return r

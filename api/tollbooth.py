@@ -1289,7 +1289,11 @@ def index():
 
 @app.get(BASE + "/v1/agent-ready")
 def agent_ready(url: str = Query(...)):
-    return checker.check(url)
+    r = checker.check(url)
+    # 11-25: a bot wall makes the score inconclusive -> return the explanation but don't charge (4xx is never settled)
+    if isinstance(r, dict) and r.get("status") == "blocked_by_bot_protection":
+        return JSONResponse({**r, "not_charged": True, "why_not_charged": "the site's bot protection refused our reader, so no score is possible; you are not charged for an inconclusive check"}, status_code=422)
+    return r
 
 
 @app.get(BASE + "/v1/local-facts")

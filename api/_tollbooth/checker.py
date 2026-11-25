@@ -19,7 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 UA = "OMENZ-AgentReadyChecker/{} (+https://omenz.org)".format(VERSION)
 TIMEOUT = 20
 MAX_BYTES = 3_000_000
@@ -45,6 +45,38 @@ BOOKING_HINTS = re.compile(r"\b(book(ing)?|appointment|schedule|reserve|reservat
                            r"calendly\.com|squareup\.com/appointments|booksy|vagaro|opentable|resy|toasttab|acuityscheduling", re.I)
 
 
+# Bot protection (same approach as business_facts/local_facts: WAF named in response headers, only on the
+# refusal codes). A refusal from a bot wall means "this reader was turned away", not "the site is down".
+BOT_WALLS = re.compile(r"cloudflare|sucuri|cloudproxy|akamai|imperva|incapsula|ddos-guard|perimeterx|datadome", re.I)
+WALL_CODES = (307, 401, 403, 429, 503)
+WALL_BODY = (("cloudflare", re.compile(r"<title>\s*(just a moment|attention required)", re.I)),
+             ("akamai", re.compile(r"<title>\s*access denied\s*</title>.*?reference\s*(&#32;|\s)*(&#35;|#)", re.I | re.S)),
+             ("datadome", re.compile(r"captcha-delivery\.com|datadome", re.I)),
+             ("perimeterx", re.compile(r"px-captcha|_pxappid", re.I)))
+
+
+def _bot_wall(e):
+    """Name the bot-protection service behind an HTTP refusal, or None."""
+    if e.code not in WALL_CODES:
+        return None
+    h = e.headers
+    sig = " ".join(filter(None, [h.get("Server"), h.get("cf-ray") and "cloudflare", h.get("cf-mitigated") and "cloudflare",
+                                 h.get("X-Sucuri-ID") and "sucuri", h.get("x-datadome") and "datadome",
+                                 h.get("X-Iinfo") and "imperva", " ".join(h.get_all("Set-Cookie") or [])]))
+    sig = re.sub(r"\b(bm_so|bm_sz|ak_bmsc|_abck)=", " akamai ", sig)
+    wall = BOT_WALLS.search(sig)
+    if wall:
+        return wall.group(0).lower()
+    try:
+        body = e.read(20000).decode("utf-8", "replace")
+    except Exception:
+        body = ""
+    for name, rx in WALL_BODY:
+        if rx.search(body):
+            return name
+    return None
+
+
 def _fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,text/plain,*/*"})
     t0 = time.time()
@@ -55,7 +87,8 @@ def _fetch(url):
             return {"ok": True, "status": r.status, "url": r.geturl(), "ms": int((time.time() - t0) * 1000),
                     "text": body.decode(charset, "replace"), "ctype": r.headers.get("Content-Type", "")}
     except urllib.error.HTTPError as e:
-        return {"ok": False, "status": e.code, "url": url, "ms": int((time.time() - t0) * 1000), "text": "", "ctype": ""}
+        return {"ok": False, "status": e.code, "url": url, "ms": int((time.time() - t0) * 1000), "text": "", "ctype": "",
+                "blocked_by": _bot_wall(e)}
     except Exception as e:
         return {"ok": False, "status": None, "url": url, "error": type(e).__name__, "text": "", "ctype": ""}
 
@@ -131,6 +164,19 @@ def check(url):
         score -= penalty
 
     home = _fetch(url)
+    if not home["ok"] and home.get("blocked_by"):
+        # Inconclusive, not down: the site answered, but its bot protection refused an honestly identified reader.
+        findings.append({"severity": "high", "code": "blocked_by_bot_protection",
+                         "what_it_means": "The site's bot protection ({}) refused our honestly identified automated reader (status {}). "
+                                          "The site is likely up for people, but AI assistants and agents that identify themselves "
+                                          "are probably refused too, so they can't read or use it.".format(home["blocked_by"], home.get("status")),
+                         "fix": "In your bot protection settings, allow verified AI assistant fetchers (e.g. OAI-SearchBot, ChatGPT-User, "
+                                "Claude-User, PerplexityBot) or lower the challenge level for the home page and key info pages."})
+        return {"url": url, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "checker_version": VERSION,
+                "status": "blocked_by_bot_protection", "blocked_by": home["blocked_by"], "inconclusive": True,
+                "score": None, "score_note": "Not scored: the page could not be read, so the content checks can't run. "
+                                             "This is not a dead site.",
+                "findings": findings, "facts": {"http_status": home.get("status"), "blocked_by": home["blocked_by"]}}
     if not home["ok"]:
         add("critical", "site_unreachable", "AI assistants could not load the home page (status {}).".format(home.get("status") or home.get("error")),
             "Make sure the site loads publicly without a login or block page.", 60)
@@ -221,6 +267,7 @@ if __name__ == "__main__":
     if "--json" in sys.argv:
         print(json.dumps(r, indent=2, ensure_ascii=False))
     else:
-        print("{}  score {}/100".format(r["url"], r["score"]))
+        print("{}  score {}".format(r["url"], "{}/100".format(r["score"]) if r["score"] is not None else
+                                    "not scored ({}, inconclusive)".format(r.get("status"))))
         for f in r["findings"]:
             print(" [{}] {} -> {}".format(f["severity"], f["what_it_means"], f["fix"]))

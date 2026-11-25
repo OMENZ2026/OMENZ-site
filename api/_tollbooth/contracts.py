@@ -78,6 +78,12 @@ def build(terms):
          "buyer": str(terms.get("buyer") or "")[:80], "seller": str(terms.get("seller") or "")[:80],
          "deliverable": deliverable[:1000], "acceptance": tests[:20], "max_spend_usd": max_spend, "deadline": deadline,
          "payment": str(terms.get("payment") or "")[:200], "issuer": "omenz.org"}
+    try:
+        import work_history
+        if work_history.in_sandbox():
+            c["sandbox"] = True  # built in AYNE: its acceptance results stay test-class in Work History
+    except Exception:  # noqa: BLE001
+        pass
     return {"contract": c, "token": _sign(c), "kid": passport.key()["kid"],
             "note": "Both parties keep the token. Deliveries are checked with POST /v1/contract/accept."}
 
@@ -147,6 +153,13 @@ def accept(token, delivered, record=True):
     att_token = _sign(att)
     if record and c["seller"]:
         _record(c["seller"], att)
+    if c["seller"]:
+        try:  # 11-24 Work History: verified evidence (OMENZ ran the tests). AYNE / sandbox contracts = test. Never breaks accept.
+            import work_history
+            work_history.record(c["seller"], "contract_pass" if passed else "contract_fail", c["contract_id"], counterparty=c["buyer"],
+                                test=(not record) or bool(c.get("sandbox")), dedupe=c["contract_id"])
+        except Exception:  # noqa: BLE001
+            pass
     return {"verdict": att["verdict"], "escrow_verdict": escrow, "late": late, "results": results, "attestation": att,
             "attestation_token": att_token,
             "note": "OMENZ holds no funds: the payer releases or refunds per escrow_verdict. Verify the attestation offline with /v1/passport/key."}

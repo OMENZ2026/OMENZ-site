@@ -97,6 +97,7 @@ Payout: the founder's Coinbase USDC-on-Base address. Facilitator: PayAI (keyless
   POST /api/tollbooth/v1/doc/read {url}|{content_base64,filename}  $0.004  Doc Read: PDF/txt/md/html -> text per page (50 pages, no OCR)
   GET  /api/tollbooth/v1/usdc/route-check?from=&to=&amount=  $0.005  USDC Route Check: CCTP Standard/Fast vs Across/Relay, cheapest + fastest
   GET  /api/tollbooth/v1/usdc/native-check?chain=&token=  $0.002  USDC Native Check: Circle native USDC vs bridged (USDC.e/USDbC)
+  GET  /api/tollbooth/v1/work/history?agent=       $0.002  Work History: an agent's signed work record, verified vs reported vs test
   GET  /api/tollbooth/v1/address/screen?address=   $0.002  Address Screen: OFAC sanctions, any chain
   GET  /api/tollbooth/v1/agent/trust?address=      $0.005  Agent Trust: know-your-agent score with reasons
   GET  /api/tollbooth/v1/ip/check?ip=               $0.002  IP Check: owner, country, cloud, Tor
@@ -208,6 +209,7 @@ import splits  # noqa: E402
 import terms_changed  # noqa: E402
 import wallet  # noqa: E402
 import workforce  # noqa: E402
+import work_history  # noqa: E402
 import x402_probe  # noqa: E402
 import site_check  # noqa: E402
 
@@ -784,6 +786,10 @@ _paid("GET", "usdc/native-check", "$0.002",
       {"chain": "base", "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"},
       {"properties": {"chain": {"type": "string", "description": "ethereum, base, arbitrum, optimism, polygon, avalanche, solana"},
                       "token": {"type": "string", "description": "token contract (0x...) or Solana mint address"}}, "required": ["chain", "token"]})
+_paid("GET", "work/history", "$0.002",
+      "OMENZ Work History: an agent's portable, signed work record across OMENZ tools (queues, contracts, checkpoints). Every event is labeled verified (OMENZ ran the acceptance tests), reported (the worker/owner said so) or test (sandbox). Completion rates from verified and reported separately, sample-size and self-dealing warnings, distinct counterparties. No record = NO_HISTORY (unknown, not bad). Ids hashed. By OMENZ.",
+      {"agent": "worker-7"},
+      {"properties": {"agent": {"type": "string", "description": "worker_id, contract/checkpoint seller name, or 0x wallet"}}, "required": ["agent"]})
 _paid("POST", "doc/read", "$0.004",
       "OMENZ Doc Read: turn a public PDF (or .txt/.md/.html) into clean text your agent can use. Send {url} (https) or {content_base64, filename}. Priced per document, no account: first 50 pages, text per page, title/author/dates, language guess, word count, links, tables hint. Native text only, no OCR: scanned/image-only PDFs come back flagged needs_ocr. Max 10 MB, 200k chars. Deterministic, stores nothing. By OMENZ.",
       {"url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf"},
@@ -1652,6 +1658,11 @@ def own_card():
     return capability_card.own_card(ROUTES, "https://www.omenz.org", BASE + "/v1/pricing-policy", BASE + "/v1/needs")
 
 
+def _wh_channel(request):
+    """11-24 Work History: AYNE sandbox calls are test-class; everything else reached a paid route."""
+    return "ayne" if getattr(request.state, "ayne", False) else "paid"
+
+
 def _wq(fn, *a):
     r = _locker_call(fn, *a)
     return r
@@ -1678,7 +1689,8 @@ def queue_post(action: str, request: Request, body: dict = Body(default={}), x_q
     }
     if action not in calls:
         return JSONResponse({"error": "unknown queue action"}, status_code=404)
-    return _locker_call(calls[action])
+    with work_history.channel(_wh_channel(request)):
+        return _locker_call(calls[action])
 
 
 @app.get(BASE + "/v1/queue/status")
@@ -1726,13 +1738,15 @@ def vendor_check(request: Request, url: str = Query(...), method: str | None = N
 def checkpoint_create(request: Request, body: dict = Body(...)):
     import checkpoint
     request.state.extra["action"] = "checkpoint_create"
-    return _locker_call(checkpoint.create, body)
+    with work_history.channel(_wh_channel(request)):
+        return _locker_call(checkpoint.create, body)
 
 
 @app.post(BASE + "/v1/checkpoint/submit")
 def checkpoint_submit(request: Request, body: dict = Body(...)):
     import checkpoint
-    r = _locker_call(checkpoint.submit, body)
+    with work_history.channel(_wh_channel(request)):
+        r = _locker_call(checkpoint.submit, body)
     request.state.extra.update({"action": "checkpoint_submit", "verdict": r.get("escrow_verdict") if isinstance(r, dict) else None})
     return r
 
@@ -1747,12 +1761,14 @@ def checkpoint_status(request: Request, id: str = Query(...)):
 @app.post(BASE + "/v1/contract/build")
 def contract_build(request: Request, body: dict = Body(...)):
     request.state.extra["action"] = "contract_build"
-    return _locker_call(contracts.build, body.get("terms"))
+    with work_history.channel(_wh_channel(request)):
+        return _locker_call(contracts.build, body.get("terms"))
 
 
 @app.post(BASE + "/v1/contract/accept")
 def contract_accept(request: Request, body: dict = Body(...)):
-    r = _locker_call(contracts.accept, body.get("token"), body.get("delivered"), not getattr(request.state, "ayne", False))
+    with work_history.channel(_wh_channel(request)):
+        r = _locker_call(contracts.accept, body.get("token"), body.get("delivered"), not getattr(request.state, "ayne", False))
     request.state.extra.update({"action": "contract_accept", "verdict": r.get("verdict") if isinstance(r, dict) else None})
     return r
 
@@ -2439,6 +2455,13 @@ def usdc_native_check_route(request: Request, chain: str | None = None, token: s
     request.state.extra.update({"action": "usdc_native_check", "verdict": r.get("verdict")})
     if r.get("error"):
         return JSONResponse(r, status_code=422)
+    return r
+
+
+@app.get(BASE + "/v1/work/history")
+def work_history_route(request: Request, agent: str = Query(...)):
+    r = _locker_call(work_history.history, agent)
+    request.state.extra.update({"action": "work_history", "status": r.get("status") if isinstance(r, dict) else None})
     return r
 
 

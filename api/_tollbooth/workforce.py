@@ -73,6 +73,15 @@ def _sweep(q):
         w["available"] = now - w.get("last_seen", 0) < q.get("heartbeat_grace_s", 300)
 
 
+def _wh(worker_id, kind, q, qid, item_id, dedupe=None):
+    """11-24 Work History hook: reported evidence (the worker/owner's word). Never breaks the job call."""
+    try:
+        import work_history
+        work_history.record(worker_id, kind, f"{qid}:{item_id}", counterparty=qid, test=bool(q.get("ayne")), dedupe=dedupe)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _item(q, item_id):
     for i in q["items"]:
         if i["id"] == item_id:
@@ -97,6 +106,11 @@ def create(name=None, supervisor_box_id=None, lease_seconds=900, heartbeat_grace
          "expires": _now() + TTL, "lease_seconds": lease, "heartbeat_grace_s": grace,
          "supervisor_box_id": supervisor_box_id if str(supervisor_box_id or "").startswith("pb_") else None,
          "items": [], "roster": {}}
+    try:
+        import work_history
+        q["ayne"] = work_history.in_sandbox()  # ids created in AYNE stay test-class in Work History
+    except Exception:  # noqa: BLE001
+        pass
     _kv("PUT", qid, q)
     return {"queue_id": qid, "owner_key": ok, "worker_key": wk, "expires_at": q["expires"],
             "note": "Keys are shown once. Give worker_key to your worker agents; keep owner_key. Send either as header X-Queue-Key."}
@@ -148,6 +162,7 @@ def claim(qid, key, worker_id, jacket_key=None):
     _event(i, "claimed", worker_id, resumed_from=i.get("checkpoint"))
     w["current"] = i["id"]
     _save(qid, q)
+    _wh(worker_id, "job_claimed", q, qid, i["id"])
     out = {"item": _public(i), "lease_seconds": q["lease_seconds"],
            "note": "a checkpoint is present: resume from it" if i.get("checkpoint") else None}
     if i.get("jacket_id"):
@@ -205,6 +220,7 @@ def complete(qid, key, worker_id, item_id, result=None):
         q["items"].append(nxt)
     q["roster"].get(worker_id, {}).pop("current", None)
     _save(qid, q)
+    _wh(worker_id, "job_completed", q, qid, item_id, dedupe=f"{qid}:{item_id}")
     return {"item_id": item_id, "state": "done", "next_scheduled": nxt and {"item_id": nxt["id"], "not_before": nxt["not_before"]}}
 
 
@@ -216,6 +232,7 @@ def fail(qid, key, worker_id, item_id, reason=None, retry=True):
     i["state"] = "queued" if retry and i["attempts"] < i["max_attempts"] else "dead"
     _event(i, "failed", worker_id, reason=str(reason or "")[:300])
     _save(qid, q)
+    _wh(worker_id, "job_failed", q, qid, item_id)
     return {"item_id": item_id, "state": i["state"], "attempts": i["attempts"]}
 
 
@@ -238,6 +255,7 @@ def escalate(qid, key, worker_id, item_id, reason):
             sent = False
             i["escalation"]["drop_error"] = e.msg
     _save(qid, q)
+    _wh(worker_id, "job_escalated", q, qid, item_id)
     return {"item_id": item_id, "state": "escalated", "supervisor_notified": sent}
 
 
@@ -326,6 +344,10 @@ def rejoin(qid, key, worker_id, item_id, checkpoint=None, result=None):
     else:
         decision, why = "NEEDS_OWNER", f"the job is {st}; the owner decides (POST /v1/queue/resolve). Your late work is attached."
     _save(qid, q)
+    if late:
+        _wh(worker_id, "late_contribution", q, qid, item_id)
+    if decision in ("REJOINED", "STAND_DOWN"):
+        _wh(worker_id, "rejoined" if decision == "REJOINED" else "stand_down", q, qid, item_id)
     return {"item_id": item_id, "decision": decision, "why": why, "state": i["state"], "current_holder": i.get("holder"),
             "your_late_work_kept": bool(late), "you_previously_held_it": bool(was),
             "checkpoint": i.get("checkpoint") if decision in ("RESUME", "REJOINED") else None,

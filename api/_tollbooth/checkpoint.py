@@ -49,7 +49,14 @@ def create(body):
     plan = {"schema": "omenz.checkpoint.v0", "checkpoint_id": cid, "buyer": str(body.get("buyer") or "")[:120],
             "seller": str(body.get("seller") or "")[:120], "job": str(body.get("job") or "")[:300], "total_usd": total,
             "milestones": clean, "iat": now, "issuer": "omenz.org"}
-    _kv("PUT", _key(cid), {"plan": plan, "results": {}})
+    st = {"plan": plan, "results": {}}
+    try:
+        import work_history
+        if work_history.in_sandbox():
+            st["ayne"] = True  # created in AYNE: milestone verdicts stay test-class in Work History
+    except Exception:  # noqa: BLE001
+        pass
+    _kv("PUT", _key(cid), st)
     return {"checkpoint_id": cid, "plan": plan, "plan_token": contracts._sign(plan),
             "next": "Seller delivers each milestone: POST /v1/checkpoint/submit {checkpoint_id, milestone, delivered}. "
                     "OMENZ holds no funds; the buyer pays each tranche on RELEASE."}
@@ -109,6 +116,14 @@ def submit(body, max_attempts=3):
                                                "verdict": rec["verdict"], "late": late, "tests": rec["tests"], "passed_tests": rec["passed_tests"],
                                                "at": now, "issuer": "omenz.org"})
         except Exception:
+            pass
+    if plan.get("seller"):
+        try:  # 11-24 Work History: verified evidence. Never breaks submit.
+            import work_history
+            work_history.record(plan["seller"], {"RELEASE": "milestone_released", "REFUND": "milestone_refunded", "RETRY": "milestone_retry"}[escrow],
+                                f"{cid}:{m['i']}", counterparty=plan.get("buyer"), test=bool(st.get("ayne")),
+                                dedupe=f"{cid}:{m['i']}:{attempts if escrow == 'RETRY' else 'final'}")
+        except Exception:  # noqa: BLE001
             pass
     return {"milestone": m["i"], "verdict": rec["verdict"], "escrow_verdict": escrow, "late": late, "results": results,
             "receipt": rec, "receipt_token": token, "summary": _summary(st),

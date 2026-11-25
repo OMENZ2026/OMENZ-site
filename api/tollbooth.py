@@ -1081,6 +1081,18 @@ def _log(ev):
         urllib.request.urlopen(req, timeout=1.5).read()
     except Exception as e:
         print("tollbooth-log-failed", e)
+    # 11-25 cost fix: count 5xx in one tiny KV record per day, so ops_audit reads 1 record instead of ~750 event rows/pass
+    try:
+        if int(ev.get("status") or 0) >= 500 and ev.get("key") == "tollbooth":
+            k = "err5xx_" + time.strftime("%Y%m%d", time.gmtime())
+            rec = locker._kv("GET", k) or {"routes": {}, "total": 0}
+            r_ = str(ev.get("route") or "?")[:80]
+            rec["routes"][r_] = rec["routes"].get(r_, 0) + 1
+            rec["total"] = rec.get("total", 0) + 1
+            rec["last"] = {"at": ev.get("ts"), "route": r_, "status": ev.get("status")}
+            locker._kv("PUT", k, rec)
+    except Exception:
+        pass
 
 
 @app.middleware("http")

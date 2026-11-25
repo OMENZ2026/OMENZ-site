@@ -38,7 +38,8 @@ def _kv(method, key, body=None):
         raise LockerError(503, "locker storage not configured")
     url = f"https://api.apify.com/v2/key-value-stores/{STORE}/records/{key}"
     data = json.dumps(body).encode() if body is not None else None
-    for attempt in (0, 1):  # 11-24: one retry on transient storage errors (a payapi verification hit a one-off 502)
+    waits = (0.5, 1.2, 2.5)  # 11-25: bursts (payapi verifier, Bazaar listing run) hit storage rate limits twice -> 502 on checkpoint/create; back off 3x (~4s max, under the 30s limit)
+    for attempt in range(len(waits) + 1):
         req = urllib.request.Request(url, data=data, method=method,
                                      headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"})
         try:
@@ -48,13 +49,13 @@ def _kv(method, key, body=None):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None
-            if attempt == 0 and (e.code == 429 or e.code >= 500):
+            if attempt < len(waits) and (e.code == 429 or e.code >= 500):
                 import time as _t
-                _t.sleep(0.6)
+                _t.sleep(waits[attempt])
                 continue
             raise LockerError(502, f"storage error {e.code}")
         except (urllib.error.URLError, TimeoutError):
-            if attempt == 0:
+            if attempt < len(waits):
                 continue
             raise LockerError(502, "storage unreachable")
 

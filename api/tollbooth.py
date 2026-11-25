@@ -1296,13 +1296,13 @@ async def _ayne(request, call_next, t0):
 
 @app.get(BASE)
 def index():
-    return {"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
+    return _cdn({"service": "OMENZ x402 tollbooth", "protocol": "x402 v2", "network": NETWORK, "asset": "USDC",
             "routes": {k: {"price": v["accepts"]["price"], "description": v["description"]} for k, v in ROUTES.items()},
             "about": "https://omenz.org", "pricing_policy": BASE + "/v1/pricing-policy", "capability_card": BASE + "/v1/card",
             "playzone": {"name": "AYNE", "url": BASE + "/ayne/v1", "price": "free", "cap": "2000 requests/day"},
             "tell_us_what_you_need": {"method": "POST", "path": BASE + "/v1/needs", "price": "free",
                                       "body": {"need": "required", "would_pay_usd_per_call": "number", "frequency": needs.FREQ,
-                                               "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}
+                                               "current_workaround": "text", "task_context": "text", "reply_box_id": "pb_... (optional)"}}}, 300)
 
 
 @app.get(BASE + "/v1/agent-ready")
@@ -1847,8 +1847,15 @@ def context_diet(request: Request, body: dict = Body(...)):
     return _locker_call(hygiene.diet, body.get("packet"), body.get("required"), body.get("max_string_chars", 400), body.get("max_list_items", 50))
 
 
+_STATUS = {"at": 0, "data": None}
+
+
 @app.get(BASE + "/v1/status")
 def status_page():
+    # 11-25 CPU fix (Vercel Hobby paused us for Active CPU): each status call made 6 self-probes (= 7 invocations, ~320 ms
+    # CPU) and uptime bots poll it constantly. Serve a 5-minute cached result.
+    if _STATUS["data"] and time.time() - _STATUS["at"] < 300:
+        return _cdn({**_STATUS["data"], "cached_for_s": int(time.time() - _STATUS["at"])}, 120)
     from concurrent.futures import ThreadPoolExecutor
     sample = [("GET", "local-facts?url=https://www.omenz.org"), ("GET", "alive?url=https://www.omenz.org"), ("POST", "secret-scan"),
               ("GET", "market/find?q=weather"), ("POST", "queue/create"), ("POST", "finance/forecast")]
@@ -1860,9 +1867,11 @@ def status_page():
     with ThreadPoolExecutor(6) as ex:
         checks = list(ex.map(probe, sample))
     up = all(c["verdict"] == "paywalled" for c in checks)
-    return {"service": "OMENZ x402 tollbooth", "status": "operational" if up else "degraded",
+    data = {"service": "OMENZ x402 tollbooth", "status": "operational" if up else "degraded",
             "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "paid_routes": len(ROUTES), "facilitator": FACILITATOR_NAME, "sample_checks": checks,
             "prices": BASE + "/v1/pricing-policy", "card": BASE + "/v1/card"}
+    _STATUS.update(at=time.time(), data=data)
+    return _cdn(data, 120)
 
 
 @app.get(BASE + "/v1/starter-pack")
@@ -1899,16 +1908,21 @@ def x402list_verify():
     return PlainTextResponse("x402list-verify-__hbxBYGCSSMxV92Z0XRTIPY-FX8CQxbn6FIs72LP24\n")
 
 
+def _cdn(data, seconds=300):
+    """11-25 CPU fix: let Vercel's CDN serve free, identical-for-everyone documents (no function CPU on cache hits)."""
+    return JSONResponse(data, headers={"Cache-Control": f"public, max-age=60, s-maxage={seconds}, stale-while-revalidate=600"})
+
+
 @app.get("/openapi.json")
 @app.get(BASE + "/openapi.json")
 def openapi_doc():
-    return discovery.openapi(ROUTES, BASE)
+    return _cdn(discovery.openapi(ROUTES, BASE), 600)
 
 
 @app.get("/.well-known/x402")
 @app.get(BASE + "/well-known/x402")
 def well_known_x402():
-    return discovery.well_known_x402(ROUTES, BASE)
+    return _cdn(discovery.well_known_x402(ROUTES, BASE), 600)
 
 
 @app.get("/.well-known/agent-card.json")

@@ -36,6 +36,9 @@ class LockerError(Exception):
 def _kv(method, key, body=None):
     if not (STORE and TOKEN):
         raise LockerError(503, "locker storage not configured")
+    import re as _re
+    if not _re.fullmatch(r"[A-Za-z0-9!\-_.'()]{1,256}", str(key)):  # 11-25: invalid keys used to surface as a vague 502
+        raise LockerError(500, f"internal storage key is invalid ({str(key)[:40]}); OMENZ bug, please report")
     url = f"https://api.apify.com/v2/key-value-stores/{STORE}/records/{key}"
     data = json.dumps(body).encode() if body is not None else None
     waits = (0.5, 1.2, 2.5)  # 11-25: bursts (payapi verifier, Bazaar listing run) hit storage rate limits twice -> 502 on checkpoint/create; back off 3x (~4s max, under the 30s limit)

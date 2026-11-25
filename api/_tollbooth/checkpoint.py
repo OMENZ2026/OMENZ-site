@@ -16,7 +16,7 @@ MAX_MILESTONES = 12
 
 
 def _key(cid):
-    return f"checkpoint:{cid}"
+    return f"checkpoint-{cid}"  # 11-25: storage keys allow only a-zA-Z0-9!-_.'() (":" made EVERY live create fail with 502)
 
 
 def create(body):

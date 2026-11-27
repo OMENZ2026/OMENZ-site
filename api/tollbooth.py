@@ -1075,10 +1075,17 @@ def _log(ev):
     tok = os.environ.get("APIFY_LOG_TOKEN", "")
     if not tok:
         return
+    # 11-27 cost fix: our own unpaid, non-error self-tests (STAY READY every 15 min, full sweeps) were a large share of the
+    # Apify dataset writes, and every report already drops ua_class "test". Skip writing those; 5xx still counted below.
+    _skip = ev.get("ua_class") == "test" and not ev.get("payer") and int(ev.get("status") or 0) < 500
     try:
+        if _skip:
+            raise StopIteration
         req = urllib.request.Request(f"https://api.apify.com/v2/datasets/{EVENTS_DATASET}/items", data=json.dumps(ev).encode(),
                                      method="POST", headers={"Content-Type": "application/json", "Authorization": "Bearer " + tok})
         urllib.request.urlopen(req, timeout=1.5).read()
+    except StopIteration:
+        pass
     except Exception as e:
         print("tollbooth-log-failed", e)
     # 11-25 cost fix: count 5xx in one tiny KV record per day, so ops_audit reads 1 record instead of ~750 event rows/pass

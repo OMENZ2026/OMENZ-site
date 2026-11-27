@@ -5,6 +5,10 @@
       "destination": "/api/s?slug=:slug"
     },
     {
+      "source": "/shop",
+      "destination": "/api/s?slug=shop"
+    },
+    {
       "source": "/.well-known/omenz-flyer.json",
       "destination": "/api/hit?f=index"
     },
